@@ -47,7 +47,7 @@ class _SpeedLimitDialogState extends State<SpeedLimitDialog> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryNeon.withOpacity(0.15),
+                    color: AppTheme.primaryNeon.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.speed, color: AppTheme.primaryNeon, size: 22),

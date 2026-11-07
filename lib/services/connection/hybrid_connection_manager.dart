@@ -17,7 +17,7 @@ enum HandshakePhase {
 }
 
 /// Master Hybrid Connection Manager
-/// Glues BLE Discovery + Invisible Handshake + 5GHz Wi-Fi Direct & LAN Sharing
+/// Green Code: Throttles UI notifications to conserve battery, supports Eco Mode
 class HybridConnectionManager extends ChangeNotifier {
   final BleDiscoveryService _bleService = BleDiscoveryService();
   final LanDiscoveryService _lanService = LanDiscoveryService();
@@ -27,6 +27,7 @@ class HybridConnectionManager extends ChangeNotifier {
   HandshakePhase _handshakePhase = HandshakePhase.idle;
   DevicePeer? _connectedPeer;
   String? _statusMessage;
+  bool _isEcoMode = false;
 
   final String localDeviceId = 'device-${DateTime.now().millisecondsSinceEpoch % 10000}';
   String localDeviceName = 'My Device';
@@ -51,11 +52,17 @@ class HybridConnectionManager extends ChangeNotifier {
   HandshakePhase get handshakePhase => _handshakePhase;
   DevicePeer? get connectedPeer => _connectedPeer;
   String? get statusMessage => _statusMessage;
+  bool get isEcoMode => _isEcoMode;
   List<DevicePeer> get discoveredPeers => List.unmodifiable(_discoveredPeers);
   List<TransferTask> get activeTransfers => List.unmodifiable(_activeTransfers);
   SpeedLimitProfile get hostLimitProfile => _hostLimitProfile;
   bool get isConnected => _connectedPeer != null && _wifiDirectService.isConnected;
   WifiDirectService get wifiDirectService => _wifiDirectService;
+
+  void toggleEcoMode() {
+    _isEcoMode = !_isEcoMode;
+    notifyListeners();
+  }
 
   void _initStreams() {
     _bleSub = _bleService.discoveredPeersStream.listen((peers) {
@@ -139,34 +146,28 @@ class HybridConnectionManager extends ChangeNotifier {
       _statusMessage = 'Executing Invisible Handshake with ${peer.name}...';
       notifyListeners();
 
-      // Step 2: Generate cryptographic Wi-Fi Direct invitation packet
       final invitation = HandshakePayload.createNewDirectInvitation(
         senderId: localDeviceId,
         senderName: localDeviceName,
       );
 
-      // Verify payload cryptographic signature
       if (!invitation.verifyIntegrity()) {
         throw Exception('Handshake security verification failed');
       }
 
-      // Simulate invisible BLE credential exchange delay (200-400ms)
-      await Future.delayed(const Duration(milliseconds: 350));
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      // Step 3: Establish 5GHz Wi-Fi Direct High-Speed Socket
       _handshakePhase = HandshakePhase.connectingWifiDirect;
       _statusMessage = 'Connecting to 5GHz Wi-Fi Channel (DIRECT-NM)...';
       notifyListeners();
 
-      // Start socket server/client handover
       await _wifiDirectService.startServer(port: invitation.port);
 
-      // In Direct Mode or Home Mode, link socket
       final targetIp = peer.ipAddress ?? invitation.ipAddress;
       if (peer.ipAddress != null) {
         await _wifiDirectService.connectToHost(hostIp: targetIp, port: invitation.port);
       }
-      // Mark peer as connected
+
       peer.isConnected = true;
       _connectedPeer = peer;
       _handshakePhase = HandshakePhase.connected;
@@ -182,7 +183,6 @@ class HybridConnectionManager extends ChangeNotifier {
     }
   }
 
-  /// Disconnect current session
   Future<void> disconnect() async {
     await _wifiDirectService.stopServer();
     if (_connectedPeer != null) {
@@ -194,10 +194,9 @@ class HybridConnectionManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Host Speed Limit & Quota Configuration
   void updateHostLimits({
-    required int maxBytesPerSecond, // e.g. 5 * 1024 * 1024 for 5MB/s
-    required int maxTotalQuotaBytes, // e.g. 1024 * 1024 * 1024 for 1GB
+    required int maxBytesPerSecond,
+    required int maxTotalQuotaBytes,
   }) {
     _hostLimitProfile = SpeedLimitProfile(
       maxBytesPerSecond: maxBytesPerSecond,
@@ -214,7 +213,6 @@ class HybridConnectionManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Adds a transfer task and initiates high-speed transfer
   void enqueueTransfer({
     required String fileName,
     required int fileSize,
@@ -234,22 +232,21 @@ class HybridConnectionManager extends ChangeNotifier {
     _activeTransfers.insert(0, task);
     notifyListeners();
 
-    // Start transfer simulation / socket streaming
     _simulateHighSpeedTransfer(task, resumeOffset: resumeOffset);
   }
 
-  /// High-speed transfer simulator reflecting real 40MB/s+ 5GHz socket performance
+  /// Green Code: Throttles UI refresh frequency to save battery during 40MB/s transfers
   void _simulateHighSpeedTransfer(TransferTask task, {int resumeOffset = 0}) async {
     task.status = TransferStatus.transferring;
     task.bytesTransferred = resumeOffset;
     notifyListeners();
 
-    // Simulated transfer: ticks every 100ms
-    // Target speed: ~42.5 MB/s (unless throttled by host limit)
-    const tickMs = 100;
+    // In Eco Mode, tick interval is 250ms (4 FPS); normal is 125ms (8 FPS)
+    final tickMs = _isEcoMode ? 250 : 125;
     var currentBytes = resumeOffset;
+    var lastUiNotify = DateTime.now().millisecondsSinceEpoch;
 
-    Timer.periodic(const Duration(milliseconds: tickMs), (timer) {
+    Timer.periodic(Duration(milliseconds: tickMs), (timer) {
       if (task.status == TransferStatus.paused ||
           task.status == TransferStatus.canceled ||
           task.status == TransferStatus.completed) {
@@ -257,15 +254,13 @@ class HybridConnectionManager extends ChangeNotifier {
         return;
       }
 
-      // Check speed limit
-      double targetBytesPerSec = 42.5 * 1024 * 1024; // 42.5 MB/s
+      double targetBytesPerSec = 42.5 * 1024 * 1024;
       if (_hostLimitProfile.isSpeedThrottled) {
         targetBytesPerSec = _hostLimitProfile.maxBytesPerSecond.toDouble();
       }
 
       final bytesThisTick = (targetBytesPerSec * (tickMs / 1000.0)).round();
 
-      // Check quota limit
       if (_hostLimitProfile.hasQuotaLimit &&
           (currentBytes + bytesThisTick) > _hostLimitProfile.maxTotalQuotaBytes) {
         task.status = TransferStatus.failed;
@@ -282,17 +277,24 @@ class HybridConnectionManager extends ChangeNotifier {
         task.finishedAt = DateTime.now();
         task.speedBytesPerSec = 0;
         timer.cancel();
+        notifyListeners();
       } else {
         task.speedBytesPerSec = targetBytesPerSec;
         task.checkStreamReady();
       }
 
       task.bytesTransferred = currentBytes;
-      notifyListeners();
+
+      // Green Code: Only call notifyListeners every 250ms (or 500ms in Eco Mode)
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final uiNotifyThreshold = _isEcoMode ? 500 : 250;
+      if (now - lastUiNotify >= uiNotifyThreshold) {
+        lastUiNotify = now;
+        notifyListeners();
+      }
     });
   }
 
-  /// Pause transfer with exact byte caching
   void pauseTransfer(String taskId) {
     final index = _activeTransfers.indexWhere((t) => t.id == taskId);
     if (index >= 0) {
@@ -302,7 +304,6 @@ class HybridConnectionManager extends ChangeNotifier {
     }
   }
 
-  /// Resume transfer from the exact cached byte offset (Auto-Resume)
   void resumeTransfer(String taskId) {
     final index = _activeTransfers.indexWhere((t) => t.id == taskId);
     if (index >= 0) {

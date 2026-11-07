@@ -28,7 +28,7 @@ class PeerCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: peer.isConnected
-                    ? AppTheme.accentGreen.withOpacity(0.15)
+                    ? AppTheme.accentGreen.withValues(alpha: 0.15)
                     : AppTheme.surfaceElevated,
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -67,7 +67,7 @@ class PeerCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryNeon.withOpacity(0.2),
+                            color: AppTheme.primaryNeon.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
@@ -84,7 +84,7 @@ class PeerCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                           decoration: BoxDecoration(
-                            color: AppTheme.secondaryAccent.withOpacity(0.2),
+                            color: AppTheme.secondaryAccent.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(

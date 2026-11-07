@@ -26,7 +26,7 @@ class PermissionDisclosureDialog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryNeon.withOpacity(0.15),
+                    color: AppTheme.primaryNeon.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.security, color: AppTheme.primaryNeon, size: 24),

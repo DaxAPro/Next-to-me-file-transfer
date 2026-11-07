@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 /// Pinned Smart Banner Ad widget adhering strictly to Blueprint Section 6:
 /// - Pinned strictly to bottom edge of screen
 /// - Auto-refreshes every 50 seconds during file transfers
-/// - NO interstitial / full screen ads, zero interruption
+/// - Green Code: Idles and pauses timer when no transfer is active to save battery
 class BottomBannerAdWidget extends StatefulWidget {
   final bool isTransferring;
 
@@ -37,14 +37,20 @@ class _BottomBannerAdWidgetState extends State<BottomBannerAdWidget> {
   @override
   void didUpdateWidget(covariant BottomBannerAdWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Green Code: Only touch timer if the transfer active state actually changed
     if (widget.isTransferring != oldWidget.isTransferring) {
-      _startAutoRefreshTimer();
+      if (widget.isTransferring) {
+        _startAutoRefreshTimer();
+      } else {
+        // Pause timer when idle
+        _refreshTimer?.cancel();
+        _refreshTimer = null;
+      }
     }
   }
 
   void _startAutoRefreshTimer() {
     _refreshTimer?.cancel();
-    // Auto-refresh banner ad every 50 seconds (compliant with 45-60s interval requirement)
     _refreshTimer = Timer.periodic(const Duration(seconds: 50), (timer) {
       if (mounted) {
         setState(() {
@@ -93,7 +99,7 @@ class _BottomBannerAdWidgetState extends State<BottomBannerAdWidget> {
           const SizedBox(width: 10),
           Expanded(
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
+              duration: const Duration(milliseconds: 300),
               child: Text(
                 _adCampaigns[_adImpressionIndex],
                 key: ValueKey<int>(_adImpressionIndex),

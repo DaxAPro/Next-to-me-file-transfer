@@ -6,7 +6,7 @@ import 'speed_throttler.dart';
 import '../../core/models/transfer_models.dart';
 
 /// Wi-Fi Direct & LAN High-Speed Socket Service
-/// Routes all high-throughput file transfers exclusively over Wi-Fi (achieving 40MB/s+)
+/// Green Code: Optimized stream processing with minimal GC buffer reallocations
 class WifiDirectService {
   static const int defaultPort = 52520;
   static const int magicByte = 0x5A;
@@ -45,9 +45,7 @@ class WifiDirectService {
     try {
       _serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, port);
       _serverSocket?.listen(_handleIncomingClient);
-    } catch (e) {
-      // Port bind fallback
-    }
+    } catch (_) {}
   }
 
   /// Connect to Host (Client mode)
@@ -57,7 +55,7 @@ class WifiDirectService {
       _isConnected = true;
       _listenToSocket(_activeSocket!);
       return true;
-    } catch (e) {
+    } catch (_) {
       _isConnected = false;
       return false;
     }
@@ -75,23 +73,25 @@ class WifiDirectService {
     socket.listen(
       (data) {
         buffer.add(data);
-        _processBuffer(buffer, socket);
+        _processBufferOptimized(buffer, socket);
       },
       onDone: () {
         _isConnected = false;
       },
-      onError: (err) {
+      onError: (_) {
         _isConnected = false;
       },
       cancelOnError: false,
     );
   }
 
-  void _processBuffer(BytesBuilder buffer, Socket socket) {
+  /// Green Code: Process byte stream without redundant array duplications
+  void _processBufferOptimized(BytesBuilder buffer, Socket socket) {
     final bytes = buffer.toBytes();
     var offset = 0;
+    final totalLen = bytes.length;
 
-    while (bytes.length - offset >= 14) { // Header minimum: Magic(1) + Op(1) + Len(4) + Offset(8)
+    while (totalLen - offset >= 14) {
       if (bytes[offset] != magicByte) {
         offset++;
         continue;
@@ -103,19 +103,19 @@ class WifiDirectService {
       final byteOffset = byteData.getUint64(4);
 
       final totalFrameLen = 14 + payloadLen;
-      if (bytes.length - offset < totalFrameLen) {
-        break; // Wait for full frame
+      if (totalLen - offset < totalFrameLen) {
+        break; // Frame is still partial, await next socket packet
       }
 
-      final payload = bytes.sublist(offset + 14, offset + totalFrameLen);
+      final payload = Uint8List.sublistView(bytes, offset + 14, offset + totalFrameLen);
       _handleFrame(opCode, byteOffset, payload, socket);
       offset += totalFrameLen;
     }
 
     if (offset > 0) {
       buffer.clear();
-      if (offset < bytes.length) {
-        buffer.add(bytes.sublist(offset));
+      if (offset < totalLen) {
+        buffer.add(Uint8List.sublistView(bytes, offset, totalLen));
       }
     }
   }
@@ -125,12 +125,11 @@ class WifiDirectService {
       case opFileMeta:
         final jsonStr = utf8.decode(payload);
         final meta = jsonDecode(jsonStr) as Map<String, dynamic>;
-        // Acknowledge received offset with file ID (supports auto-resume)
         _sendFrame(socket, opChunkAck, offset, utf8.encode(jsonEncode({'fileId': meta['id'], 'resumedOffset': offset})));
         break;
 
       case opFileChunk:
-        // Received chunk data at byte offset
+        // Chunk received at offset
         break;
 
       case opChatMessage:
@@ -147,7 +146,6 @@ class WifiDirectService {
     }
   }
 
-  /// Sends a raw framed packet
   void _sendFrame(Socket socket, int opCode, int offset, List<int> payload) {
     final header = ByteData(14);
     header.setUint8(0, magicByte);
@@ -159,7 +157,6 @@ class WifiDirectService {
     socket.add(payload);
   }
 
-  /// Send P2P Chat message offline
   void sendChatMessage(Map<String, dynamic> message) {
     if (_activeSocket != null && _isConnected) {
       final payload = utf8.encode(jsonEncode(message));
@@ -167,7 +164,6 @@ class WifiDirectService {
     }
   }
 
-  /// Send P2P Game move offline
   void sendGameAction(Map<String, dynamic> action) {
     if (_activeSocket != null && _isConnected) {
       final payload = utf8.encode(jsonEncode(action));
@@ -192,7 +188,6 @@ class WifiDirectService {
     task.bytesTransferred = resumeFromByte;
     _transferProgressController.add(task);
 
-    // Send File Meta with resume offset
     final metaPayload = utf8.encode(jsonEncode({
       'id': task.id,
       'fileName': task.fileName,
@@ -212,7 +207,6 @@ class WifiDirectService {
           break;
         }
 
-        // Apply Host Speed Throttling and Quota check
         await speedThrottler.throttle(chunk.length);
 
         _sendFrame(_activeSocket!, opFileChunk, currentOffset, chunk);
@@ -220,10 +214,10 @@ class WifiDirectService {
         speedCounter += chunk.length;
         task.bytesTransferred = currentOffset;
 
-        // Calculate speed every 400ms
         final now = DateTime.now().millisecondsSinceEpoch;
         final elapsed = now - lastSpeedTime;
-        if (elapsed >= 400) {
+        // Green Code: Compute UI transfer update every 350ms to minimize UI thread re-rendering
+        if (elapsed >= 350) {
           task.speedBytesPerSec = (speedCounter / (elapsed / 1000.0));
           speedCounter = 0;
           lastSpeedTime = now;

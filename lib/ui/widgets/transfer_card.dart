@@ -36,7 +36,7 @@ class TransferCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _getCategoryColor(task.category).withOpacity(0.15),
+                    color: _getCategoryColor(task.category).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -78,9 +78,9 @@ class TransferCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentGreen.withOpacity(0.15),
+                      color: AppTheme.accentGreen.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppTheme.accentGreen.withOpacity(0.4)),
+                      border: Border.all(color: AppTheme.accentGreen.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -103,7 +103,7 @@ class TransferCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentAmber.withOpacity(0.2),
+                      color: AppTheme.accentAmber.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
@@ -149,7 +149,6 @@ class TransferCard extends StatelessWidget {
 
                 Row(
                   children: [
-                    // Stream While Downloading Feature
                     if (task.checkStreamReady() && !isCompleted)
                       TextButton.icon(
                         onPressed: onStreamPlay,
@@ -164,7 +163,6 @@ class TransferCard extends StatelessWidget {
                         ),
                       ),
 
-                    // Pause / Resume
                     if (!isCompleted)
                       IconButton(
                         icon: Icon(

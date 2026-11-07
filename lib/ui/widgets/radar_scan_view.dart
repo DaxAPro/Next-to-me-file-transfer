@@ -6,12 +6,14 @@ import '../theme/app_theme.dart';
 class RadarScanView extends StatefulWidget {
   final List<DevicePeer> peers;
   final bool isScanning;
+  final bool isEcoMode;
   final Function(DevicePeer) onPeerSelected;
 
   const RadarScanView({
     super.key,
     required this.peers,
     required this.isScanning,
+    this.isEcoMode = false,
     required this.onPeerSelected,
   });
 
@@ -29,7 +31,28 @@ class _RadarScanViewState extends State<RadarScanView>
     _rotationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3000),
-    )..repeat();
+    );
+    // Green Code: Only run rotation animation if actively scanning and not in Eco Mode
+    if (widget.isScanning && !widget.isEcoMode) {
+      _rotationController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant RadarScanView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Green Code: Stop animation immediately when scanning stops or Eco Mode turns on
+    if (widget.isScanning != oldWidget.isScanning || widget.isEcoMode != oldWidget.isEcoMode) {
+      if (widget.isScanning && !widget.isEcoMode) {
+        if (!_rotationController.isAnimating) {
+          _rotationController.repeat();
+        }
+      } else {
+        if (_rotationController.isAnimating) {
+          _rotationController.stop();
+        }
+      }
+    }
   }
 
   @override
@@ -57,8 +80,8 @@ class _RadarScanViewState extends State<RadarScanView>
                   painter: _RadarGridPainter(),
                 ),
 
-                // Rotating Radar Sweep Beam
-                if (widget.isScanning)
+                // Rotating Radar Sweep Beam (Halted when not scanning to conserve GPU)
+                if (widget.isScanning && !widget.isEcoMode)
                   AnimatedBuilder(
                     animation: _rotationController,
                     builder: (context, child) {
@@ -83,7 +106,7 @@ class _RadarScanViewState extends State<RadarScanView>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primaryNeon.withOpacity(0.5),
+                        color: AppTheme.primaryNeon.withValues(alpha: 0.5),
                         blurRadius: 16,
                         spreadRadius: 2,
                       ),
@@ -139,7 +162,7 @@ class _RadarScanViewState extends State<RadarScanView>
                                     color: (peer.isConnected
                                             ? AppTheme.accentGreen
                                             : AppTheme.primaryNeon)
-                                        .withOpacity(0.4),
+                                        .withValues(alpha: 0.4),
                                     blurRadius: 10,
                                     spreadRadius: 1,
                                   ),
@@ -155,7 +178,7 @@ class _RadarScanViewState extends State<RadarScanView>
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
+                                color: Colors.black.withValues(alpha: 0.7),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -203,7 +226,7 @@ class _RadarGridPainter extends CustomPainter {
     final maxRadius = size.width / 2;
 
     final ringPaint = Paint()
-      ..color = AppTheme.cardBorder.withOpacity(0.6)
+      ..color = AppTheme.cardBorder.withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -214,7 +237,7 @@ class _RadarGridPainter extends CustomPainter {
 
     // Crosshairs
     final linePaint = Paint()
-      ..color = AppTheme.cardBorder.withOpacity(0.4)
+      ..color = AppTheme.cardBorder.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -237,8 +260,8 @@ class _RadarBeamPainter extends CustomPainter {
       startAngle: 0.0,
       endAngle: pi / 2,
       colors: [
-        AppTheme.primaryNeon.withOpacity(0.0),
-        AppTheme.primaryNeon.withOpacity(0.35),
+        AppTheme.primaryNeon.withValues(alpha: 0.0),
+        AppTheme.primaryNeon.withValues(alpha: 0.35),
       ],
     );
 
@@ -251,7 +274,7 @@ class _RadarBeamPainter extends CustomPainter {
 
     // Leading edge beam line
     final edgePaint = Paint()
-      ..color = AppTheme.primaryNeon.withOpacity(0.9)
+      ..color = AppTheme.primaryNeon.withValues(alpha: 0.9)
       ..strokeWidth = 2.0;
 
     canvas.drawLine(

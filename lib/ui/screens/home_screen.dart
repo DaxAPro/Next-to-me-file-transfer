@@ -25,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto start discovery
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkPermissionsAndStartScan();
     });
@@ -158,11 +157,11 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.cardDark,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(Icons.play_circle_fill, color: AppTheme.primaryNeon),
-            const SizedBox(width: 8),
-            const Text('Stream While Downloading', style: TextStyle(fontSize: 16)),
+            Icon(Icons.play_circle_fill, color: AppTheme.primaryNeon),
+            SizedBox(width: 8),
+            Text('Stream While Downloading', style: TextStyle(fontSize: 16)),
           ],
         ),
         content: Column(
@@ -180,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.primaryNeon.withOpacity(0.4)),
+                border: Border.all(color: AppTheme.primaryNeon.withValues(alpha: 0.4)),
               ),
               child: const Center(
                 child: Column(
@@ -220,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppTheme.primaryNeon.withOpacity(0.15),
+                color: AppTheme.primaryNeon.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.offline_bolt, color: AppTheme.primaryNeon, size: 22),
@@ -230,6 +229,27 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
+          // Green Code: Eco Mode Toggle (Saves Battery by throttling polling and stopping non-essential animations)
+          IconButton(
+            icon: Icon(
+              Icons.eco_rounded,
+              color: cm.isEcoMode ? AppTheme.accentGreen : AppTheme.textMuted,
+            ),
+            tooltip: cm.isEcoMode ? 'Eco Mode: Active (Power Saver)' : 'Eco Mode: Off',
+            onPressed: () {
+              cm.toggleEcoMode();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(cm.isEcoMode
+                      ? '🌿 Eco Mode Enabled: Battery saver active, animations paused.'
+                      : '⚡ Eco Mode Disabled: Full performance active.'),
+                  duration: const Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+          ),
+
           // Host Limits Badge / Button
           IconButton(
             icon: Icon(
@@ -273,11 +293,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 8),
 
-                // Animated Radar Scanner View
+                // Animated Radar Scanner View (Green Code: stopped when not scanning or in Eco mode)
                 RadarScanView(
                   peers: cm.discoveredPeers,
                   isScanning: cm.handshakePhase == HandshakePhase.discoveringBle ||
                       cm.handshakePhase == HandshakePhase.idle,
+                  isEcoMode: cm.isEcoMode,
                   onPeerSelected: _handlePeerTap,
                 ),
 
@@ -356,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Center(
                       child: Column(
                         children: [
-                          Icon(Icons.radar, size: 40, color: AppTheme.textMuted.withOpacity(0.5)),
+                          Icon(Icons.radar, size: 40, color: AppTheme.textMuted.withValues(alpha: 0.5)),
                           const SizedBox(height: 8),
                           const Text(
                             'Scanning for nearby devices...',
