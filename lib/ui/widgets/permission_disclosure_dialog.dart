@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../../core/theme/cyber_colors.dart';
+import '../common_widgets/custom_cyber_icons.dart';
 
 class PermissionDisclosureDialog extends StatelessWidget {
   final VoidCallback onAccepted;
@@ -9,10 +10,10 @@ class PermissionDisclosureDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: AppTheme.cardDark,
+      backgroundColor: CyberColors.oledBlack,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: AppTheme.cardBorder),
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: CyberColors.borderOutline),
       ),
       child: Padding(
         padding: const EdgeInsets.all(22),
@@ -26,18 +27,18 @@ class PermissionDisclosureDialog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryNeon.withValues(alpha: 0.15),
+                    color: CyberColors.electricCyan.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.security, color: AppTheme.primaryNeon, size: 24),
+                  child: const CyberIcon(type: CyberIconType.shield, color: CyberColors.electricCyan, size: 22),
                 ),
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
                     'Prominent Permission Disclosure',
                     style: TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontSize: 16,
+                      color: CyberColors.textPrimary,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -53,30 +54,37 @@ class PermissionDisclosureDialog extends StatelessWidget {
               '• All file transfers are 100% direct and offline.\n'
               '• Storage access is used exclusively to categorize and store files sent or received by you.',
               style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontSize: 13,
+                color: CyberColors.textSecondary,
+                fontSize: 12,
                 height: 1.45,
               ),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 24),
 
-            // Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: AppTheme.textMuted)),
+            // Agree & Continue button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  onAccepted();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: CyberColors.electricCyan,
+                  foregroundColor: CyberColors.oledBlack,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onAccepted();
-                  },
-                  child: const Text('I Understand & Agree'),
+                child: const Text(
+                  'Accept & Continue',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ],
+              ),
             ),
           ],
         ),

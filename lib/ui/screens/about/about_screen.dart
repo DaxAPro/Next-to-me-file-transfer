@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../theme/app_theme.dart';
+import '../../../core/theme/cyber_colors.dart';
+import '../../common_widgets/cyber_avatar.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
+      backgroundColor: CyberColors.oledBlack,
       appBar: AppBar(
         title: const Text('About'),
+        backgroundColor: CyberColors.darkSurface,
+        elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -19,25 +21,16 @@ class AboutScreen extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.cyan),
-                  ),
-                  child: const Icon(Icons.bolt, color: AppTheme.cyan, size: 36),
-                ),
+                const CyberAvatar(size: 64, showStatusBadge: false),
                 const SizedBox(height: 12),
-                Text(
+                const Text(
                   AppConstants.appName,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: CyberColors.textPrimary),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                const Text(
                   AppConstants.appVersion,
-                  style: const TextStyle(fontSize: 12, color: AppTheme.cyan, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 12, color: CyberColors.electricCyan, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -47,14 +40,14 @@ class AboutScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+              color: CyberColors.darkSurface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+              border: Border.all(color: CyberColors.borderOutline),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Architecture & Tech Stack', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text('Architecture & Tech Stack', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: CyberColors.electricCyan)),
                 const SizedBox(height: 8),
                 _buildTechRow('UI Framework', 'Flutter (Android, iOS, PC)'),
                 _buildTechRow('High-Speed Channel', '5GHz Wi-Fi Direct (40MB/s+)'),
@@ -69,18 +62,18 @@ class AboutScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+              color: CyberColors.darkSurface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+              border: Border.all(color: CyberColors.borderOutline),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Developer Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text('Developer Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: CyberColors.techEmerald)),
                 const SizedBox(height: 8),
-                _buildTechRow('Lead Developer', 'DaxAPro'),
+                _buildTechRow('Lead Engineer', 'DaxAPro'),
                 _buildTechRow('Repository', 'github.com/DaxAPro/Next-to-me-file-transfer'),
-                _buildTechRow('License', 'Open Source (MIT)'),
+                _buildTechRow('License', 'MIT Open Source'),
               ],
             ),
           ),
@@ -95,11 +88,11 @@ class AboutScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.darkTextSecondary)),
+          Text(label, style: const TextStyle(fontSize: 11, color: CyberColors.textSecondary)),
           Flexible(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: CyberColors.textPrimary),
               overflow: TextOverflow.ellipsis,
             ),
           ),

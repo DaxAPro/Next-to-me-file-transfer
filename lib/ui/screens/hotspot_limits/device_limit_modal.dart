@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/device_peer.dart';
-import '../../theme/app_theme.dart';
+import '../../../core/theme/cyber_colors.dart';
+import 'widgets/interactive_speedometer_gauge.dart';
 
+/// Modal for Configuring Per-Device Speed Limit & Quota
 class DeviceLimitModal extends StatefulWidget {
   final DevicePeer peer;
   final Function(int maxSpeedBytes, int maxQuotaBytes) onSave;
@@ -17,8 +19,8 @@ class DeviceLimitModal extends StatefulWidget {
 }
 
 class _DeviceLimitModalState extends State<DeviceLimitModal> {
-  late double _speedMb;   // 0 = unlimited, 1, 2, or slider (1-50)
-  late double _quotaMb;   // 0 = unlimited, 250, 1024, or custom (100-10240)
+  late double _speedMb; // 0 = unlimited, 1-50
+  late double _quotaMb; // 0 = unlimited, 250, 1024, etc.
 
   @override
   void initState() {
@@ -29,159 +31,168 @@ class _DeviceLimitModalState extends State<DeviceLimitModal> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+        color: CyberColors.oledBlack,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+        border: Border.all(color: CyberColors.borderOutline),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Limits for ${widget.peer.name}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Application Stream-Level Socket Pacing',
-                    style: TextStyle(fontSize: 11, color: AppTheme.cyan),
-                  ),
-                ],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Drag handle
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: CyberColors.borderOutline,
+                borderRadius: BorderRadius.circular(2),
               ),
-              IconButton(
-                icon: const Icon(Icons.close, size: 20),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 14),
 
-          // 1. Speed Throttling Options
-          const Text('Max Speed Throttling', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _buildChoiceChip('Unlimited', _speedMb == 0, () => setState(() => _speedMb = 0)),
-              const SizedBox(width: 6),
-              _buildChoiceChip('1 MB/s', _speedMb == 1.0, () => setState(() => _speedMb = 1.0)),
-              const SizedBox(width: 6),
-              _buildChoiceChip('2 MB/s', _speedMb == 2.0, () => setState(() => _speedMb = 2.0)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Text('Custom:', style: TextStyle(fontSize: 11)),
-              Expanded(
-                child: Slider(
-                  value: _speedMb.clamp(0.0, 50.0),
-                  min: 0.0,
-                  max: 50.0,
-                  divisions: 50,
-                  activeColor: AppTheme.cyan,
-                  label: _speedMb == 0 ? 'Unlimited' : '${_speedMb.toInt()} MB/s',
-                  onChanged: (val) => setState(() => _speedMb = val),
+            // Header Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SPEED & QUOTA LIMITS',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                        color: CyberColors.electricCyan,
+                      ),
+                    ),
+                    Text(
+                      widget.peer.name,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: CyberColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20, color: CyberColors.textSecondary),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const Divider(color: CyberColors.borderOutline, height: 24),
+
+            // 1. Dynamic Speedometer Gauge
+            InteractiveSpeedometerGauge(
+              speedMb: _speedMb,
+              onSpeedChanged: (speed) {
+                setState(() => _speedMb = speed);
+              },
+            ),
+
+            const SizedBox(height: 20),
+            const Divider(color: CyberColors.borderOutline, height: 1),
+            const SizedBox(height: 16),
+
+            // 2. Data Quota Limit
+            Align(
+              alignment: Alignment.centerLeft,
+              child: const Text(
+                'DATA QUOTA LIMIT',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.8,
+                  color: CyberColors.textSecondary,
                 ),
               ),
-              Text(
-                _speedMb == 0 ? 'Unlimited' : '${_speedMb.toInt()} MB/s',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.cyan),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _buildQuotaChip('Unlimited', 0.0),
+                const SizedBox(width: 8),
+                _buildQuotaChip('250 MB', 250.0),
+                const SizedBox(width: 8),
+                _buildQuotaChip('1 GB', 1024.0),
+                const SizedBox(width: 8),
+                _buildQuotaChip('5 GB', 5120.0),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-          const SizedBox(height: 16),
-
-          // 2. Data Quota Limit
-          const Text('Data Quota Limit', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _buildChoiceChip('Unlimited', _quotaMb == 0, () => setState(() => _quotaMb = 0)),
-              const SizedBox(width: 6),
-              _buildChoiceChip('250 MB', _quotaMb == 250.0, () => setState(() => _quotaMb = 250.0)),
-              const SizedBox(width: 6),
-              _buildChoiceChip('1 GB', _quotaMb == 1024.0, () => setState(() => _quotaMb = 1024.0)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Text('Custom:', style: TextStyle(fontSize: 11)),
-              Expanded(
-                child: Slider(
-                  value: _quotaMb.clamp(0.0, 5120.0),
-                  min: 0.0,
-                  max: 5120.0,
-                  divisions: 20,
-                  activeColor: AppTheme.green,
-                  label: _quotaMb == 0 ? 'Unlimited' : '${(_quotaMb / 1024).toStringAsFixed(1)} GB',
-                  onChanged: (val) => setState(() => _quotaMb = val),
+            // Actions
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: CyberColors.textSecondary,
+                      side: const BorderSide(color: CyberColors.borderOutline),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
                 ),
-              ),
-              Text(
-                _quotaMb == 0 ? 'Unlimited' : '${(_quotaMb / 1024).toStringAsFixed(1)} GB',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.green),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Actions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () {
-                  final speedBytes = (_speedMb * 1024 * 1024).toInt();
-                  final quotaBytes = (_quotaMb * 1024 * 1024).toInt();
-                  widget.onSave(speedBytes, quotaBytes);
-                  Navigator.pop(context);
-                },
-                child: const Text('Apply Limits'),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final speedBytes = (_speedMb * 1024 * 1024).toInt();
+                      final quotaBytes = (_quotaMb * 1024 * 1024).toInt();
+                      widget.onSave(speedBytes, quotaBytes);
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: CyberColors.electricCyan,
+                      foregroundColor: CyberColors.oledBlack,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text(
+                      'Apply Limits',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildChoiceChip(String label, bool isSelected, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.cyan : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: isSelected ? AppTheme.cyan : AppTheme.darkBorder),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.black : null,
+  Widget _buildQuotaChip(String label, double quotaVal) {
+    final isSelected = _quotaMb == quotaVal;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _quotaMb = quotaVal),
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? CyberColors.techEmerald : CyberColors.darkSurface,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: isSelected ? CyberColors.techEmerald : CyberColors.borderOutline,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? CyberColors.oledBlack : CyberColors.textPrimary,
+            ),
           ),
         ),
       ),

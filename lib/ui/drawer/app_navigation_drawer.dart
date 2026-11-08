@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/cyber_colors.dart';
 import '../../services/connection/hybrid_connection_manager.dart';
-import '../theme/app_theme.dart';
-import '../screens/hotspot_limits/hotspot_limits_screen.dart';
-import '../screens/history/download_history_screen.dart';
-import '../screens/chat/offline_group_chat_screen.dart';
-import '../screens/settings/settings_screen.dart';
+import '../common_widgets/cyber_avatar.dart';
+import '../common_widgets/custom_cyber_icons.dart';
 import '../screens/about/about_screen.dart';
+import '../screens/chat/offline_group_chat_screen.dart';
+import '../screens/history/download_history_screen.dart';
+import '../screens/hotspot_limits/hotspot_limits_screen.dart';
 import '../screens/privacy/privacy_policy_screen.dart';
+import '../screens/settings/settings_screen.dart';
 
 enum DrawerItem {
   home,
@@ -31,19 +33,16 @@ class AppNavigationDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Drawer(
-      backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+      backgroundColor: CyberColors.oledBlack,
       elevation: 0,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: SafeArea(
         child: Column(
           children: [
-            // Drawer Header: Profile & Status
-            _buildDrawerHeader(context, isDark),
-            const Divider(),
+            // Drawer Header: Persona Avatar & Device Status
+            _buildDrawerHeader(),
+            const Divider(color: CyberColors.borderOutline, height: 1),
 
             // Ordered Menu Items
             Expanded(
@@ -52,19 +51,15 @@ class AppNavigationDrawer extends StatelessWidget {
                 children: [
                   // 1. Home / File Share
                   _buildNavItem(
-                    context,
-                    icon: Icons.swap_horiz_rounded,
+                    iconType: CyberIconType.wifiDirect,
                     title: 'Home / File Share',
                     isSelected: currentItem == DrawerItem.home,
-                    onTap: () {
-                      Navigator.pop(context); // Close drawer, return to Home
-                    },
+                    onTap: () => Navigator.pop(context),
                   ),
 
                   // 2. Hotspot Limits
                   _buildNavItem(
-                    context,
-                    icon: Icons.tune_rounded,
+                    iconType: CyberIconType.speedometer,
                     title: 'Hotspot Limits',
                     subtitle: connectionManager.hostLimitProfile.isSpeedThrottled
                         ? 'Throttled (${connectionManager.hostLimitProfile.formattedSpeedLimit})'
@@ -83,8 +78,7 @@ class AppNavigationDrawer extends StatelessWidget {
 
                   // 3. Download History
                   _buildNavItem(
-                    context,
-                    icon: Icons.history_rounded,
+                    iconType: CyberIconType.history,
                     title: 'Download History',
                     subtitle: '${connectionManager.activeTransfers.length} records',
                     isSelected: currentItem == DrawerItem.downloadHistory,
@@ -101,8 +95,7 @@ class AppNavigationDrawer extends StatelessWidget {
 
                   // 4. Offline Chat
                   _buildNavItem(
-                    context,
-                    icon: Icons.chat_bubble_outline_rounded,
+                    iconType: CyberIconType.chat,
                     title: 'Offline Chat',
                     subtitle: 'Wi-Fi P2P Group',
                     isSelected: currentItem == DrawerItem.offlineChat,
@@ -119,8 +112,7 @@ class AppNavigationDrawer extends StatelessWidget {
 
                   // 5. Settings
                   _buildNavItem(
-                    context,
-                    icon: Icons.settings_outlined,
+                    iconType: CyberIconType.eco,
                     title: 'Settings',
                     subtitle: 'Theme, Eco Mode & PIN',
                     isSelected: currentItem == DrawerItem.settings,
@@ -137,13 +129,12 @@ class AppNavigationDrawer extends StatelessWidget {
 
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Divider(),
+                    child: Divider(color: CyberColors.borderOutline, height: 1),
                   ),
 
                   // 6. About
                   _buildNavItem(
-                    context,
-                    icon: Icons.info_outline_rounded,
+                    iconType: CyberIconType.phone,
                     title: 'About',
                     isSelected: currentItem == DrawerItem.about,
                     onTap: () {
@@ -159,8 +150,7 @@ class AppNavigationDrawer extends StatelessWidget {
 
                   // 7. Privacy Policy
                   _buildNavItem(
-                    context,
-                    icon: Icons.shield_outlined,
+                    iconType: CyberIconType.shield,
                     title: 'Privacy Policy',
                     isSelected: currentItem == DrawerItem.privacyPolicy,
                     onTap: () {
@@ -180,30 +170,28 @@ class AppNavigationDrawer extends StatelessWidget {
             // 8. Footer: Version 1.0.0
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 border: Border(
-                  top: BorderSide(
-                    color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
-                  ),
+                  top: BorderSide(color: CyberColors.borderOutline),
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+                children: const [
                   Text(
                     AppConstants.appName,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                      color: CyberColors.textSecondary,
                     ),
                   ),
                   Text(
                     AppConstants.appVersion,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.cyan,
+                      color: CyberColors.electricCyan,
                     ),
                   ),
                 ],
@@ -215,23 +203,13 @@ class AppNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerHeader(BuildContext context, bool isDark) {
+  Widget _buildDrawerHeader() {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder,
-              ),
-            ),
-            child: const Icon(Icons.bolt, color: AppTheme.cyan, size: 26),
-          ),
+          // Distinct Flat 2D Digital Humanoid Persona Node
+          const CyberAvatar(size: 46, showStatusBadge: true),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -242,26 +220,29 @@ class AppNavigationDrawer extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
+                    color: CyberColors.textPrimary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Row(
                   children: [
                     Container(
                       width: 7,
                       height: 7,
                       decoration: BoxDecoration(
-                        color: connectionManager.isConnected ? AppTheme.green : AppTheme.cyan,
+                        color: connectionManager.isConnected
+                            ? CyberColors.techEmerald
+                            : CyberColors.electricCyan,
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 6),
                     Text(
                       connectionManager.isConnected ? 'Connected' : 'Ready to share',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
-                        color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                        color: CyberColors.textSecondary,
                       ),
                     ),
                   ],
@@ -274,17 +255,15 @@ class AppNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(
-    BuildContext context, {
-    required IconData icon,
+  Widget _buildNavItem({
+    required CyberIconType iconType,
     required String title,
     String? subtitle,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final selectedBg = isDark ? AppTheme.cyan.withValues(alpha: 0.12) : AppTheme.cyan.withValues(alpha: 0.15);
-    final selectedBorder = isDark ? AppTheme.cyan : const Color(0xFF00838F);
+    final selectedBg = CyberColors.electricCyan.withValues(alpha: 0.12);
+    final iconColor = isSelected ? CyberColors.electricCyan : CyberColors.textSecondary;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
@@ -292,35 +271,27 @@ class AppNavigationDrawer extends StatelessWidget {
         color: isSelected ? selectedBg : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isSelected ? selectedBorder : Colors.transparent,
+          color: isSelected ? CyberColors.electricCyan : Colors.transparent,
           width: 1,
         ),
       ),
       child: ListTile(
         dense: true,
-        leading: Icon(
-          icon,
-          size: 20,
-          color: isSelected
-              ? (isDark ? AppTheme.cyan : const Color(0xFF00838F))
-              : (isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
-        ),
+        leading: CyberIcon(type: iconType, size: 20, color: iconColor),
         title: Text(
           title,
           style: TextStyle(
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected
-                ? (isDark ? AppTheme.cyan : const Color(0xFF00838F))
-                : (isDark ? AppTheme.darkTextPrimary : AppTheme.lightTextPrimary),
+            color: isSelected ? CyberColors.electricCyan : CyberColors.textPrimary,
           ),
         ),
         subtitle: subtitle != null
             ? Text(
                 subtitle,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 10,
-                  color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                  color: CyberColors.textSecondary,
                 ),
               )
             : null,

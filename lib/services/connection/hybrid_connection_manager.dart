@@ -64,6 +64,11 @@ class HybridConnectionManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  void renameLocalDevice(String newName) {
+    localDeviceName = newName;
+    notifyListeners();
+  }
+
   void _initStreams() {
     _bleSub = _bleService.discoveredPeersStream.listen((peers) {
       if (_activeMode == ConnectionMode.directMode) {

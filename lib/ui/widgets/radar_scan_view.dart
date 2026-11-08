@@ -1,7 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../core/models/device_peer.dart';
-import '../theme/app_theme.dart';
+import '../../core/theme/cyber_colors.dart';
+import '../common_widgets/cyber_avatar.dart';
+import '../common_widgets/custom_cyber_icons.dart';
+import 'adaptive_radar_painter.dart';
 
 class RadarScanView extends StatefulWidget {
   final List<DevicePeer> peers;
@@ -22,35 +25,38 @@ class RadarScanView extends StatefulWidget {
 }
 
 class _RadarScanViewState extends State<RadarScanView>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _rotationController;
+  late AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
     _rotationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3000),
+      duration: const Duration(milliseconds: 3200),
     );
-    // Green Code: Only run rotation animation if actively scanning and not in Eco Mode
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+
     if (widget.isScanning && !widget.isEcoMode) {
       _rotationController.repeat();
+      _pulseController.repeat();
     }
   }
 
   @override
   void didUpdateWidget(covariant RadarScanView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Green Code: Stop animation immediately when scanning stops or Eco Mode turns on
     if (widget.isScanning != oldWidget.isScanning || widget.isEcoMode != oldWidget.isEcoMode) {
       if (widget.isScanning && !widget.isEcoMode) {
-        if (!_rotationController.isAnimating) {
-          _rotationController.repeat();
-        }
+        if (!_rotationController.isAnimating) _rotationController.repeat();
+        if (!_pulseController.isAnimating) _pulseController.repeat();
       } else {
-        if (_rotationController.isAnimating) {
-          _rotationController.stop();
-        }
+        if (_rotationController.isAnimating) _rotationController.stop();
+        if (_pulseController.isAnimating) _pulseController.stop();
       }
     }
   }
@@ -58,6 +64,7 @@ class _RadarScanViewState extends State<RadarScanView>
   @override
   void dispose() {
     _rotationController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -80,7 +87,7 @@ class _RadarScanViewState extends State<RadarScanView>
                   painter: _RadarGridPainter(),
                 ),
 
-                // Rotating Radar Sweep Beam (Halted when not scanning to conserve GPU)
+                // Rotating Radar Sweep Beam
                 if (widget.isScanning && !widget.isEcoMode)
                   AnimatedBuilder(
                     animation: _rotationController,
@@ -95,38 +102,15 @@ class _RadarScanViewState extends State<RadarScanView>
                     },
                   ),
 
-                // Center local device beacon
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const RadialGradient(
-                      colors: [AppTheme.primaryNeon, Color(0xFF0052CC)],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryNeon.withValues(alpha: 0.5),
-                        blurRadius: 16,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.wifi_tethering,
-                    color: Colors.black,
-                    size: 24,
-                  ),
-                ),
+                // Center local device identity node: Distinct Flat 2D Cyber Persona
+                const CyberAvatar(size: 48, showStatusBadge: true),
 
                 // Discovered Peer Nodes placed radially based on RSSI
                 ...widget.peers.asMap().entries.map((entry) {
                   final index = entry.key;
                   final peer = entry.value;
 
-                  // Compute angle around circle based on index
                   final angle = (index * (2 * pi / max(1, widget.peers.length))) - (pi / 2);
-                  // Distance based on RSSI: -40 dBm is close (0.35 r), -90 dBm is far (0.85 r)
                   final normalizedDistance = ((peer.rssi.abs() - 40) / 55.0).clamp(0.35, 0.85);
                   final radius = (size / 2) * normalizedDistance;
 
@@ -143,48 +127,65 @@ class _RadarScanViewState extends State<RadarScanView>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: peer.isConnected
-                                    ? AppTheme.accentGreen
-                                    : AppTheme.cardDark,
-                                border: Border.all(
-                                  color: peer.isConnected
-                                      ? AppTheme.accentGreen
-                                      : AppTheme.primaryNeon,
-                                  width: 2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: (peer.isConnected
-                                            ? AppTheme.accentGreen
-                                            : AppTheme.primaryNeon)
-                                        .withValues(alpha: 0.4),
-                                    blurRadius: 10,
-                                    spreadRadius: 1,
+                            // Node with Adaptive Pulse Wave
+                            SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  if (peer.isConnected && !widget.isEcoMode)
+                                    AnimatedBuilder(
+                                      animation: _pulseController,
+                                      builder: (context, child) {
+                                        return CustomPaint(
+                                          size: const Size(44, 44),
+                                          painter: DeviceAdaptivePulsePainter(
+                                            animationValue: _pulseController.value,
+                                            deviceType: peer.deviceType,
+                                            baseColor: CyberColors.techEmerald,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: CyberColors.darkSurface,
+                                      border: Border.all(
+                                        color: peer.isConnected
+                                            ? CyberColors.techEmerald
+                                            : CyberColors.electricCyan,
+                                        width: 1.8,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: CyberIcon(
+                                        type: _getPeerCyberIcon(peer.deviceType),
+                                        size: 18,
+                                        color: peer.isConnected
+                                            ? CyberColors.techEmerald
+                                            : CyberColors.electricCyan,
+                                      ),
+                                    ),
                                   ),
                                 ],
-                              ),
-                              child: Icon(
-                                _getPeerIcon(peer.deviceType),
-                                size: 18,
-                                color: peer.isConnected ? Colors.black : Colors.white,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.7),
+                                color: CyberColors.oledBlack.withValues(alpha: 0.85),
                                 borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: CyberColors.borderOutline, width: 0.8),
                               ),
                               child: Text(
                                 peer.name.split(' ').first,
                                 style: const TextStyle(
-                                  color: AppTheme.textPrimary,
+                                  color: CyberColors.textPrimary,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -205,16 +206,15 @@ class _RadarScanViewState extends State<RadarScanView>
     );
   }
 
-  IconData _getPeerIcon(DeviceType type) {
+  CyberIconType _getPeerCyberIcon(DeviceType type) {
     switch (type) {
-      case DeviceType.phone:
-        return Icons.phone_android;
-      case DeviceType.tablet:
-        return Icons.tablet_android;
       case DeviceType.pc:
-        return Icons.laptop;
+        return CyberIconType.pc;
+      case DeviceType.tablet:
+        return CyberIconType.tablet;
+      case DeviceType.phone:
       case DeviceType.unknown:
-        return Icons.devices;
+        return CyberIconType.phone;
     }
   }
 }
@@ -225,24 +225,23 @@ class _RadarGridPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = size.width / 2;
 
-    final ringPaint = Paint()
-      ..color = AppTheme.cardBorder.withValues(alpha: 0.6)
+    final circlePaint = Paint()
+      ..color = CyberColors.borderOutline
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
-    // 4 Concentric Radar Rings
-    for (int i = 1; i <= 4; i++) {
-      canvas.drawCircle(center, maxRadius * (i / 4.0), ringPaint);
-    }
+    // 3 concentric distance range rings
+    canvas.drawCircle(center, maxRadius * 0.35, circlePaint);
+    canvas.drawCircle(center, maxRadius * 0.65, circlePaint);
+    canvas.drawCircle(center, maxRadius - 2, circlePaint);
 
     // Crosshairs
-    final linePaint = Paint()
-      ..color = AppTheme.cardBorder.withValues(alpha: 0.4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+    final crosshairPaint = Paint()
+      ..color = CyberColors.borderOutline.withValues(alpha: 0.5)
+      ..strokeWidth = 0.8;
 
-    canvas.drawLine(Offset(center.dx, 0), Offset(center.dx, size.height), linePaint);
-    canvas.drawLine(Offset(0, center.dy), Offset(size.width, center.dy), linePaint);
+    canvas.drawLine(Offset(center.dx, 0), Offset(center.dx, size.height), crosshairPaint);
+    canvas.drawLine(Offset(0, center.dy), Offset(size.width, center.dy), crosshairPaint);
   }
 
   @override
@@ -255,35 +254,35 @@ class _RadarBeamPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // Flat Cyber sweep arc (45 degree sweep)
     final sweepGradient = SweepGradient(
       center: Alignment.center,
       startAngle: 0.0,
-      endAngle: pi / 2,
+      endAngle: pi / 4,
       colors: [
-        AppTheme.primaryNeon.withValues(alpha: 0.0),
-        AppTheme.primaryNeon.withValues(alpha: 0.35),
+        CyberColors.electricCyan.withValues(alpha: 0.0),
+        CyberColors.electricCyan.withValues(alpha: 0.25),
       ],
     );
 
-    final rect = Rect.fromCircle(center: center, radius: radius);
-    final paint = Paint()
+    final sweepPaint = Paint()
       ..shader = sweepGradient.createShader(rect)
       ..style = PaintingStyle.fill;
 
-    canvas.drawArc(rect, 0, pi / 2, true, paint);
+    canvas.drawArc(rect, 0, pi / 4, true, sweepPaint);
 
-    // Leading edge beam line
-    final edgePaint = Paint()
-      ..color = AppTheme.primaryNeon.withValues(alpha: 0.9)
-      ..strokeWidth = 2.0;
+    // Leading edge bright ray
+    final linePaint = Paint()
+      ..color = CyberColors.electricCyan
+      ..strokeWidth = 1.5;
 
-    canvas.drawLine(
-      center,
-      Offset(center.dx + radius * cos(pi / 2), center.dy + radius * sin(pi / 2)),
-      edgePaint,
-    );
+    final edgeX = center.dx + radius * cos(pi / 4);
+    final edgeY = center.dy + radius * sin(pi / 4);
+    canvas.drawLine(center, Offset(edgeX, edgeY), linePaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

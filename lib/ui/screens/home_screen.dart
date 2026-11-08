@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../core/models/device_peer.dart';
 import '../../core/models/transfer_models.dart';
+import '../../core/theme/cyber_colors.dart';
 import '../../services/connection/hybrid_connection_manager.dart';
+import '../common_widgets/cyber_avatar.dart';
+import '../common_widgets/custom_cyber_icons.dart';
 import '../drawer/app_navigation_drawer.dart';
-import '../theme/app_theme.dart';
-import '../widgets/radar_scan_view.dart';
-import '../widgets/peer_card.dart';
-import '../widgets/transfer_card.dart';
+import '../screens/hotspot_limits/device_limit_modal.dart';
 import '../widgets/bottom_banner_ad.dart';
+import '../widgets/peer_card.dart';
 import '../widgets/permission_disclosure_dialog.dart';
+import '../widgets/radar_scan_view.dart';
+import '../widgets/transfer_card.dart';
+import '../widgets/transfer_success_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   final HybridConnectionManager connectionManager;
@@ -56,10 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showQuickSendDialog(DevicePeer peer) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+      backgroundColor: CyberColors.oledBlack,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -71,26 +74,26 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.send_rounded, color: AppTheme.cyan),
+                const CyberIcon(type: CyberIconType.wifiDirect, color: CyberColors.electricCyan, size: 22),
                 const SizedBox(width: 10),
                 Text(
                   'Send File to ${peer.name}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: CyberColors.textPrimary),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Text(
+            const SizedBox(height: 10),
+            const Text(
               'Select a sample file to initiate high-speed 5GHz socket stream with stream-while-downloading:',
-              style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+              style: TextStyle(fontSize: 12, color: CyberColors.textSecondary),
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.movie_outlined, color: AppTheme.red, size: 28),
-              title: const Text('4K_Nature_Documentary.mp4 (450 MB)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              subtitle: const Text('Supports 5% buffer streaming preview', style: TextStyle(fontSize: 11)),
+              leading: const Icon(Icons.movie_outlined, color: CyberColors.dangerRed, size: 26),
+              title: const Text('4K_Nature_Documentary.mp4 (450 MB)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
+              subtitle: const Text('Supports 5% buffer streaming preview', style: TextStyle(fontSize: 11, color: CyberColors.textSecondary)),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              tileColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+              tileColor: CyberColors.darkSurface,
               onTap: () {
                 Navigator.pop(ctx);
                 widget.connectionManager.enqueueTransfer(
@@ -102,11 +105,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 8),
             ListTile(
-              leading: const Icon(Icons.android_outlined, color: AppTheme.green, size: 28),
-              title: const Text('AppInstaller_v2.0.apk (85 MB)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              subtitle: const Text('Auto-categorizes into /NextToMe/APKs', style: TextStyle(fontSize: 11)),
+              leading: const Icon(Icons.android_outlined, color: CyberColors.techEmerald, size: 26),
+              title: const Text('AppInstaller_v2.0.apk (85 MB)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
+              subtitle: const Text('Auto-categorizes into /NextToMe/APKs', style: TextStyle(fontSize: 11, color: CyberColors.textSecondary)),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              tileColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+              tileColor: CyberColors.darkSurface,
               onTap: () {
                 Navigator.pop(ctx);
                 widget.connectionManager.enqueueTransfer(
@@ -126,18 +129,23 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: CyberColors.oledBlack,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: CyberColors.borderOutline),
+        ),
         title: Row(
           children: const [
-            Icon(Icons.play_circle_fill, color: AppTheme.cyan),
+            Icon(Icons.play_circle_fill, color: CyberColors.electricCyan, size: 20),
             SizedBox(width: 8),
-            Text('Stream Preview', style: TextStyle(fontSize: 15)),
+            Text('Stream Preview', style: TextStyle(fontSize: 15, color: CyberColors.textPrimary)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Playing: ${task.fileName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            Text('Playing: ${task.fileName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: CyberColors.textPrimary)),
             const SizedBox(height: 12),
             Container(
               height: 110,
@@ -145,15 +153,15 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.cyan),
+                border: Border.all(color: CyberColors.electricCyan),
               ),
               child: const Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.live_tv, size: 32, color: AppTheme.cyan),
+                    Icon(Icons.live_tv, size: 32, color: CyberColors.electricCyan),
                     SizedBox(height: 6),
-                    Text('Direct HLS Loopback Active (5% threshold met)', style: TextStyle(fontSize: 10, color: AppTheme.green)),
+                    Text('Direct HLS Loopback Active (5% threshold met)', style: TextStyle(fontSize: 10, color: CyberColors.techEmerald)),
                   ],
                 ),
               ),
@@ -161,8 +169,42 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
-          ElevatedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(backgroundColor: CyberColors.electricCyan, foregroundColor: CyberColors.oledBlack),
+            child: const Text('Close'),
+          ),
         ],
+      ),
+    );
+  }
+
+  void _showSuccessCelebration(TransferTask task) {
+    showDialog(
+      context: context,
+      builder: (ctx) => TransferSuccessDialog(
+        fileName: task.fileName,
+        fileSize: '${(task.fileSize / (1024 * 1024)).toStringAsFixed(1)} MB',
+        onDismiss: () {},
+      ),
+    );
+  }
+
+  void _openLimitModal(DevicePeer peer) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DeviceLimitModal(
+        peer: peer,
+        onSave: (maxSpeedBytes, maxQuotaBytes) {
+          peer.speedLimitBytesPerSec = maxSpeedBytes;
+          peer.dataLimitBytes = maxQuotaBytes;
+          widget.connectionManager.updateHostLimits(
+            maxBytesPerSecond: maxSpeedBytes,
+            maxTotalQuotaBytes: maxQuotaBytes,
+          );
+        },
       ),
     );
   }
@@ -170,40 +212,33 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final cm = widget.connectionManager;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isTransferring = cm.activeTransfers.any((t) => t.status == TransferStatus.transferring);
 
     return Scaffold(
       key: _scaffoldKey,
-      // Side Navigation Drawer
+      backgroundColor: CyberColors.oledBlack,
       drawer: AppNavigationDrawer(
         connectionManager: cm,
         currentItem: DrawerItem.home,
       ),
       appBar: AppBar(
-        // Hamburger Menu (three lines top-left)
+        backgroundColor: CyberColors.darkSurface,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
+          icon: const Icon(Icons.menu_rounded, color: CyberColors.textPrimary),
           tooltip: 'Open Menu',
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: AppTheme.cyan.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Icon(Icons.bolt, color: AppTheme.cyan, size: 20),
-            ),
-            const SizedBox(width: 8),
-            const Text('NextToMe'),
+          children: const [
+            CyberAvatar(size: 26, showStatusBadge: false),
+            SizedBox(width: 10),
+            Text('NextToMe', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, color: CyberColors.electricCyan),
             tooltip: 'Rescan Nearby',
             onPressed: cm.startScanning,
           ),
@@ -218,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 8),
 
                 // Mode Selector Tabs (Direct vs Home)
-                _buildModeSelector(cm, isDark),
+                _buildModeSelector(cm),
 
                 if (cm.statusMessage != null)
                   Padding(
@@ -226,14 +261,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Center(
                       child: Text(
                         cm.statusMessage!,
-                        style: const TextStyle(color: AppTheme.cyan, fontSize: 11, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: CyberColors.electricCyan, fontSize: 11, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
 
                 const SizedBox(height: 8),
 
-                // Flat Radar Scanner
+                // Flat Radar Scanner with Adaptive Pulses and Cyber Persona
                 RadarScanView(
                   peers: cm.discoveredPeers,
                   isScanning: cm.handshakePhase == HandshakePhase.discoveringBle ||
@@ -253,21 +288,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         const Text(
                           'ACTIVE TRANSFERS',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: AppTheme.cyan),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: CyberColors.electricCyan),
                         ),
                         if (cm.hostLimitProfile.isSpeedThrottled)
                           Text(
                             'Throttled: ${cm.hostLimitProfile.formattedSpeedLimit}',
-                            style: const TextStyle(color: AppTheme.amber, fontSize: 11, fontWeight: FontWeight.bold),
+                            style: const TextStyle(color: CyberColors.warningAmber, fontSize: 11, fontWeight: FontWeight.bold),
                           ),
                       ],
                     ),
                   ),
-                  ...cm.activeTransfers.map((task) => TransferCard(
-                        task: task,
-                        onPause: () => cm.pauseTransfer(task.id),
-                        onResume: () => cm.resumeTransfer(task.id),
-                        onStreamPlay: () => _showStreamingPreviewDialog(task),
+                  ...cm.activeTransfers.map((task) => InkWell(
+                        onTap: task.status == TransferStatus.completed
+                            ? () => _showSuccessCelebration(task)
+                            : null,
+                        child: TransferCard(
+                          task: task,
+                          onPause: () => cm.pauseTransfer(task.id),
+                          onResume: () => cm.resumeTransfer(task.id),
+                          onStreamPlay: () => _showStreamingPreviewDialog(task),
+                        ),
                       )),
                 ],
 
@@ -283,23 +323,23 @@ class _HomeScreenState extends State<HomeScreen> {
                         cm.activeMode == ConnectionMode.directMode
                             ? 'NEARBY DEVICES (5GHz)'
                             : 'LAN DEVICES (ROUTER)',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: AppTheme.cyan),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: CyberColors.electricCyan),
                       ),
                       Text(
                         '${cm.discoveredPeers.length} found',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: CyberColors.textSecondary),
                       ),
                     ],
                   ),
                 ),
 
                 if (cm.discoveredPeers.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
                     child: Center(
                       child: Text(
                         'Scanning for nearby devices...',
-                        style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                        style: TextStyle(fontSize: 12, color: CyberColors.textSecondary),
                       ),
                     ),
                   )
@@ -307,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ...cm.discoveredPeers.map((peer) => PeerCard(
                         peer: peer,
                         onConnect: () => _handlePeerTap(peer),
-                        onConfigureLimits: () {},
+                        onConfigureLimits: () => _openLimitModal(peer),
                       )),
               ],
             ),
@@ -320,14 +360,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildModeSelector(HybridConnectionManager cm, bool isDark) {
+  Widget _buildModeSelector(HybridConnectionManager cm) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+        color: CyberColors.darkSurface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+        border: Border.all(color: CyberColors.borderOutline),
       ),
       child: Row(
         children: [
@@ -337,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: cm.activeMode == ConnectionMode.directMode ? AppTheme.cyan : Colors.transparent,
+                  color: cm.activeMode == ConnectionMode.directMode ? CyberColors.electricCyan : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -346,7 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: cm.activeMode == ConnectionMode.directMode ? Colors.black : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                      color: cm.activeMode == ConnectionMode.directMode ? CyberColors.oledBlack : CyberColors.textSecondary,
                     ),
                   ),
                 ),
@@ -359,7 +399,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: cm.activeMode == ConnectionMode.homeMode ? AppTheme.violet : Colors.transparent,
+                  color: cm.activeMode == ConnectionMode.homeMode ? CyberColors.cyberViolet : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -368,7 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: cm.activeMode == ConnectionMode.homeMode ? Colors.white : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                      color: cm.activeMode == ConnectionMode.homeMode ? Colors.white : CyberColors.textSecondary,
                     ),
                   ),
                 ),

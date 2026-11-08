@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/cyber_colors.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
-import '../../theme/app_theme.dart';
+import '../../common_widgets/custom_cyber_icons.dart';
 
 class SettingsScreen extends StatefulWidget {
   final HybridConnectionManager connectionManager;
@@ -17,12 +18,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final cm = widget.connectionManager;
 
     return Scaffold(
+      backgroundColor: CyberColors.oledBlack,
       appBar: AppBar(
         title: const Text('Settings'),
+        backgroundColor: CyberColors.darkSurface,
+        elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -32,25 +35,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+              color: CyberColors.darkSurface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+              border: Border.all(color: CyberColors.borderOutline),
             ),
             child: Row(
               children: [
-                const Icon(Icons.badge_outlined, color: AppTheme.cyan),
+                const CyberIcon(type: CyberIconType.phone, size: 22, color: CyberColors.electricCyan),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Device Nickname', style: TextStyle(fontSize: 11, color: AppTheme.darkTextSecondary)),
-                      Text(cm.localDeviceName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      const Text('Device Nickname', style: TextStyle(fontSize: 11, color: CyberColors.textSecondary)),
+                      Text(cm.localDeviceName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  icon: const Icon(Icons.edit_outlined, size: 20, color: CyberColors.textSecondary),
                   onPressed: () => _editDeviceName(context),
                 ),
               ],
@@ -62,30 +65,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('PERFORMANCE & GREEN CODE'),
           Container(
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+              color: CyberColors.darkSurface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+              border: Border.all(color: CyberColors.borderOutline),
             ),
             child: Column(
               children: [
                 SwitchListTile(
-                  title: const Text('🌿 Eco Mode (Battery Saver)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  subtitle: Text(
+                  title: const Text('🌿 Eco Mode (Battery Saver)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
+                  subtitle: const Text(
                     'Halts radar animations and throttles background polling to save battery.',
-                    style: TextStyle(fontSize: 11, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                    style: TextStyle(fontSize: 11, color: CyberColors.textSecondary),
                   ),
                   value: cm.isEcoMode,
-                  activeThumbColor: AppTheme.green,
+                  activeThumbColor: CyberColors.techEmerald,
                   onChanged: (val) {
                     cm.toggleEcoMode();
                     setState(() {});
                   },
                 ),
-                const Divider(),
-                ListTile(
-                  title: const Text('Zero-Copy Socket Transfer', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Kernel-level sendfile() enabled for high-speed file streaming.', style: TextStyle(fontSize: 11, color: AppTheme.cyan)),
-                  trailing: const Icon(Icons.check_circle_outline, color: AppTheme.green, size: 20),
+                const Divider(color: CyberColors.borderOutline, height: 1),
+                const ListTile(
+                  title: Text('Zero-Copy Socket Transfer', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
+                  subtitle: Text('Kernel-level sendfile() enabled for high-speed file streaming.', style: TextStyle(fontSize: 11, color: CyberColors.electricCyan)),
+                  trailing: Icon(Icons.check_circle_outline, color: CyberColors.techEmerald, size: 20),
                 ),
               ],
             ),
@@ -96,25 +99,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('SECURITY & CONNECTION ACCESS'),
           Container(
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+              color: CyberColors.darkSurface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+              border: Border.all(color: CyberColors.borderOutline),
             ),
-            child: Column(
-              children: [
-                SwitchListTile(
-                  title: const Text('4-Digit Connection PIN', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                  subtitle: Text(
-                    _isPinProtected ? 'Active PIN: $_pinCode' : 'Require PIN challenge before accepting incoming transfers.',
-                    style: TextStyle(fontSize: 11, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
-                  ),
-                  value: _isPinProtected,
-                  activeThumbColor: AppTheme.cyan,
-                  onChanged: (val) {
-                    setState(() => _isPinProtected = val);
-                  },
-                ),
-              ],
+            child: SwitchListTile(
+              title: const Text('4-Digit PIN Verification', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
+              subtitle: Text(
+                _isPinProtected ? 'Active (PIN: $_pinCode)' : 'Incoming transfers accept automatically',
+                style: const TextStyle(fontSize: 11, color: CyberColors.textSecondary),
+              ),
+              value: _isPinProtected,
+              activeThumbColor: CyberColors.electricCyan,
+              onChanged: (val) {
+                setState(() => _isPinProtected = val);
+              },
             ),
           ),
         ],
@@ -127,7 +126,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: AppTheme.cyan),
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.0,
+          color: CyberColors.electricCyan,
+        ),
       ),
     );
   }
@@ -137,22 +141,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Device Nickname'),
+        backgroundColor: CyberColors.oledBlack,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: CyberColors.borderOutline),
+        ),
+        title: const Text('Rename Device', style: TextStyle(color: CyberColors.textPrimary, fontSize: 15)),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: 'Enter name (e.g., Pixel 9 Pro)'),
+          style: const TextStyle(color: CyberColors.textPrimary),
+          decoration: const InputDecoration(
+            labelText: 'New Name',
+            labelStyle: TextStyle(color: CyberColors.electricCyan),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: CyberColors.electricCyan)),
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: CyberColors.textSecondary)),
+          ),
           ElevatedButton(
             onPressed: () {
               if (controller.text.trim().isNotEmpty) {
-                setState(() {
-                  widget.connectionManager.localDeviceName = controller.text.trim();
-                });
+                widget.connectionManager.renameLocalDevice(controller.text.trim());
+                setState(() {});
               }
               Navigator.pop(ctx);
             },
+            style: ElevatedButton.styleFrom(backgroundColor: CyberColors.electricCyan, foregroundColor: CyberColors.oledBlack),
             child: const Text('Save'),
           ),
         ],

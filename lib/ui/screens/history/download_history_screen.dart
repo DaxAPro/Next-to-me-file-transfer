@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/transfer_models.dart';
+import '../../../core/theme/cyber_colors.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
-import '../../theme/app_theme.dart';
+import '../../common_widgets/custom_cyber_icons.dart';
 
 class DownloadHistoryScreen extends StatefulWidget {
   final HybridConnectionManager connectionManager;
@@ -15,15 +16,17 @@ class DownloadHistoryScreen extends StatefulWidget {
 class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final transfers = widget.connectionManager.activeTransfers;
 
     return Scaffold(
+      backgroundColor: CyberColors.oledBlack,
       appBar: AppBar(
         title: const Text('Download History'),
+        backgroundColor: CyberColors.darkSurface,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_sweep_outlined),
+            icon: const Icon(Icons.delete_sweep_outlined, color: CyberColors.dangerRed),
             tooltip: 'Clear Cache & History',
             onPressed: () => _confirmClearHistory(context),
           ),
@@ -33,14 +36,17 @@ class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
           ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.folder_open_rounded, size: 48, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
-                  const SizedBox(height: 12),
-                  const Text('No transfer history yet.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
+                children: const [
+                  CyberIcon(type: CyberIconType.history, size: 48, color: CyberColors.textMuted),
+                  SizedBox(height: 14),
+                  Text(
+                    'No transfer history yet.',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: CyberColors.textPrimary),
+                  ),
+                  SizedBox(height: 4),
                   Text(
                     'Files sent or received over Wi-Fi will appear here.',
-                    style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                    style: TextStyle(fontSize: 12, color: CyberColors.textSecondary),
                   ),
                 ],
               ),
@@ -54,21 +60,22 @@ class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                    color: CyberColors.darkSurface,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                    border: Border.all(color: CyberColors.borderOutline),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+                          color: CyberColors.oledBlack,
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: CyberColors.borderOutline),
                         ),
                         child: Icon(
                           task.isIncoming ? Icons.download_rounded : Icons.upload_rounded,
-                          color: task.isIncoming ? AppTheme.green : AppTheme.cyan,
+                          color: task.isIncoming ? CyberColors.techEmerald : CyberColors.electricCyan,
                           size: 20,
                         ),
                       ),
@@ -79,16 +86,16 @@ class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
                           children: [
                             Text(
                               task.fileName,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: CyberColors.textPrimary),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '${_formatBytes(task.fileSize)} • ${task.targetSubdirectory}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 11,
-                                color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                                color: CyberColors.textSecondary,
                               ),
                             ),
                           ],
@@ -98,16 +105,22 @@ class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: task.status == TransferStatus.completed
-                              ? AppTheme.green.withValues(alpha: 0.15)
-                              : AppTheme.amber.withValues(alpha: 0.15),
+                              ? CyberColors.techEmerald.withValues(alpha: 0.15)
+                              : CyberColors.warningAmber.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: task.status == TransferStatus.completed
+                                ? CyberColors.techEmerald
+                                : CyberColors.warningAmber,
+                            width: 1,
+                          ),
                         ),
                         child: Text(
                           task.status.name.toUpperCase(),
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: task.status == TransferStatus.completed ? AppTheme.green : AppTheme.amber,
+                            color: task.status == TransferStatus.completed ? CyberColors.techEmerald : CyberColors.warningAmber,
                           ),
                         ),
                       ),
@@ -123,25 +136,33 @@ class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear History & Cache?'),
+        backgroundColor: CyberColors.oledBlack,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: CyberColors.borderOutline),
+        ),
+        title: const Text('Clear History & Cache?', style: TextStyle(color: CyberColors.textPrimary, fontSize: 15)),
         content: const Text(
           'This will remove transfer records and delete temporary stream playback chunks from device cache to free up memory.',
+          style: TextStyle(color: CyberColors.textSecondary, fontSize: 12),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: CyberColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              setState(() {
-                // In production, also purges SQLite history / cache directory
-              });
+              setState(() {});
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('History and streaming cache cleared.')),
               );
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: CyberColors.dangerRed,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Clear Now'),
           ),
         ],

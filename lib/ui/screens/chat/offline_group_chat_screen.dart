@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/models/chat_message.dart';
+import '../../../core/theme/cyber_colors.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
-import '../../theme/app_theme.dart';
+import '../../common_widgets/custom_cyber_icons.dart';
 
 class OfflineGroupChatScreen extends StatefulWidget {
   final HybridConnectionManager connectionManager;
@@ -21,18 +22,16 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-populate system greeting
     _messages.add(
       ChatMessage(
         id: 'init-1',
         senderId: 'sys',
         senderName: 'System',
-        content: 'Offline Wi-Fi Group Chat active. All messages route directly between connected devices without internet.',
+        content: 'Offline Wi-Fi Group Chat active. Messages route directly between connected peers without internet.',
         type: ChatMessageType.system,
       ),
     );
 
-    // Listen to real incoming Wi-Fi frames
     widget.connectionManager.wifiDirectService.chatStream.listen((data) {
       if (!mounted || !_isChatEnabled) return;
       setState(() {
@@ -61,7 +60,6 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
       if (customContent == null) _msgController.clear();
     });
 
-    // Send over socket channel to connected peers
     widget.connectionManager.wifiDirectService.sendChatMessage(msg.toJson());
   }
 
@@ -77,6 +75,28 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
     }
   }
 
+  void _sendImageAttachment() {
+    _sendMessage(
+      customContent: '📷 [Shared Photo: IMG_20261108_P2P.jpg (2.4 MB)]',
+      type: ChatMessageType.image,
+    );
+  }
+
+  void _clearConversation() {
+    setState(() {
+      _messages.clear();
+      _messages.add(
+        ChatMessage(
+          id: 'cleared-${DateTime.now().millisecondsSinceEpoch}',
+          senderId: 'sys',
+          senderName: 'System',
+          content: 'Chat conversation cleared.',
+          type: ChatMessageType.system,
+        ),
+      );
+    });
+  }
+
   @override
   void dispose() {
     _msgController.dispose();
@@ -85,48 +105,80 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
+      backgroundColor: CyberColors.oledBlack,
       appBar: AppBar(
         title: const Text('Offline Group Chat'),
+        backgroundColor: CyberColors.darkSurface,
+        elevation: 0,
         actions: [
-          // Clipboard Sync action
           IconButton(
-            icon: const Icon(Icons.paste_rounded),
+            icon: const Icon(Icons.paste_rounded, color: CyberColors.electricCyan),
             tooltip: 'Paste & Sync Universal Clipboard',
             onPressed: _syncClipboardToChat,
           ),
-          // Enable/disable toggle
-          Switch(
-            value: _isChatEnabled,
-            activeThumbColor: AppTheme.cyan,
-            onChanged: (val) {
-              setState(() => _isChatEnabled = val);
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded, color: CyberColors.textPrimary),
+            color: CyberColors.darkSurface,
+            onSelected: (val) {
+              if (val == 'clear') {
+                _clearConversation();
+              } else if (val == 'toggle') {
+                setState(() => _isChatEnabled = !_isChatEnabled);
+              }
             },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'clear',
+                child: Row(
+                  children: const [
+                    Icon(Icons.delete_sweep_outlined, size: 18, color: CyberColors.dangerRed),
+                    SizedBox(width: 8),
+                    Text('Clear Conversation', style: TextStyle(color: CyberColors.textPrimary, fontSize: 13)),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'toggle',
+                child: Row(
+                  children: [
+                    Icon(
+                      _isChatEnabled ? Icons.notifications_off_outlined : Icons.notifications_active_outlined,
+                      size: 18,
+                      color: CyberColors.electricCyan,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _isChatEnabled ? 'Disable Chat' : 'Enable Chat',
+                      style: const TextStyle(color: CyberColors.textPrimary, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
       body: Column(
         children: [
-          // Connected Peer Bar
+          // Peer status strip
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+            color: CyberColors.darkSurface,
             child: Row(
               children: [
-                const Icon(Icons.wifi_tethering, size: 16, color: AppTheme.green),
+                const CyberIcon(type: CyberIconType.wifiDirect, size: 16, color: CyberColors.techEmerald),
                 const SizedBox(width: 8),
                 Text(
-                  'Connected to ${widget.connectionManager.discoveredPeers.length} peer(s) via Wi-Fi',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                  'Connected to ${widget.connectionManager.discoveredPeers.length} peer(s) via Wi-Fi P2P',
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: CyberColors.textPrimary),
                 ),
               ],
             ),
           ),
-          const Divider(),
+          const Divider(color: CyberColors.borderOutline, height: 1),
 
-          // Chat Messages List
+          // Messages List
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -139,45 +191,70 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
                       margin: const EdgeInsets.symmetric(vertical: 6),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                        color: CyberColors.darkSurface,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                        border: Border.all(color: CyberColors.borderOutline),
                       ),
-                      child: Text(msg.content, style: const TextStyle(fontSize: 11, color: AppTheme.cyan), textAlign: TextAlign.center),
+                      child: Text(
+                        msg.content,
+                        style: const TextStyle(fontSize: 11, color: CyberColors.electricCyan),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   );
                 }
-                return _buildMessageBubble(msg, isDark);
+                return _buildMessageBubble(msg);
               },
             ),
           ),
 
-          // Message Input Bar
+          // Quick Emoji Bar
+          Container(
+            height: 38,
+            color: CyberColors.darkSurface,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: ['⚡', '🚀', '📁', '📡', '👍', '🔥', '❤️', '📱', '💻']
+                  .map(
+                    (emoji) => InkWell(
+                      onTap: _isChatEnabled ? () => _sendMessage(customContent: emoji) : null,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        child: Text(emoji, style: const TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+
+          // Input Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+            color: CyberColors.darkSurface,
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.content_paste_go, size: 20),
-                  tooltip: 'Sync Clipboard',
-                  onPressed: _syncClipboardToChat,
+                  icon: const Icon(Icons.attach_file_rounded, size: 20, color: CyberColors.textSecondary),
+                  tooltip: 'Attach Image / File',
+                  onPressed: _isChatEnabled ? _sendImageAttachment : null,
                 ),
                 Expanded(
                   child: TextField(
                     controller: _msgController,
                     enabled: _isChatEnabled,
-                    style: const TextStyle(fontSize: 13),
+                    style: const TextStyle(fontSize: 13, color: CyberColors.textPrimary),
                     decoration: InputDecoration(
                       hintText: _isChatEnabled ? 'Type offline message...' : 'Chat disabled',
-                      hintStyle: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                      hintStyle: const TextStyle(fontSize: 12, color: CyberColors.textMuted),
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       filled: true,
-                      fillColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+                      fillColor: CyberColors.oledBlack,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                        borderSide: const BorderSide(color: CyberColors.borderOutline),
                       ),
                     ),
                     onSubmitted: (_) => _sendMessage(),
@@ -185,7 +262,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.send_rounded, color: AppTheme.cyan),
+                  icon: const Icon(Icons.send_rounded, color: CyberColors.electricCyan),
                   onPressed: _isChatEnabled ? () => _sendMessage() : null,
                 ),
               ],
@@ -196,7 +273,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage msg, bool isDark) {
+  Widget _buildMessageBubble(ChatMessage msg) {
     return Align(
       alignment: msg.isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -204,12 +281,12 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         constraints: const BoxConstraints(maxWidth: 280),
         decoration: BoxDecoration(
-          color: msg.isMe
-              ? (isDark ? const Color(0xFF005662) : const Color(0xFFE0F7FA))
-              : (isDark ? AppTheme.darkSurface : AppTheme.lightSurface),
+          color: msg.isMe ? const Color(0xFF003840) : CyberColors.darkSurface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: msg.type == ChatMessageType.clipboard ? AppTheme.cyan : (isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+            color: msg.type == ChatMessageType.clipboard
+                ? CyberColors.electricCyan
+                : CyberColors.borderOutline,
           ),
         ),
         child: Column(
@@ -218,19 +295,19 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
             if (!msg.isMe)
               Text(
                 msg.senderName,
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.cyan),
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: CyberColors.electricCyan),
               ),
             if (msg.type == ChatMessageType.clipboard)
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
-                  Icon(Icons.copy_rounded, size: 12, color: AppTheme.cyan),
+                  Icon(Icons.copy_rounded, size: 12, color: CyberColors.electricCyan),
                   SizedBox(width: 4),
-                  Text('Universal Clipboard', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.cyan)),
+                  Text('Universal Clipboard', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: CyberColors.electricCyan)),
                 ],
               ),
             const SizedBox(height: 2),
-            Text(msg.content, style: const TextStyle(fontSize: 13)),
+            Text(msg.content, style: const TextStyle(fontSize: 13, color: CyberColors.textPrimary)),
           ],
         ),
       ),

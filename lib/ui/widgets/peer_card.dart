@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/models/device_peer.dart';
-import '../theme/app_theme.dart';
+import '../../core/theme/cyber_colors.dart';
+import '../common_widgets/custom_cyber_icons.dart';
 
 class PeerCard extends StatelessWidget {
   final DevicePeer peer;
@@ -16,155 +17,142 @@ class PeerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            // Device Avatar
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: peer.isConnected
-                    ? AppTheme.accentGreen.withValues(alpha: 0.15)
-                    : AppTheme.surfaceElevated,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: peer.isConnected ? AppTheme.accentGreen : AppTheme.cardBorder,
-                  width: 1.5,
-                ),
-              ),
-              child: Icon(
-                _getPeerIcon(peer.deviceType),
-                color: peer.isConnected ? AppTheme.accentGreen : AppTheme.primaryNeon,
-                size: 24,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: CyberColors.darkSurface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: CyberColors.borderOutline),
+      ),
+      child: Row(
+        children: [
+          // Device Avatar with CyberIcon
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: CyberColors.oledBlack,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: peer.isConnected ? CyberColors.techEmerald : CyberColors.electricCyan,
+                width: 1.5,
               ),
             ),
-            const SizedBox(width: 12),
+            child: Center(
+              child: CyberIcon(
+                type: _getPeerCyberIcon(peer.deviceType),
+                color: peer.isConnected ? CyberColors.techEmerald : CyberColors.electricCyan,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
 
-            // Peer info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          peer.name,
-                          style: const TextStyle(
-                            color: AppTheme.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      if (peer.supports5GHz)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryNeon.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            '5GHz',
-                            style: TextStyle(
-                              color: AppTheme.primaryNeon,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      if (peer.supportsZeroCopy) ...[
-                        const SizedBox(width: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: AppTheme.secondaryAccent.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'Zero-Copy',
-                            style: TextStyle(
-                              color: Color(0xFFB388FF),
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        '${peer.os} • ${peer.rssi} dBm',
+          // Peer info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        peer.name,
                         style: const TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 12,
+                          color: CyberColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      if (peer.speedLimitBytesPerSec > 0) ...[
-                        const SizedBox(width: 6),
-                        const Icon(Icons.speed, size: 12, color: AppTheme.accentAmber),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${(peer.speedLimitBytesPerSec / (1024 * 1024)).toStringAsFixed(0)}MB/s',
-                          style: const TextStyle(
-                            color: AppTheme.accentAmber,
-                            fontSize: 11,
+                    ),
+                    const SizedBox(width: 6),
+                    if (peer.supports5GHz)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: CyberColors.electricCyan.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: CyberColors.electricCyan.withValues(alpha: 0.3)),
+                        ),
+                        child: const Text(
+                          '5GHz',
+                          style: TextStyle(
+                            color: CyberColors.electricCyan,
+                            fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      '${peer.os} • ${peer.rssi} dBm',
+                      style: const TextStyle(
+                        color: CyberColors.textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                    if (peer.speedLimitBytesPerSec > 0) ...[
+                      const SizedBox(width: 6),
+                      const CyberIcon(type: CyberIconType.speedometer, size: 12, color: CyberColors.warningAmber),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${(peer.speedLimitBytesPerSec / (1024 * 1024)).toStringAsFixed(0)}MB/s',
+                        style: const TextStyle(
+                          color: CyberColors.warningAmber,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
+          ),
 
-            // Limit Config Button
-            IconButton(
-              icon: const Icon(Icons.tune, color: AppTheme.textSecondary, size: 20),
-              tooltip: 'Speed & Data Limits',
-              onPressed: onConfigureLimits,
-            ),
+          // Limit Config Button
+          IconButton(
+            icon: const Icon(Icons.tune_rounded, color: CyberColors.textSecondary, size: 20),
+            tooltip: 'Speed & Data Limits',
+            onPressed: onConfigureLimits,
+          ),
 
-            // Connect button
-            ElevatedButton(
-              onPressed: onConnect,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: peer.isConnected ? AppTheme.accentGreen : AppTheme.primaryNeon,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                minimumSize: const Size(80, 36),
-              ),
-              child: Text(
-                peer.isConnected ? 'Connected' : 'Send',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-              ),
+          // Connect button
+          ElevatedButton(
+            onPressed: onConnect,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: peer.isConnected ? CyberColors.techEmerald : CyberColors.electricCyan,
+              foregroundColor: CyberColors.oledBlack,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              minimumSize: const Size(72, 34),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
             ),
-          ],
-        ),
+            child: Text(
+              peer.isConnected ? 'Connected' : 'Send',
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  IconData _getPeerIcon(DeviceType type) {
+  CyberIconType _getPeerCyberIcon(DeviceType type) {
     switch (type) {
       case DeviceType.phone:
-        return Icons.smartphone;
+        return CyberIconType.phone;
       case DeviceType.tablet:
-        return Icons.tablet_mac;
+        return CyberIconType.tablet;
       case DeviceType.pc:
-        return Icons.computer;
+        return CyberIconType.pc;
       case DeviceType.unknown:
-        return Icons.devices;
+        return CyberIconType.phone;
     }
   }
 }

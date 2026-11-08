@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../../core/theme/cyber_colors.dart';
 
 /// Pinned Smart Banner Ad widget adhering strictly to Blueprint Section 6:
 /// - Pinned strictly to bottom edge of screen
@@ -42,7 +42,6 @@ class _BottomBannerAdWidgetState extends State<BottomBannerAdWidget> {
       if (widget.isTransferring) {
         _startAutoRefreshTimer();
       } else {
-        // Pause timer when idle
         _refreshTimer?.cancel();
         _refreshTimer = null;
       }
@@ -72,50 +71,58 @@ class _BottomBannerAdWidgetState extends State<BottomBannerAdWidget> {
       width: double.infinity,
       height: 52,
       decoration: const BoxDecoration(
-        color: Color(0xFF0F1522),
+        color: CyberColors.oledBlack,
         border: Border(
-          top: BorderSide(color: AppTheme.cardBorder, width: 1),
+          top: BorderSide(color: CyberColors.borderOutline, width: 1),
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
+          // "AD" Indicator Tag
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceElevated,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: AppTheme.cardBorder),
+              color: CyberColors.borderOutline,
+              borderRadius: BorderRadius.circular(3),
             ),
             child: const Text(
-              'Ad',
+              'AD',
               style: TextStyle(
-                color: AppTheme.textMuted,
-                fontSize: 10,
+                color: CyberColors.textSecondary,
+                fontSize: 9,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
+
+          // Sponsored text
           Expanded(
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 400),
               child: Text(
                 _adCampaigns[_adImpressionIndex],
                 key: ValueKey<int>(_adImpressionIndex),
                 style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 12,
+                  color: CyberColors.textPrimary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
-          const Icon(
-            Icons.verified_user_outlined,
-            size: 16,
-            color: AppTheme.textMuted,
+
+          // Green Code status indicator
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: widget.isTransferring ? CyberColors.techEmerald : CyberColors.textMuted,
+            ),
           ),
         ],
       ),

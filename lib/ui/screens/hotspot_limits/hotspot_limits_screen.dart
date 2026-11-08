@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/device_peer.dart';
+import '../../../core/theme/cyber_colors.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
-import '../../theme/app_theme.dart';
+import '../../common_widgets/custom_cyber_icons.dart';
 import 'device_limit_modal.dart';
+import 'widgets/live_bandwidth_card.dart';
 
 class HotspotLimitsScreen extends StatelessWidget {
   final HybridConnectionManager connectionManager;
@@ -11,12 +13,14 @@ class HotspotLimitsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final peers = connectionManager.discoveredPeers;
 
     return Scaffold(
+      backgroundColor: CyberColors.oledBlack,
       appBar: AppBar(
         title: const Text('Hotspot Limits'),
+        backgroundColor: CyberColors.darkSurface,
+        elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -25,14 +29,18 @@ class HotspotLimitsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+              color: CyberColors.darkSurface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+              border: Border.all(color: CyberColors.borderOutline),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.shield_outlined, color: AppTheme.cyan, size: 20),
+                const CyberIcon(
+                  type: CyberIconType.shield,
+                  color: CyberColors.electricCyan,
+                  size: 20,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -40,14 +48,18 @@ class HotspotLimitsScreen extends StatelessWidget {
                     children: [
                       const Text(
                         'Application Stream-Level Pacing',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: CyberColors.textPrimary,
+                        ),
                       ),
                       const SizedBox(height: 3),
-                      Text(
+                      const Text(
                         'Throttles socket transmission byte-rates and enforces transfer quotas per connected device without touching OS-level hotspot settings.',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                          color: CyberColors.textSecondary,
                         ),
                       ),
                     ],
@@ -58,9 +70,24 @@ class HotspotLimitsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
+          // Real-Time Bandwidth Dashboard Card
+          const LiveBandwidthCard(
+            deviceName: 'Wi-Fi Direct Active Peer',
+            currentSpeedMb: 1.8,
+            usedMb: 140.0,
+            totalQuotaMb: 1024.0,
+            isThrottled: false,
+          ),
+          const SizedBox(height: 16),
+
           const Text(
             'CONNECTED PEER DEVICES',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: AppTheme.cyan),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.0,
+              color: CyberColors.electricCyan,
+            ),
           ),
           const SizedBox(height: 8),
 
@@ -68,32 +95,37 @@ class HotspotLimitsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               alignment: Alignment.center,
-              child: Text(
+              decoration: BoxDecoration(
+                color: CyberColors.darkSurface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: CyberColors.borderOutline),
+              ),
+              child: const Text(
                 'No peer devices currently discovered.\nStart scanning or connect via Direct Mode.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary,
+                  color: CyberColors.textSecondary,
                 ),
               ),
             )
           else
-            ...peers.map((peer) => _buildPeerLimitTile(context, peer, isDark)),
+            ...peers.map((peer) => _buildPeerLimitTile(context, peer)),
         ],
       ),
     );
   }
 
-  Widget _buildPeerLimitTile(BuildContext context, DevicePeer peer, bool isDark) {
+  Widget _buildPeerLimitTile(BuildContext context, DevicePeer peer) {
     final limit = peer.limitProfile;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+        color: CyberColors.darkSurface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+        border: Border.all(color: CyberColors.borderOutline),
       ),
       child: Column(
         children: [
@@ -103,14 +135,18 @@ class HotspotLimitsScreen extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+                  color: CyberColors.oledBlack,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
+                  border: Border.all(color: CyberColors.borderOutline),
                 ),
-                child: Icon(
-                  peer.deviceType == DeviceType.pc ? Icons.laptop_mac : Icons.smartphone,
-                  size: 20,
-                  color: peer.isConnected ? AppTheme.green : AppTheme.cyan,
+                child: Center(
+                  child: CyberIcon(
+                    type: peer.deviceType == DeviceType.pc
+                        ? CyberIconType.pc
+                        : CyberIconType.phone,
+                    size: 20,
+                    color: peer.isConnected ? CyberColors.techEmerald : CyberColors.electricCyan,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -120,14 +156,20 @@ class HotspotLimitsScreen extends StatelessWidget {
                   children: [
                     Text(
                       peer.name,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: CyberColors.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Max Speed: ${limit.formattedSpeed} • Quota: ${limit.formattedQuota}',
                       style: TextStyle(
                         fontSize: 11,
-                        color: limit.isSpeedThrottled ? AppTheme.amber : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
+                        color: limit.isSpeedThrottled
+                            ? CyberColors.warningAmber
+                            : CyberColors.textSecondary,
                         fontWeight: limit.isSpeedThrottled ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
@@ -137,10 +179,13 @@ class HotspotLimitsScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () => _openLimitModal(context, peer),
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: CyberColors.electricCyan,
+                  foregroundColor: CyberColors.oledBlack,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   minimumSize: const Size(60, 32),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                 ),
-                child: const Text('Configure', style: TextStyle(fontSize: 11)),
+                child: const Text('Configure', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -151,9 +196,9 @@ class HotspotLimitsScreen extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: limit.quotaProgress,
                 minHeight: 4,
-                backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+                backgroundColor: CyberColors.oledBlack,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  limit.isQuotaExceeded ? AppTheme.red : AppTheme.green,
+                  limit.isQuotaExceeded ? CyberColors.dangerRed : CyberColors.techEmerald,
                 ),
               ),
             ),
