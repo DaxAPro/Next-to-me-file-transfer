@@ -16,10 +16,10 @@ class HotspotLimitsScreen extends StatelessWidget {
     final peers = connectionManager.discoveredPeers;
 
     return Scaffold(
-      backgroundColor: CyberColors.oledBlack,
+      backgroundColor: CyberColors.background(context),
       appBar: AppBar(
         title: const Text('Set Limits'),
-        backgroundColor: CyberColors.darkSurface,
+        backgroundColor: CyberColors.surface(context),
         elevation: 0,
       ),
       body: ListView(
@@ -29,9 +29,9 @@ class HotspotLimitsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: CyberColors.darkSurface,
+              color: CyberColors.surface(context),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: CyberColors.borderOutline),
+              border: Border.all(color: CyberColors.border(context)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,9 +123,9 @@ class HotspotLimitsScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: CyberColors.darkSurface,
+        color: CyberColors.surface(context),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CyberColors.borderOutline),
+        border: Border.all(color: CyberColors.border(context)),
       ),
       child: Column(
         children: [
@@ -135,9 +135,9 @@ class HotspotLimitsScreen extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: CyberColors.oledBlack,
+                  color: CyberColors.background(context),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: CyberColors.borderOutline),
+                  border: Border.all(color: CyberColors.border(context)),
                 ),
                 child: Center(
                   child: CyberIcon(
@@ -145,7 +145,7 @@ class HotspotLimitsScreen extends StatelessWidget {
                         ? CyberIconType.pc
                         : CyberIconType.phone,
                     size: 20,
-                    color: peer.isConnected ? CyberColors.techEmerald : CyberColors.electricCyan,
+                    color: peer.isConnected ? CyberColors.emeraldAccent(context) : CyberColors.primaryAccent(context),
                   ),
                 ),
               ),
@@ -156,10 +156,10 @@ class HotspotLimitsScreen extends StatelessWidget {
                   children: [
                     Text(
                       peer.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: CyberColors.textPrimary,
+                        color: CyberColors.text(context),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -169,7 +169,7 @@ class HotspotLimitsScreen extends StatelessWidget {
                         fontSize: 11,
                         color: limit.isSpeedThrottled
                             ? CyberColors.warningAmber
-                            : CyberColors.textSecondary,
+                            : CyberColors.subtext(context),
                         fontWeight: limit.isSpeedThrottled ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
@@ -179,8 +179,8 @@ class HotspotLimitsScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () => _openLimitModal(context, peer),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: CyberColors.electricCyan,
-                  foregroundColor: CyberColors.oledBlack,
+                  backgroundColor: CyberColors.primaryAccent(context),
+                  foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   minimumSize: const Size(60, 32),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),

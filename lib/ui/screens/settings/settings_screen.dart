@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/cyber_colors.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
 import '../../common_widgets/custom_cyber_icons.dart';
 
@@ -19,41 +20,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final cm = widget.connectionManager;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: CyberColors.oledBlack,
+      backgroundColor: CyberColors.background(context),
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: CyberColors.darkSurface,
+        backgroundColor: CyberColors.surface(context),
         elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Section: Appearance & Theme Mode
+          _buildSectionHeader(context, 'APPEARANCE & THEME'),
+          Container(
+            decoration: BoxDecoration(
+              color: CyberColors.surface(context),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: CyberColors.border(context)),
+            ),
+            child: SwitchListTile(
+              secondary: Icon(
+                isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                color: CyberColors.primaryAccent(context),
+              ),
+              title: Text(
+                'Dark Mode',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: CyberColors.text(context),
+                ),
+              ),
+              subtitle: Text(
+                isDark ? 'OLED Black Cyber Theme' : 'Clean Pearl White Theme',
+                style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
+              ),
+              value: ThemeController.instance.isDarkMode,
+              activeThumbColor: CyberColors.emeraldAccent(context),
+              onChanged: (val) {
+                ThemeController.instance.toggleTheme();
+                setState(() {});
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
+
           // Section: Device Profile
-          _buildSectionHeader('DEVICE IDENTITY'),
+          _buildSectionHeader(context, 'DEVICE PROFILE'),
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: CyberColors.darkSurface,
+              color: CyberColors.surface(context),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: CyberColors.borderOutline),
+              border: Border.all(color: CyberColors.border(context)),
             ),
             child: Row(
               children: [
-                const CyberIcon(type: CyberIconType.phone, size: 22, color: CyberColors.electricCyan),
+                CyberIcon(type: CyberIconType.phone, size: 22, color: CyberColors.primaryAccent(context)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Device Nickname', style: TextStyle(fontSize: 11, color: CyberColors.textSecondary)),
-                      Text(cm.localDeviceName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
+                      Text('Device Nickname', style: TextStyle(fontSize: 11, color: CyberColors.subtext(context))),
+                      Text(
+                        cm.localDeviceName,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                      ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20, color: CyberColors.textSecondary),
+                  icon: Icon(Icons.edit_outlined, size: 20, color: CyberColors.subtext(context)),
                   onPressed: () => _editDeviceName(context),
                 ),
               ],
@@ -62,33 +102,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 20),
 
           // Section: Performance & Battery
-          _buildSectionHeader('BATTERY & PERFORMANCE'),
+          _buildSectionHeader(context, 'BATTERY & PERFORMANCE'),
           Container(
             decoration: BoxDecoration(
-              color: CyberColors.darkSurface,
+              color: CyberColors.surface(context),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: CyberColors.borderOutline),
+              border: Border.all(color: CyberColors.border(context)),
             ),
             child: Column(
               children: [
                 SwitchListTile(
-                  title: const Text('🌿 Battery Saver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
-                  subtitle: const Text(
+                  title: Text(
+                    '🌿 Battery Saver',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                  ),
+                  subtitle: Text(
                     'Slows down radar scans to save phone battery.',
-                    style: TextStyle(fontSize: 11, color: CyberColors.textSecondary),
+                    style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
                   ),
                   value: cm.isEcoMode,
-                  activeThumbColor: CyberColors.techEmerald,
+                  activeThumbColor: CyberColors.emeraldAccent(context),
                   onChanged: (val) {
                     cm.toggleEcoMode();
                     setState(() {});
                   },
                 ),
-                const Divider(color: CyberColors.borderOutline, height: 1),
-                const ListTile(
-                  title: Text('Fast Direct File Sharing', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
-                  subtitle: Text('Transfers files smoothly without heating up your phone.', style: TextStyle(fontSize: 11, color: CyberColors.electricCyan)),
-                  trailing: Icon(Icons.check_circle_outline, color: CyberColors.techEmerald, size: 20),
+                Divider(color: CyberColors.border(context), height: 1),
+                ListTile(
+                  title: Text(
+                    'Fast Direct File Sharing',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                  ),
+                  subtitle: Text(
+                    'Transfers files smoothly without heating up your phone.',
+                    style: TextStyle(fontSize: 11, color: CyberColors.primaryAccent(context)),
+                  ),
+                  trailing: Icon(Icons.check_circle_outline, color: CyberColors.emeraldAccent(context), size: 20),
                 ),
               ],
             ),
@@ -96,21 +145,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 20),
 
           // Section: Security
-          _buildSectionHeader('SECURITY & CONNECTION ACCESS'),
+          _buildSectionHeader(context, 'SECURITY & CONNECTION ACCESS'),
           Container(
             decoration: BoxDecoration(
-              color: CyberColors.darkSurface,
+              color: CyberColors.surface(context),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: CyberColors.borderOutline),
+              border: Border.all(color: CyberColors.border(context)),
             ),
             child: SwitchListTile(
-              title: const Text('4-Digit PIN Verification', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
+              title: Text(
+                '4-Digit PIN Verification',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+              ),
               subtitle: Text(
                 _isPinProtected ? 'Active (PIN: $_pinCode)' : 'Incoming transfers accept automatically',
-                style: const TextStyle(fontSize: 11, color: CyberColors.textSecondary),
+                style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
               ),
               value: _isPinProtected,
-              activeThumbColor: CyberColors.electricCyan,
+              activeThumbColor: CyberColors.primaryAccent(context),
               onChanged: (val) {
                 setState(() => _isPinProtected = val);
               },
@@ -121,16 +173,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.0,
-          color: CyberColors.electricCyan,
+          color: CyberColors.primaryAccent(context),
         ),
       ),
     );
@@ -141,25 +193,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: CyberColors.oledBlack,
+        backgroundColor: CyberColors.surface(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: CyberColors.borderOutline),
+          side: BorderSide(color: CyberColors.border(context)),
         ),
-        title: const Text('Rename Device', style: TextStyle(color: CyberColors.textPrimary, fontSize: 15)),
+        title: Text('Rename Device', style: TextStyle(color: CyberColors.text(context), fontSize: 15)),
         content: TextField(
           controller: controller,
-          style: const TextStyle(color: CyberColors.textPrimary),
-          decoration: const InputDecoration(
+          style: TextStyle(color: CyberColors.text(context)),
+          decoration: InputDecoration(
             labelText: 'New Name',
-            labelStyle: TextStyle(color: CyberColors.electricCyan),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: CyberColors.electricCyan)),
+            labelStyle: TextStyle(color: CyberColors.primaryAccent(context)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: CyberColors.primaryAccent(context))),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: CyberColors.textSecondary)),
+            child: Text('Cancel', style: TextStyle(color: CyberColors.subtext(context))),
           ),
           ElevatedButton(
             onPressed: () {
@@ -169,7 +221,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
               Navigator.pop(ctx);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: CyberColors.electricCyan, foregroundColor: CyberColors.oledBlack),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: CyberColors.primaryAccent(context),
+              foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
+            ),
             child: const Text('Save'),
           ),
         ],

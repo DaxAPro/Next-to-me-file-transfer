@@ -59,11 +59,16 @@ class _TransferSuccessDialogState extends State<TransferSuccessDialog>
 
   @override
   Widget build(BuildContext context) {
+    final surfaceColor = CyberColors.surface(context);
+    final borderColor = CyberColors.border(context);
+    final textPrimary = CyberColors.text(context);
+    final textSecondary = CyberColors.subtext(context);
+
     return Dialog(
-      backgroundColor: CyberColors.oledBlack,
+      backgroundColor: surfaceColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: CyberColors.borderOutline),
+        side: BorderSide(color: borderColor),
       ),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -91,12 +96,12 @@ class _TransferSuccessDialogState extends State<TransferSuccessDialog>
                           decoration: BoxDecoration(
                             color: CyberColors.techEmerald,
                             shape: BoxShape.circle,
-                            border: Border.all(color: CyberColors.oledBlack, width: 3),
+                            border: Border.all(color: surfaceColor, width: 3),
                           ),
                           child: const Icon(
                             Icons.check_rounded,
                             size: 34,
-                            color: CyberColors.oledBlack,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -122,18 +127,18 @@ class _TransferSuccessDialogState extends State<TransferSuccessDialog>
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: CyberColors.textPrimary,
+                color: textPrimary,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               'Saved to /Downloads/NextToMe • ${widget.fileSize}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: CyberColors.textSecondary,
+                color: textSecondary,
               ),
             ),
             const SizedBox(height: 20),
@@ -147,7 +152,7 @@ class _TransferSuccessDialogState extends State<TransferSuccessDialog>
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: CyberColors.techEmerald,
-                  foregroundColor: CyberColors.oledBlack,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),

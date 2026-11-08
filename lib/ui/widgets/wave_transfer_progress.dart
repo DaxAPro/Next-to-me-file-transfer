@@ -55,18 +55,19 @@ class _WaveTransferProgressState extends State<WaveTransferProgress>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final waveColor = widget.isCompleted
         ? CyberColors.techEmerald
         : widget.isPaused
             ? CyberColors.warningAmber
-            : CyberColors.electricCyan;
+            : CyberColors.primaryAccent(context);
 
     return Container(
       height: 10,
       decoration: BoxDecoration(
-        color: CyberColors.darkSurface,
+        color: isDark ? CyberColors.darkSurface : const Color(0xFFE2E8F0),
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: CyberColors.borderOutline, width: 1),
+        border: Border.all(color: CyberColors.border(context), width: 1),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(4),

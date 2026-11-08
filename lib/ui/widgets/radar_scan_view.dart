@@ -24,8 +24,7 @@ class RadarScanView extends StatefulWidget {
   State<RadarScanView> createState() => _RadarScanViewState();
 }
 
-class _RadarScanViewState extends State<RadarScanView>
-    with TickerProviderStateMixin {
+class _RadarScanViewState extends State<RadarScanView> with TickerProviderStateMixin {
   late AnimationController _rotationController;
   late AnimationController _pulseController;
 
@@ -70,6 +69,12 @@ class _RadarScanViewState extends State<RadarScanView>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryAccent = CyberColors.primaryAccent(context);
+    final borderColor = CyberColors.border(context);
+    final surfaceColor = CyberColors.surface(context);
+    final textPrimary = CyberColors.text(context);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = min(constraints.maxWidth, 280.0);
@@ -84,7 +89,7 @@ class _RadarScanViewState extends State<RadarScanView>
                 // Concentric Sonar Rings
                 CustomPaint(
                   size: Size(size, size),
-                  painter: _RadarGridPainter(),
+                  painter: _RadarGridPainter(gridColor: borderColor),
                 ),
 
                 // Rotating Radar Sweep Beam
@@ -96,7 +101,7 @@ class _RadarScanViewState extends State<RadarScanView>
                         angle: _rotationController.value * 2 * pi,
                         child: CustomPaint(
                           size: Size(size, size),
-                          painter: _RadarBeamPainter(),
+                          painter: _RadarBeamPainter(beamColor: primaryAccent),
                         ),
                       );
                     },
@@ -117,6 +122,8 @@ class _RadarScanViewState extends State<RadarScanView>
                   final x = (size / 2) + radius * cos(angle) - 22;
                   final y = (size / 2) + radius * sin(angle) - 22;
 
+                  final peerAccent = peer.isConnected ? CyberColors.techEmerald : primaryAccent;
+
                   return Positioned(
                     left: x,
                     top: y,
@@ -127,7 +134,6 @@ class _RadarScanViewState extends State<RadarScanView>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Node with Adaptive Pulse Wave
                             SizedBox(
                               width: 44,
                               height: 44,
@@ -153,21 +159,14 @@ class _RadarScanViewState extends State<RadarScanView>
                                     height: 36,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: CyberColors.darkSurface,
-                                      border: Border.all(
-                                        color: peer.isConnected
-                                            ? CyberColors.techEmerald
-                                            : CyberColors.electricCyan,
-                                        width: 1.8,
-                                      ),
+                                      color: surfaceColor,
+                                      border: Border.all(color: peerAccent, width: 1.8),
                                     ),
                                     child: Center(
                                       child: CyberIcon(
                                         type: _getPeerCyberIcon(peer.deviceType),
                                         size: 18,
-                                        color: peer.isConnected
-                                            ? CyberColors.techEmerald
-                                            : CyberColors.electricCyan,
+                                        color: peerAccent,
                                       ),
                                     ),
                                   ),
@@ -178,14 +177,16 @@ class _RadarScanViewState extends State<RadarScanView>
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                               decoration: BoxDecoration(
-                                color: CyberColors.oledBlack.withValues(alpha: 0.85),
+                                color: isDark
+                                    ? CyberColors.oledBlack.withValues(alpha: 0.85)
+                                    : Colors.white.withValues(alpha: 0.95),
                                 borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: CyberColors.borderOutline, width: 0.8),
+                                border: Border.all(color: borderColor, width: 0.8),
                               ),
                               child: Text(
                                 peer.name.split(' ').first,
-                                style: const TextStyle(
-                                  color: CyberColors.textPrimary,
+                                style: TextStyle(
+                                  color: textPrimary,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -220,24 +221,25 @@ class _RadarScanViewState extends State<RadarScanView>
 }
 
 class _RadarGridPainter extends CustomPainter {
+  final Color gridColor;
+  _RadarGridPainter({required this.gridColor});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = size.width / 2;
 
     final circlePaint = Paint()
-      ..color = CyberColors.borderOutline
+      ..color = gridColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
-    // 3 concentric distance range rings
     canvas.drawCircle(center, maxRadius * 0.35, circlePaint);
     canvas.drawCircle(center, maxRadius * 0.65, circlePaint);
     canvas.drawCircle(center, maxRadius - 2, circlePaint);
 
-    // Crosshairs
     final crosshairPaint = Paint()
-      ..color = CyberColors.borderOutline.withValues(alpha: 0.5)
+      ..color = gridColor.withValues(alpha: 0.5)
       ..strokeWidth = 0.8;
 
     canvas.drawLine(Offset(center.dx, 0), Offset(center.dx, size.height), crosshairPaint);
@@ -245,25 +247,26 @@ class _RadarGridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _RadarGridPainter oldDelegate) => oldDelegate.gridColor != gridColor;
 }
 
 class _RadarBeamPainter extends CustomPainter {
+  final Color beamColor;
+  _RadarBeamPainter({required this.beamColor});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-
     final rect = Rect.fromCircle(center: center, radius: radius);
 
-    // Flat Cyber sweep arc (45 degree sweep)
     final sweepGradient = SweepGradient(
       center: Alignment.center,
       startAngle: 0.0,
       endAngle: pi / 4,
       colors: [
-        CyberColors.electricCyan.withValues(alpha: 0.0),
-        CyberColors.electricCyan.withValues(alpha: 0.25),
+        beamColor.withValues(alpha: 0.0),
+        beamColor.withValues(alpha: 0.25),
       ],
     );
 
@@ -273,9 +276,8 @@ class _RadarBeamPainter extends CustomPainter {
 
     canvas.drawArc(rect, 0, pi / 4, true, sweepPaint);
 
-    // Leading edge bright ray
     final linePaint = Paint()
-      ..color = CyberColors.electricCyan
+      ..color = beamColor
       ..strokeWidth = 1.5;
 
     final edgeX = center.dx + radius * cos(pi / 4);
@@ -284,5 +286,5 @@ class _RadarBeamPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _RadarBeamPainter oldDelegate) => oldDelegate.beamColor != beamColor;
 }

@@ -21,9 +21,9 @@ class PeerCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: CyberColors.darkSurface,
+        color: CyberColors.surface(context),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CyberColors.borderOutline),
+        border: Border.all(color: CyberColors.border(context)),
       ),
       child: Row(
         children: [
@@ -32,17 +32,17 @@ class PeerCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: CyberColors.oledBlack,
+              color: CyberColors.background(context),
               shape: BoxShape.circle,
               border: Border.all(
-                color: peer.isConnected ? CyberColors.techEmerald : CyberColors.electricCyan,
+                color: peer.isConnected ? CyberColors.emeraldAccent(context) : CyberColors.primaryAccent(context),
                 width: 1.5,
               ),
             ),
             child: Center(
               child: CyberIcon(
                 type: _getPeerCyberIcon(peer.deviceType),
-                color: peer.isConnected ? CyberColors.techEmerald : CyberColors.electricCyan,
+                color: peer.isConnected ? CyberColors.emeraldAccent(context) : CyberColors.primaryAccent(context),
                 size: 20,
               ),
             ),
@@ -59,8 +59,8 @@ class PeerCard extends StatelessWidget {
                     Flexible(
                       child: Text(
                         peer.name,
-                        style: const TextStyle(
-                          color: CyberColors.textPrimary,
+                        style: TextStyle(
+                          color: CyberColors.text(context),
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -72,14 +72,14 @@ class PeerCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
-                          color: CyberColors.electricCyan.withValues(alpha: 0.15),
+                          color: CyberColors.primaryAccent(context).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: CyberColors.electricCyan.withValues(alpha: 0.3)),
+                          border: Border.all(color: CyberColors.primaryAccent(context).withValues(alpha: 0.3)),
                         ),
-                        child: const Text(
-                          '5GHz',
+                        child: Text(
+                          'Fast Link',
                           style: TextStyle(
-                            color: CyberColors.electricCyan,
+                            color: CyberColors.primaryAccent(context),
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),
@@ -92,8 +92,8 @@ class PeerCard extends StatelessWidget {
                   children: [
                     Text(
                       '${peer.os} • Nearby',
-                      style: const TextStyle(
-                        color: CyberColors.textSecondary,
+                      style: TextStyle(
+                        color: CyberColors.subtext(context),
                         fontSize: 11,
                       ),
                     ),
@@ -118,7 +118,7 @@ class PeerCard extends StatelessWidget {
 
           // Limit Config Button
           IconButton(
-            icon: const Icon(Icons.tune_rounded, color: CyberColors.textSecondary, size: 20),
+            icon: Icon(Icons.tune_rounded, color: CyberColors.subtext(context), size: 20),
             tooltip: 'Set Speed Limit',
             onPressed: onConfigureLimits,
           ),
@@ -127,8 +127,8 @@ class PeerCard extends StatelessWidget {
           ElevatedButton(
             onPressed: onConnect,
             style: ElevatedButton.styleFrom(
-              backgroundColor: peer.isConnected ? CyberColors.techEmerald : CyberColors.electricCyan,
-              foregroundColor: CyberColors.oledBlack,
+              backgroundColor: peer.isConnected ? CyberColors.emeraldAccent(context) : CyberColors.primaryAccent(context),
+              foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               minimumSize: const Size(72, 34),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),

@@ -21,22 +21,23 @@ class BrandedAppLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     if (useAssetIfAvailable) {
       return Image.asset(
-        'assets/images/logo.png',
+        'assets/images/logo no background.png',
         width: size,
         height: size,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => _buildVectorLogo(),
+        errorBuilder: (context, error, stackTrace) => _buildVectorLogo(context),
       );
     }
-    return _buildVectorLogo();
+    return _buildVectorLogo(context);
   }
 
-  Widget _buildVectorLogo() {
+  Widget _buildVectorLogo(BuildContext context) {
+    final surfaceColor = CyberColors.surface(context);
     return SizedBox(
       width: size,
       height: size,
       child: CustomPaint(
-        painter: _BrandedLogoPainter(),
+        painter: _BrandedLogoPainter(backgroundColor: surfaceColor),
         size: Size(size, size),
       ),
     );
@@ -44,14 +45,18 @@ class BrandedAppLogo extends StatelessWidget {
 }
 
 class _BrandedLogoPainter extends CustomPainter {
+  final Color backgroundColor;
+
+  _BrandedLogoPainter({this.backgroundColor = CyberColors.oledBlack});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    // Dark circular backdrop
+    // Circular backdrop
     final bgPaint = Paint()
-      ..color = CyberColors.oledBlack
+      ..color = backgroundColor
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius - 2, bgPaint);
 

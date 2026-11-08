@@ -28,9 +28,9 @@ class TransferCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: CyberColors.darkSurface,
+        color: CyberColors.surface(context),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CyberColors.borderOutline),
+        border: Border.all(color: CyberColors.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,8 +58,8 @@ class TransferCard extends StatelessWidget {
                   children: [
                     Text(
                       task.fileName,
-                      style: const TextStyle(
-                        color: CyberColors.textPrimary,
+                      style: TextStyle(
+                        color: CyberColors.text(context),
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -69,8 +69,8 @@ class TransferCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${_formatBytes(task.bytesTransferred)} / ${_formatBytes(task.fileSize)} • ${task.category.name.toUpperCase()}',
-                      style: const TextStyle(
-                        color: CyberColors.textSecondary,
+                      style: TextStyle(
+                        color: CyberColors.subtext(context),
                         fontSize: 11,
                       ),
                     ),

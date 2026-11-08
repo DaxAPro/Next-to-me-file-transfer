@@ -17,13 +17,22 @@ class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final transfers = widget.connectionManager.activeTransfers;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimary = CyberColors.text(context);
+    final textSecondary = CyberColors.subtext(context);
+    final surfaceColor = CyberColors.surface(context);
+    final borderColor = CyberColors.border(context);
 
     return Scaffold(
-      backgroundColor: CyberColors.oledBlack,
+      backgroundColor: CyberColors.background(context),
       appBar: AppBar(
-        title: const Text('Download History'),
-        backgroundColor: CyberColors.darkSurface,
+        title: Text(
+          'Download History',
+          style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: surfaceColor,
         elevation: 0,
+        iconTheme: IconThemeData(color: textPrimary),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_sweep_outlined, color: CyberColors.dangerRed),
@@ -36,17 +45,17 @@ class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
           ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
-                  CyberIcon(type: CyberIconType.history, size: 48, color: CyberColors.textMuted),
-                  SizedBox(height: 14),
+                children: [
+                  const CyberIcon(type: CyberIconType.history, size: 48, color: CyberColors.textMuted),
+                  const SizedBox(height: 14),
                   Text(
                     'No transfer history yet.',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: CyberColors.textPrimary),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textPrimary),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     'Files sent or received over Wi-Fi will appear here.',
-                    style: TextStyle(fontSize: 12, color: CyberColors.textSecondary),
+                    style: TextStyle(fontSize: 12, color: textSecondary),
                   ),
                 ],
               ),
@@ -60,22 +69,22 @@ class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: CyberColors.darkSurface,
+                    color: surfaceColor,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: CyberColors.borderOutline),
+                    border: Border.all(color: borderColor),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: CyberColors.oledBlack,
+                          color: isDark ? CyberColors.oledBlack : const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: CyberColors.borderOutline),
+                          border: Border.all(color: borderColor),
                         ),
                         child: Icon(
                           task.isIncoming ? Icons.download_rounded : Icons.upload_rounded,
-                          color: task.isIncoming ? CyberColors.techEmerald : CyberColors.electricCyan,
+                          color: task.isIncoming ? CyberColors.techEmerald : CyberColors.primaryAccent(context),
                           size: 20,
                         ),
                       ),
@@ -86,16 +95,16 @@ class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
                           children: [
                             Text(
                               task.fileName,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: CyberColors.textPrimary),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textPrimary),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '${_formatBytes(task.fileSize)} • ${task.targetSubdirectory}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: CyberColors.textSecondary,
+                                color: textSecondary,
                               ),
                             ),
                           ],
@@ -133,23 +142,28 @@ class _DownloadHistoryScreenState extends State<DownloadHistoryScreen> {
   }
 
   void _confirmClearHistory(BuildContext context) {
+    final surfaceColor = CyberColors.surface(context);
+    final borderColor = CyberColors.border(context);
+    final textPrimary = CyberColors.text(context);
+    final textSecondary = CyberColors.subtext(context);
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: CyberColors.oledBlack,
+        backgroundColor: surfaceColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: CyberColors.borderOutline),
+          side: BorderSide(color: borderColor),
         ),
-        title: const Text('Clear History & Cache?', style: TextStyle(color: CyberColors.textPrimary, fontSize: 15)),
-        content: const Text(
+        title: Text('Clear History & Cache?', style: TextStyle(color: textPrimary, fontSize: 15)),
+        content: Text(
           'This will remove transfer records and delete temporary stream playback chunks from device cache to free up memory.',
-          style: TextStyle(color: CyberColors.textSecondary, fontSize: 12),
+          style: TextStyle(color: textSecondary, fontSize: 12),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: CyberColors.textSecondary)),
+            child: Text('Cancel', style: TextStyle(color: textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {

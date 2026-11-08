@@ -9,11 +9,17 @@ class PermissionDisclosureDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final surfaceColor = CyberColors.surface(context);
+    final borderColor = CyberColors.border(context);
+    final textPrimary = CyberColors.text(context);
+    final textSecondary = CyberColors.subtext(context);
+    final primaryAccent = CyberColors.primaryAccent(context);
+
     return Dialog(
-      backgroundColor: CyberColors.oledBlack,
+      backgroundColor: surfaceColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: CyberColors.borderOutline),
+        side: BorderSide(color: borderColor),
       ),
       child: Padding(
         padding: const EdgeInsets.all(22),
@@ -27,17 +33,17 @@ class PermissionDisclosureDialog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: CyberColors.electricCyan.withValues(alpha: 0.15),
+                    color: primaryAccent.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const CyberIcon(type: CyberIconType.shield, color: CyberColors.electricCyan, size: 22),
+                  child: CyberIcon(type: CyberIconType.shield, color: primaryAccent, size: 22),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Prominent Permission Disclosure',
                     style: TextStyle(
-                      color: CyberColors.textPrimary,
+                      color: textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
@@ -48,13 +54,13 @@ class PermissionDisclosureDialog extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Content
-            const Text(
+            Text(
               'NextToMe File Transfer requires access to Nearby Devices (BLE & Wi-Fi Direct) and Location in order to scan, discover, and establish high-speed 5GHz peer-to-peer file transfers with devices in your physical proximity.\n\n'
               '• Your physical location is NEVER recorded, tracked, or sent to any server.\n'
               '• All file transfers are 100% direct and offline.\n'
               '• Storage access is used exclusively to categorize and store files sent or received by you.',
               style: TextStyle(
-                color: CyberColors.textSecondary,
+                color: textSecondary,
                 fontSize: 12,
                 height: 1.45,
               ),
@@ -70,8 +76,8 @@ class PermissionDisclosureDialog extends StatelessWidget {
                   onAccepted();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: CyberColors.electricCyan,
-                  foregroundColor: CyberColors.oledBlack,
+                  backgroundColor: primaryAccent,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

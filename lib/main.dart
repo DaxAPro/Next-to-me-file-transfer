@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/constants/app_constants.dart';
+import 'core/theme/theme_controller.dart';
 import 'services/connection/hybrid_connection_manager.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/onboarding/onboarding_screen.dart';
@@ -10,15 +10,8 @@ import 'ui/theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Configure system navigation & status bar colors for flat aesthetics
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFF0B0E14),
-      systemNavigationBarIconBrightness: Brightness.light,
-    ),
-  );
+  // Initialize theme mode preference
+  await ThemeController.instance.init();
 
   final prefs = await SharedPreferences.getInstance();
   final isFirstLaunchDone = prefs.getBool(AppConstants.keyFirstLaunch) ?? false;
@@ -53,14 +46,14 @@ class _NextToMeAppState extends State<NextToMeApp> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: _connectionManager,
+      listenable: Listenable.merge([_connectionManager, ThemeController.instance]),
       builder: (context, child) {
         return MaterialApp(
           title: 'NextToMe',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.dark, // Default to Dark OLED
+          themeMode: ThemeController.instance.themeMode,
           home: widget.isFirstLaunchDone
               ? HomeScreen(connectionManager: _connectionManager)
               : OnboardingScreen(connectionManager: _connectionManager),

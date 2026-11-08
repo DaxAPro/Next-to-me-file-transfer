@@ -34,9 +34,9 @@ class _DeviceLimitModalState extends State<DeviceLimitModal> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       decoration: BoxDecoration(
-        color: CyberColors.oledBlack,
+        color: CyberColors.surface(context),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        border: Border.all(color: CyberColors.borderOutline),
+        border: Border.all(color: CyberColors.border(context)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -48,7 +48,7 @@ class _DeviceLimitModalState extends State<DeviceLimitModal> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: CyberColors.borderOutline,
+                color: CyberColors.border(context),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -63,29 +63,29 @@ class _DeviceLimitModalState extends State<DeviceLimitModal> {
                   children: [
                     Text(
                       'SET SPEED & DATA LIMIT',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.0,
-                        color: CyberColors.electricCyan,
+                        color: CyberColors.primaryAccent(context),
                       ),
                     ),
                     Text(
                       widget.peer.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: CyberColors.textSecondary,
+                        color: CyberColors.subtext(context),
                       ),
                     ),
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20, color: CyberColors.textSecondary),
+                  icon: Icon(Icons.close, size: 20, color: CyberColors.subtext(context)),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const Divider(color: CyberColors.borderOutline, height: 24),
+            Divider(color: CyberColors.border(context), height: 24),
 
             // 1. Dynamic Speedometer Gauge
             InteractiveSpeedometerGauge(

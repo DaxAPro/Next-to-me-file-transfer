@@ -31,12 +31,15 @@ class LiveBandwidthCard extends StatelessWidget {
             ? CyberColors.warningAmber
             : CyberColors.techEmerald;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryAccent = CyberColors.primaryAccent(context);
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: CyberColors.darkSurface,
+        color: CyberColors.surface(context),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CyberColors.borderOutline),
+        border: Border.all(color: CyberColors.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,19 +49,19 @@ class LiveBandwidthCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const CyberIcon(
+                  CyberIcon(
                     type: CyberIconType.speedometer,
                     size: 16,
-                    color: CyberColors.electricCyan,
+                    color: primaryAccent,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     deviceName.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.8,
-                      color: CyberColors.textPrimary,
+                      color: CyberColors.text(context),
                     ),
                   ),
                 ],
@@ -95,18 +98,18 @@ class LiveBandwidthCard extends StatelessWidget {
                 totalQuotaMb > 0
                     ? 'Used: ${usedMb.toStringAsFixed(0)}MB / ${totalQuotaMb >= 1024 ? "${(totalQuotaMb / 1024).toStringAsFixed(1)}GB" : "${totalQuotaMb.toStringAsFixed(0)}MB"}'
                     : 'Used: ${usedMb.toStringAsFixed(0)}MB / Unlimited',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: CyberColors.textSecondary,
+                  color: CyberColors.subtext(context),
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
                 'Speed: ${currentSpeedMb.toStringAsFixed(1)} MB/s',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: CyberColors.electricCyan,
+                  color: primaryAccent,
                 ),
               ),
             ],
@@ -117,7 +120,7 @@ class LiveBandwidthCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: quotaRatio,
               minHeight: 5,
-              backgroundColor: CyberColors.oledBlack,
+              backgroundColor: isDark ? CyberColors.oledBlack : const Color(0xFFE2E8F0),
               valueColor: AlwaysStoppedAnimation<Color>(quotaColor),
             ),
           ),

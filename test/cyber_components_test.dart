@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:next_to_me/core/constants/user_friendly_strings.dart';
 import 'package:next_to_me/core/models/device_peer.dart';
 import 'package:next_to_me/core/theme/cyber_colors.dart';
+import 'package:next_to_me/core/theme/theme_controller.dart';
 import 'package:next_to_me/ui/common_widgets/branded_app_logo.dart';
 import 'package:next_to_me/ui/common_widgets/cyber_avatar.dart';
 import 'package:next_to_me/ui/common_widgets/custom_cyber_icons.dart';
@@ -12,6 +14,60 @@ import 'package:next_to_me/ui/widgets/adaptive_radar_painter.dart';
 import 'package:next_to_me/ui/widgets/wave_transfer_progress.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  group('ThemeController & Dark/Light Mode', () {
+    test('ThemeController toggles seamlessly between dark and light', () async {
+      final controller = ThemeController.instance;
+      await controller.setThemeMode(ThemeMode.dark);
+      expect(controller.isDarkMode, isTrue);
+      expect(controller.themeMode, equals(ThemeMode.dark));
+
+      await controller.toggleTheme();
+      expect(controller.isDarkMode, isFalse);
+      expect(controller.themeMode, equals(ThemeMode.light));
+
+      await controller.toggleTheme();
+      expect(controller.isDarkMode, isTrue);
+      expect(controller.themeMode, equals(ThemeMode.dark));
+    });
+
+    testWidgets('CyberColors dynamically adapts to theme brightness', (tester) async {
+      Color? darkBg;
+      Color? lightBg;
+
+      await tester.pumpWidget(
+        Theme(
+          data: ThemeData(brightness: Brightness.dark),
+          child: Builder(
+            builder: (ctx) {
+              darkBg = CyberColors.background(ctx);
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      expect(darkBg, equals(CyberColors.oledBlack));
+
+      await tester.pumpWidget(
+        Theme(
+          data: ThemeData(brightness: Brightness.light),
+          child: Builder(
+            builder: (ctx) {
+              lightBg = CyberColors.background(ctx);
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      expect(lightBg, equals(CyberColors.lightBg));
+    });
+  });
+
   group('Cyber Colors & Gradients', () {
     test('Speedometer color transitions smoothly from Cyan to Tech Emerald', () {
       final lowColor = CyberColors.getSpeedometerColor(0.0);

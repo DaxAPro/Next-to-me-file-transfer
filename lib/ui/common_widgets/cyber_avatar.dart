@@ -24,6 +24,8 @@ class CyberAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final surfaceColor = CyberColors.surface(context);
+
     return SizedBox(
       width: size,
       height: size,
@@ -40,6 +42,7 @@ class CyberAvatar extends StatelessWidget {
                 size: Size(size, size),
                 painter: _CyberAvatarPainter(
                   borderColor: borderColor,
+                  backgroundColor: surfaceColor,
                 ),
               ),
             ),
@@ -55,7 +58,7 @@ class CyberAvatar extends StatelessWidget {
                   color: CyberColors.techEmerald,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: CyberColors.oledBlack,
+                    color: surfaceColor,
                     width: 2.0,
                   ),
                 ),
@@ -69,17 +72,18 @@ class CyberAvatar extends StatelessWidget {
 
 class _CyberAvatarPainter extends CustomPainter {
   final Color? borderColor;
+  final Color backgroundColor;
 
-  _CyberAvatarPainter({this.borderColor});
+  _CyberAvatarPainter({this.borderColor, this.backgroundColor = CyberColors.darkSurface});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    // Dark surface background
+    // Surface background
     final bgPaint = Paint()
-      ..color = CyberColors.darkSurface
+      ..color = backgroundColor
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius - 1.5, bgPaint);
 

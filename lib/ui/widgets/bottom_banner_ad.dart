@@ -67,13 +67,18 @@ class _BottomBannerAdWidgetState extends State<BottomBannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final surfaceColor = CyberColors.surface(context);
+    final borderColor = CyberColors.border(context);
+    final textPrimary = CyberColors.text(context);
+    final textSecondary = CyberColors.subtext(context);
+
     return Container(
       width: double.infinity,
       height: 52,
-      decoration: const BoxDecoration(
-        color: CyberColors.oledBlack,
+      decoration: BoxDecoration(
+        color: surfaceColor,
         border: Border(
-          top: BorderSide(color: CyberColors.borderOutline, width: 1),
+          top: BorderSide(color: borderColor, width: 1),
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -83,13 +88,13 @@ class _BottomBannerAdWidgetState extends State<BottomBannerAdWidget> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
             decoration: BoxDecoration(
-              color: CyberColors.borderOutline,
+              color: borderColor,
               borderRadius: BorderRadius.circular(3),
             ),
-            child: const Text(
+            child: Text(
               'AD',
               style: TextStyle(
-                color: CyberColors.textSecondary,
+                color: textSecondary,
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
               ),
@@ -104,8 +109,8 @@ class _BottomBannerAdWidgetState extends State<BottomBannerAdWidget> {
               child: Text(
                 _adCampaigns[_adImpressionIndex],
                 key: ValueKey<int>(_adImpressionIndex),
-                style: const TextStyle(
-                  color: CyberColors.textPrimary,
+                style: TextStyle(
+                  color: textPrimary,
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
