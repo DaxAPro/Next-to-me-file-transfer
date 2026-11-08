@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/device_peer.dart';
 import '../../core/theme/cyber_colors.dart';
 import '../common_widgets/custom_cyber_icons.dart';
+import '../common_widgets/glass_container.dart';
 import 'adaptive_radar_painter.dart';
 
 /// Floating peer node with pop-in bounce animation and clean mini-card
@@ -54,7 +55,6 @@ class _OrbitalPeerNodeState extends State<OrbitalPeerNode>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryAccent = CyberColors.primaryAccent(context);
-    final borderColor = CyberColors.border(context);
     final surfaceColor = CyberColors.surface(context);
     final textPrimary = CyberColors.text(context);
     final peer = widget.peer;
@@ -117,59 +117,51 @@ class _OrbitalPeerNodeState extends State<OrbitalPeerNode>
               ),
               const SizedBox(height: 2),
 
-              // Floating Mini-Card with device name & signal strength
-              Container(
-                constraints: const BoxConstraints(maxWidth: 76),
+              // Floating Frosted Glass Mini-Card with device name & signal strength
+              GlassContainer(
+                borderRadius: BorderRadius.circular(6),
+                blur: 10,
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                decoration: BoxDecoration(
-                  color: surfaceColor.withValues(alpha: isDark ? 0.90 : 0.96),
-                  borderRadius: BorderRadius.circular(5),
-                  border: Border.all(color: borderColor, width: 0.8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      peer.name.split(' ').first,
-                      style: TextStyle(
-                        color: textPrimary,
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.bold,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 76),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        peer.name.split(' ').first,
+                        style: TextStyle(
+                          color: textPrimary,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: peerAccent,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: peerAccent,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${peer.rssi} dBm',
-                          style: TextStyle(
-                            color: CyberColors.subtext(context),
-                            fontSize: 7.5,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(width: 3),
+                          Text(
+                            '${peer.rssi} dBm',
+                            style: TextStyle(
+                              color: CyberColors.subtext(context),
+                              fontSize: 7.5,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

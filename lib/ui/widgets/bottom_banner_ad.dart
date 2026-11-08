@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/theme/cyber_colors.dart';
+import '../common_widgets/glass_container.dart';
 
 /// Pinned Smart Banner Ad widget adhering strictly to Blueprint Section 6:
-/// - Pinned strictly to bottom edge of screen
+/// - Frosted glass dock pinned strictly to bottom edge of screen
 /// - Auto-refreshes every 50 seconds during file transfers
 /// - Green Code: Idles and pauses timer when no transfer is active to save battery
 class BottomBannerAdWidget extends StatefulWidget {
@@ -67,19 +68,17 @@ class _BottomBannerAdWidgetState extends State<BottomBannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final surfaceColor = CyberColors.surface(context);
     final borderColor = CyberColors.border(context);
     final textPrimary = CyberColors.text(context);
     final textSecondary = CyberColors.subtext(context);
 
-    return Container(
+    return GlassContainer(
       width: double.infinity,
       height: 52,
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        border: Border(
-          top: BorderSide(color: borderColor, width: 1),
-        ),
+      borderRadius: BorderRadius.zero,
+      blur: 16,
+      border: Border(
+        top: BorderSide(color: borderColor, width: 1),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -134,3 +133,4 @@ class _BottomBannerAdWidgetState extends State<BottomBannerAdWidget> {
     );
   }
 }
+

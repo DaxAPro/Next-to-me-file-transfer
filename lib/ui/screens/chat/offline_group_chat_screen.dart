@@ -4,6 +4,8 @@ import '../../../core/models/chat_message.dart';
 import '../../../core/theme/cyber_colors.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
 import '../../common_widgets/custom_cyber_icons.dart';
+import '../../common_widgets/glass_background.dart';
+import '../../common_widgets/glass_container.dart';
 import 'widgets/chat_message_bubble.dart';
 
 class OfflineGroupChatScreen extends StatefulWidget {
@@ -167,103 +169,116 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Peer status strip
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: surfaceColor,
-            child: Row(
-              children: [
-                const CyberIcon(type: CyberIconType.wifiDirect, size: 16, color: CyberColors.techEmerald),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Connected to ${widget.connectionManager.discoveredPeers.length} friend(s) nearby (No Internet)',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textPrimary),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(color: borderColor, height: 1),
-
-          // Messages List
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                return ChatMessageBubble(message: _messages[index]);
-              },
-            ),
-          ),
-
-          // Quick Emoji Bar
-          Container(
-            height: 38,
-            color: surfaceColor,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: ['⚡', '🚀', '📁', '📡', '👍', '🔥', '❤️', '📱', '💻']
-                  .map(
-                    (emoji) => InkWell(
-                      onTap: _isChatEnabled ? () => _sendMessage(customContent: emoji) : null,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        child: Text(emoji, style: const TextStyle(fontSize: 18)),
+      body: GlassBackground(
+        child: Column(
+          children: [
+            // Peer status strip in frosted glass
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: GlassContainer(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                borderRadius: BorderRadius.circular(10),
+                blur: 14,
+                child: Row(
+                  children: [
+                    const CyberIcon(type: CyberIconType.wifiDirect, size: 16, color: CyberColors.techEmerald),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Connected to ${widget.connectionManager.discoveredPeers.length} friend(s) nearby (No Internet)',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textPrimary),
                       ),
                     ),
-                  )
-                  .toList(),
+                  ],
+                ),
+              ),
             ),
-          ),
 
-          // Input Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            color: surfaceColor,
-            child: Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.attach_file_rounded, size: 20, color: CyberColors.subtext(context)),
-                  tooltip: 'Attach Image / File',
-                  onPressed: _isChatEnabled ? _sendImageAttachment : null,
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: _msgController,
-                    enabled: _isChatEnabled,
-                    style: TextStyle(fontSize: 13, color: textPrimary),
-                    decoration: InputDecoration(
-                      hintText: _isChatEnabled ? 'Type offline message...' : 'Chat disabled',
-                      hintStyle: TextStyle(fontSize: 12, color: CyberColors.subtext(context)),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      filled: true,
-                      fillColor: isDark ? CyberColors.oledBlack : const Color(0xFFF1F5F9),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
-                    ),
-                    onSubmitted: (_) => _sendMessage(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(Icons.send_rounded, color: primaryAccent),
-                  onPressed: _isChatEnabled ? () => _sendMessage() : null,
-                ),
-              ],
+            // Messages List
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  return ChatMessageBubble(message: _messages[index]);
+                },
+              ),
             ),
-          ),
-        ],
+
+            // Glassy Emoji & Input Dock
+            GlassContainer(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+              blur: 20,
+              padding: const EdgeInsets.only(top: 6, bottom: 8, left: 8, right: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Quick Emoji Bar
+                  SizedBox(
+                    height: 36,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: ['⚡', '🚀', '📁', '📡', '👍', '🔥', '❤️', '📱', '💻']
+                          .map(
+                            (emoji) => InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: _isChatEnabled ? () => _sendMessage(customContent: emoji) : null,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: Text(emoji, style: const TextStyle(fontSize: 18)),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Input Bar
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.attach_file_rounded, size: 20, color: CyberColors.subtext(context)),
+                        tooltip: 'Attach Image / File',
+                        onPressed: _isChatEnabled ? _sendImageAttachment : null,
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: _msgController,
+                          enabled: _isChatEnabled,
+                          style: TextStyle(fontSize: 13, color: textPrimary),
+                          decoration: InputDecoration(
+                            hintText: _isChatEnabled ? 'Type offline message...' : 'Chat disabled',
+                            hintStyle: TextStyle(fontSize: 12, color: CyberColors.subtext(context)),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            filled: true,
+                            fillColor: isDark
+                                ? Colors.black.withValues(alpha: 0.45)
+                                : Colors.white.withValues(alpha: 0.6),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: borderColor),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: borderColor),
+                            ),
+                          ),
+                          onSubmitted: (_) => _sendMessage(),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      IconButton(
+                        icon: Icon(Icons.send_rounded, color: primaryAccent),
+                        onPressed: _isChatEnabled ? () => _sendMessage() : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import '../../core/theme/theme_controller.dart';
 import '../../services/connection/hybrid_connection_manager.dart';
 import '../common_widgets/cyber_avatar.dart';
 import '../common_widgets/custom_cyber_icons.dart';
+import '../common_widgets/glass_background.dart';
 import '../screens/about/about_screen.dart';
 import '../screens/chat/offline_group_chat_screen.dart';
 import '../screens/history/download_history_screen.dart';
@@ -39,9 +40,10 @@ class AppNavigationDrawer extends StatelessWidget {
       backgroundColor: CyberColors.background(context),
       elevation: 0,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-      child: SafeArea(
-        child: Column(
-          children: [
+      child: GlassBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
             // Drawer Header: image_13.png Persona Avatar & Status
             _buildDrawerHeader(context),
             Divider(color: CyberColors.border(context), height: 1),
@@ -225,6 +227,7 @@ class AppNavigationDrawer extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 

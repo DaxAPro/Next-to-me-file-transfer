@@ -7,6 +7,8 @@ import '../../core/theme/theme_controller.dart';
 import '../../services/connection/hybrid_connection_manager.dart';
 import '../common_widgets/cyber_avatar.dart';
 import '../common_widgets/custom_cyber_icons.dart';
+import '../common_widgets/glass_background.dart';
+import '../common_widgets/glass_container.dart';
 import '../drawer/app_navigation_drawer.dart';
 import '../screens/hotspot_limits/device_limit_modal.dart';
 import '../widgets/bottom_banner_ad.dart';
@@ -265,7 +267,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: GlassBackground(
+        child: Column(
         children: [
           Expanded(
             child: ListView(
@@ -376,18 +379,16 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomBannerAdWidget(isTransferring: isTransferring),
         ],
       ),
+    ),
     );
   }
 
   Widget _buildModeSelector(HybridConnectionManager cm) {
-    return Container(
+    return GlassContainer(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: CyberColors.surface(context),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CyberColors.border(context)),
-      ),
+      padding: const EdgeInsets.all(4),
+      borderRadius: BorderRadius.circular(12),
+      blur: 16,
       child: Row(
         children: [
           Expanded(

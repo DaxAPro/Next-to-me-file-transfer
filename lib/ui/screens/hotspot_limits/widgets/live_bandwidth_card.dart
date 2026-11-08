@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/cyber_colors.dart';
 import '../../../common_widgets/custom_cyber_icons.dart';
+import '../../../common_widgets/glass_container.dart';
 
 /// Real-Time Bandwidth and Quota Feedback Card
 class LiveBandwidthCard extends StatelessWidget {
@@ -34,13 +35,10 @@ class LiveBandwidthCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryAccent = CyberColors.primaryAccent(context);
 
-    return Container(
+    return GlassContainer(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: CyberColors.surface(context),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CyberColors.border(context)),
-      ),
+      borderRadius: BorderRadius.circular(14),
+      blur: 14,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/device_peer.dart';
 import '../../core/theme/cyber_colors.dart';
 import '../common_widgets/custom_cyber_icons.dart';
+import '../common_widgets/glass_container.dart';
 
 class PeerCard extends StatelessWidget {
   final DevicePeer peer;
@@ -17,32 +18,39 @@ class PeerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final primaryAccent = CyberColors.primaryAccent(context);
+    final emeraldAccent = CyberColors.emeraldAccent(context);
+    final peerAccent = peer.isConnected ? emeraldAccent : primaryAccent;
+
+    return GlassContainer(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: CyberColors.surface(context),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CyberColors.border(context)),
-      ),
+      borderRadius: BorderRadius.circular(14),
+      blur: 14,
       child: Row(
         children: [
-          // Device Avatar with CyberIcon
+          // Device Avatar with CyberIcon inside glass halo
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: CyberColors.background(context),
+              color: peerAccent.withValues(alpha: 0.12),
               shape: BoxShape.circle,
               border: Border.all(
-                color: peer.isConnected ? CyberColors.emeraldAccent(context) : CyberColors.primaryAccent(context),
+                color: peerAccent,
                 width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: peerAccent.withValues(alpha: 0.20),
+                  blurRadius: 8,
+                ),
+              ],
             ),
             child: Center(
               child: CyberIcon(
                 type: _getPeerCyberIcon(peer.deviceType),
-                color: peer.isConnected ? CyberColors.emeraldAccent(context) : CyberColors.primaryAccent(context),
+                color: peerAccent,
                 size: 20,
               ),
             ),
@@ -72,14 +80,14 @@ class PeerCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
-                          color: CyberColors.primaryAccent(context).withValues(alpha: 0.15),
+                          color: primaryAccent.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: CyberColors.primaryAccent(context).withValues(alpha: 0.3)),
+                          border: Border.all(color: primaryAccent.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           'Fast Link',
                           style: TextStyle(
-                            color: CyberColors.primaryAccent(context),
+                            color: primaryAccent,
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),
@@ -123,15 +131,16 @@ class PeerCard extends StatelessWidget {
             onPressed: onConfigureLimits,
           ),
 
-          // Connect button
+          // Connect button with glass sheen
           ElevatedButton(
             onPressed: onConnect,
             style: ElevatedButton.styleFrom(
-              backgroundColor: peer.isConnected ? CyberColors.emeraldAccent(context) : CyberColors.primaryAccent(context),
+              backgroundColor: peerAccent,
               foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               minimumSize: const Size(72, 34),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 2,
             ),
             child: Text(
               peer.isConnected ? 'Connected' : 'Send File',

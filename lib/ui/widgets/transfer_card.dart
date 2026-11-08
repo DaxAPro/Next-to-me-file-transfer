@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/models/transfer_models.dart';
 import '../../core/theme/cyber_colors.dart';
+import '../common_widgets/glass_container.dart';
 import 'wave_transfer_progress.dart';
 
 class TransferCard extends StatelessWidget {
@@ -24,14 +25,11 @@ class TransferCard extends StatelessWidget {
     final isPaused = task.status == TransferStatus.paused;
     final isCompleted = task.status == TransferStatus.completed;
 
-    return Container(
+    return GlassContainer(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: CyberColors.surface(context),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CyberColors.border(context)),
-      ),
+      borderRadius: BorderRadius.circular(16),
+      blur: 14,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

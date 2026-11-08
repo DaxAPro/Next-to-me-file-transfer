@@ -3,6 +3,8 @@ import '../../../core/theme/cyber_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
 import '../../common_widgets/custom_cyber_icons.dart';
+import '../../common_widgets/glass_background.dart';
+import '../../common_widgets/glass_container.dart';
 
 class SettingsScreen extends StatefulWidget {
   final HybridConnectionManager connectionManager;
@@ -29,146 +31,136 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: CyberColors.surface(context),
         elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Section: Appearance & Theme Mode
-          _buildSectionHeader(context, 'APPEARANCE & THEME'),
-          Container(
-            decoration: BoxDecoration(
-              color: CyberColors.surface(context),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: CyberColors.border(context)),
-            ),
-            child: SwitchListTile(
-              secondary: Icon(
-                isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
-                color: CyberColors.primaryAccent(context),
-              ),
-              title: Text(
-                'Dark Mode',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: CyberColors.text(context),
+      body: GlassBackground(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Section: Appearance & Theme Mode
+            _buildSectionHeader(context, 'APPEARANCE & THEME'),
+            GlassContainer(
+              borderRadius: BorderRadius.circular(12),
+              blur: 16,
+              child: SwitchListTile(
+                secondary: Icon(
+                  isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                  color: CyberColors.primaryAccent(context),
                 ),
+                title: Text(
+                  'Dark Mode',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: CyberColors.text(context),
+                  ),
+                ),
+                subtitle: Text(
+                  isDark ? 'OLED Black Cyber Theme' : 'Clean Pearl White Theme',
+                  style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
+                ),
+                value: ThemeController.instance.isDarkMode,
+                activeThumbColor: CyberColors.emeraldAccent(context),
+                onChanged: (val) {
+                  ThemeController.instance.toggleTheme();
+                  setState(() {});
+                },
               ),
-              subtitle: Text(
-                isDark ? 'OLED Black Cyber Theme' : 'Clean Pearl White Theme',
-                style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
-              ),
-              value: ThemeController.instance.isDarkMode,
-              activeThumbColor: CyberColors.emeraldAccent(context),
-              onChanged: (val) {
-                ThemeController.instance.toggleTheme();
-                setState(() {});
-              },
             ),
-          ),
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // Section: Device Profile
-          _buildSectionHeader(context, 'DEVICE PROFILE'),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: CyberColors.surface(context),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: CyberColors.border(context)),
-            ),
-            child: Row(
-              children: [
-                CyberIcon(type: CyberIconType.phone, size: 22, color: CyberColors.primaryAccent(context)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Device Nickname', style: TextStyle(fontSize: 11, color: CyberColors.subtext(context))),
-                      Text(
-                        cm.localDeviceName,
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
-                      ),
-                    ],
+            // Section: Device Profile
+            _buildSectionHeader(context, 'DEVICE PROFILE'),
+            GlassContainer(
+              padding: const EdgeInsets.all(14),
+              borderRadius: BorderRadius.circular(12),
+              blur: 16,
+              child: Row(
+                children: [
+                  CyberIcon(type: CyberIconType.phone, size: 22, color: CyberColors.primaryAccent(context)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Device Nickname', style: TextStyle(fontSize: 11, color: CyberColors.subtext(context))),
+                        Text(
+                          cm.localDeviceName,
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.edit_outlined, size: 20, color: CyberColors.subtext(context)),
-                  onPressed: () => _editDeviceName(context),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Section: Performance & Battery
-          _buildSectionHeader(context, 'BATTERY & PERFORMANCE'),
-          Container(
-            decoration: BoxDecoration(
-              color: CyberColors.surface(context),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: CyberColors.border(context)),
-            ),
-            child: Column(
-              children: [
-                SwitchListTile(
-                  title: Text(
-                    '🌿 Battery Saver',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                  IconButton(
+                    icon: Icon(Icons.edit_outlined, size: 20, color: CyberColors.subtext(context)),
+                    onPressed: () => _editDeviceName(context),
                   ),
-                  subtitle: Text(
-                    'Slows down radar scans to save phone battery.',
-                    style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
-                  ),
-                  value: cm.isEcoMode,
-                  activeThumbColor: CyberColors.emeraldAccent(context),
-                  onChanged: (val) {
-                    cm.toggleEcoMode();
-                    setState(() {});
-                  },
-                ),
-                Divider(color: CyberColors.border(context), height: 1),
-                ListTile(
-                  title: Text(
-                    'Fast Direct File Sharing',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
-                  ),
-                  subtitle: Text(
-                    'Transfers files smoothly without heating up your phone.',
-                    style: TextStyle(fontSize: 11, color: CyberColors.primaryAccent(context)),
-                  ),
-                  trailing: Icon(Icons.check_circle_outline, color: CyberColors.emeraldAccent(context), size: 20),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Section: Security
-          _buildSectionHeader(context, 'SECURITY & CONNECTION ACCESS'),
-          Container(
-            decoration: BoxDecoration(
-              color: CyberColors.surface(context),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: CyberColors.border(context)),
-            ),
-            child: SwitchListTile(
-              title: Text(
-                '4-Digit PIN Verification',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                ],
               ),
-              subtitle: Text(
-                _isPinProtected ? 'Active (PIN: $_pinCode)' : 'Incoming transfers accept automatically',
-                style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
-              ),
-              value: _isPinProtected,
-              activeThumbColor: CyberColors.primaryAccent(context),
-              onChanged: (val) {
-                setState(() => _isPinProtected = val);
-              },
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+
+            // Section: Performance & Battery
+            _buildSectionHeader(context, 'BATTERY & PERFORMANCE'),
+            GlassContainer(
+              borderRadius: BorderRadius.circular(12),
+              blur: 16,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    title: Text(
+                      '🌿 Battery Saver',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                    ),
+                    subtitle: Text(
+                      'Slows down radar scans to save phone battery.',
+                      style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
+                    ),
+                    value: cm.isEcoMode,
+                    activeThumbColor: CyberColors.emeraldAccent(context),
+                    onChanged: (val) {
+                      cm.toggleEcoMode();
+                      setState(() {});
+                    },
+                  ),
+                  Divider(color: CyberColors.border(context), height: 1),
+                  ListTile(
+                    title: Text(
+                      'Fast Direct File Sharing',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                    ),
+                    subtitle: Text(
+                      'Transfers files smoothly without heating up your phone.',
+                      style: TextStyle(fontSize: 11, color: CyberColors.primaryAccent(context)),
+                    ),
+                    trailing: Icon(Icons.check_circle_outline, color: CyberColors.emeraldAccent(context), size: 20),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Section: Security
+            _buildSectionHeader(context, 'SECURITY & CONNECTION ACCESS'),
+            GlassContainer(
+              borderRadius: BorderRadius.circular(12),
+              blur: 16,
+              child: SwitchListTile(
+                title: Text(
+                  '4-Digit PIN Verification',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                ),
+                subtitle: Text(
+                  _isPinProtected ? 'Active (PIN: $_pinCode)' : 'Incoming transfers accept automatically',
+                  style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
+                ),
+                value: _isPinProtected,
+                activeThumbColor: CyberColors.primaryAccent(context),
+                onChanged: (val) {
+                  setState(() => _isPinProtected = val);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

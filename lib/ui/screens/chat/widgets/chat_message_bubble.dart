@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/models/chat_message.dart';
 import '../../../../core/theme/cyber_colors.dart';
 import '../../../common_widgets/cyber_avatar.dart';
+import '../../../common_widgets/glass_container.dart';
 
 /// Clean, modular chat bubble supporting Dark and Light themes with user avatar.
 class ChatMessageBubble extends StatelessWidget {
@@ -77,19 +78,19 @@ class ChatMessageBubble extends StatelessWidget {
             const SizedBox(width: 8),
           ],
 
-          // Bubble container
+          // Glassy Bubble container
           Flexible(
-            child: Container(
+            child: GlassContainer(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              constraints: const BoxConstraints(maxWidth: 260),
-              decoration: BoxDecoration(
-                color: bubbleBg,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: borderColor),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              borderRadius: BorderRadius.circular(12),
+              color: bubbleBg.withValues(alpha: isDark ? 0.70 : 0.80),
+              border: Border.all(color: borderColor, width: 1.2),
+              blur: 10,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 260),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   if (!isMe)
                     Text(
                       message.senderName,
@@ -128,14 +129,15 @@ class ChatMessageBubble extends StatelessWidget {
               ),
             ),
           ),
+        ),
 
-          // "ME" avatar on right using assets/user_icon.png
-          if (isMe) ...[
-            const SizedBox(width: 8),
-            const CyberAvatar(size: 28, showStatusBadge: false),
-          ],
+        // "ME" avatar on right using assets/user_icon.png
+        if (isMe) ...[
+          const SizedBox(width: 8),
+          const CyberAvatar(size: 28, showStatusBadge: false),
         ],
-      ),
-    );
+      ],
+    ),
+  );
   }
 }

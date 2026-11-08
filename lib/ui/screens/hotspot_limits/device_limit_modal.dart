@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/device_peer.dart';
 import '../../../core/theme/cyber_colors.dart';
+import '../../common_widgets/glass_container.dart';
 import 'widgets/interactive_speedometer_gauge.dart';
 
 /// Modal for Configuring Per-Device Speed Limit & Quota
@@ -31,13 +32,10 @@ class _DeviceLimitModalState extends State<DeviceLimitModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassContainer(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: BoxDecoration(
-        color: CyberColors.surface(context),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        border: Border.all(color: CyberColors.border(context)),
-      ),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      blur: 20,
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,

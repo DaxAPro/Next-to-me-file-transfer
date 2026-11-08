@@ -3,6 +3,8 @@ import '../../../core/models/device_peer.dart';
 import '../../../core/theme/cyber_colors.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
 import '../../common_widgets/custom_cyber_icons.dart';
+import '../../common_widgets/glass_background.dart';
+import '../../common_widgets/glass_container.dart';
 import 'device_limit_modal.dart';
 import 'widgets/live_bandwidth_card.dart';
 
@@ -22,20 +24,18 @@ class HotspotLimitsScreen extends StatelessWidget {
         backgroundColor: CyberColors.surface(context),
         elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Banner Notice
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: CyberColors.surface(context),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: CyberColors.border(context)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+      body: GlassBackground(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Banner Notice
+            GlassContainer(
+              padding: const EdgeInsets.all(14),
+              borderRadius: BorderRadius.circular(14),
+              blur: 14,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 const CyberIcon(
                   type: CyberIconType.shield,
                   color: CyberColors.electricCyan,
@@ -113,20 +113,18 @@ class HotspotLimitsScreen extends StatelessWidget {
             ...peers.map((peer) => _buildPeerLimitTile(context, peer)),
         ],
       ),
+    ),
     );
   }
 
   Widget _buildPeerLimitTile(BuildContext context, DevicePeer peer) {
     final limit = peer.limitProfile;
 
-    return Container(
+    return GlassContainer(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: CyberColors.surface(context),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CyberColors.border(context)),
-      ),
+      borderRadius: BorderRadius.circular(14),
+      blur: 14,
       child: Column(
         children: [
           Row(
