@@ -91,7 +91,7 @@ class PeerCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '${peer.os} • ${peer.rssi} dBm',
+                      '${peer.os} • Nearby',
                       style: const TextStyle(
                         color: CyberColors.textSecondary,
                         fontSize: 11,
@@ -102,7 +102,7 @@ class PeerCard extends StatelessWidget {
                       const CyberIcon(type: CyberIconType.speedometer, size: 12, color: CyberColors.warningAmber),
                       const SizedBox(width: 3),
                       Text(
-                        '${(peer.speedLimitBytesPerSec / (1024 * 1024)).toStringAsFixed(0)}MB/s',
+                        '${(peer.speedLimitBytesPerSec / (1024 * 1024)).toStringAsFixed(0)} MB/s',
                         style: const TextStyle(
                           color: CyberColors.warningAmber,
                           fontSize: 10,
@@ -119,7 +119,7 @@ class PeerCard extends StatelessWidget {
           // Limit Config Button
           IconButton(
             icon: const Icon(Icons.tune_rounded, color: CyberColors.textSecondary, size: 20),
-            tooltip: 'Speed & Data Limits',
+            tooltip: 'Set Speed Limit',
             onPressed: onConfigureLimits,
           ),
 
@@ -134,7 +134,7 @@ class PeerCard extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
             ),
             child: Text(
-              peer.isConnected ? 'Connected' : 'Send',
+              peer.isConnected ? 'Connected' : 'Send File',
               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
             ),
           ),

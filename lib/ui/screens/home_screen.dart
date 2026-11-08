@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/user_friendly_strings.dart';
 import '../../core/models/device_peer.dart';
 import '../../core/models/transfer_models.dart';
 import '../../core/theme/cyber_colors.dart';
@@ -320,9 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        cm.activeMode == ConnectionMode.directMode
-                            ? 'NEARBY DEVICES (5GHz)'
-                            : 'LAN DEVICES (ROUTER)',
+                        UserFriendlyStrings.sectionNearbyDevices,
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: CyberColors.electricCyan),
                       ),
                       Text(
@@ -338,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: Center(
                       child: Text(
-                        'Scanning for nearby devices...',
+                        UserFriendlyStrings.statusScanning,
                         style: TextStyle(fontSize: 12, color: CyberColors.textSecondary),
                       ),
                     ),
@@ -382,7 +381,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    'Direct (BLE + 5GHz)',
+                    UserFriendlyStrings.modeNearby,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -404,7 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    'Home Mode (LAN)',
+                    UserFriendlyStrings.modeHomeWifi,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,

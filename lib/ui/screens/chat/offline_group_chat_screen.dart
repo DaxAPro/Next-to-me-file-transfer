@@ -90,7 +90,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
           id: 'cleared-${DateTime.now().millisecondsSinceEpoch}',
           senderId: 'sys',
           senderName: 'System',
-          content: 'Chat conversation cleared.',
+          content: 'Chat cleared.',
           type: ChatMessageType.system,
         ),
       );
@@ -134,7 +134,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
                   children: const [
                     Icon(Icons.delete_sweep_outlined, size: 18, color: CyberColors.dangerRed),
                     SizedBox(width: 8),
-                    Text('Clear Conversation', style: TextStyle(color: CyberColors.textPrimary, fontSize: 13)),
+                    Text('Clear Chat', style: TextStyle(color: CyberColors.textPrimary, fontSize: 13)),
                   ],
                 ),
               ),
@@ -149,7 +149,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _isChatEnabled ? 'Disable Chat' : 'Enable Chat',
+                      _isChatEnabled ? 'Pause Chat' : 'Resume Chat',
                       style: const TextStyle(color: CyberColors.textPrimary, fontSize: 13),
                     ),
                   ],
@@ -170,7 +170,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
                 const CyberIcon(type: CyberIconType.wifiDirect, size: 16, color: CyberColors.techEmerald),
                 const SizedBox(width: 8),
                 Text(
-                  'Connected to ${widget.connectionManager.discoveredPeers.length} peer(s) via Wi-Fi P2P',
+                  'Connected to ${widget.connectionManager.discoveredPeers.length} friend(s) nearby (No Internet)',
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: CyberColors.textPrimary),
                 ),
               ],

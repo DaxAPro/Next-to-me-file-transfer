@@ -112,8 +112,8 @@ class _InteractiveSpeedometerGaugeState extends State<InteractiveSpeedometerGaug
                         ),
                         child: Text(
                           widget.speedMb == 0
-                              ? 'NO THROTTLE'
-                              : 'THROTTLE: ${((1.0 - _ratio) * 100).toInt()}%',
+                              ? 'FULL SPEED'
+                              : 'LIMIT: ${widget.speedMb.toStringAsFixed(0)} MB/S',
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,

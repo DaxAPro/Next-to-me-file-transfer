@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/user_friendly_strings.dart';
 import '../../../core/theme/cyber_colors.dart';
-import '../../common_widgets/cyber_avatar.dart';
+import '../../common_widgets/branded_app_logo.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -21,16 +22,22 @@ class AboutScreen extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                const CyberAvatar(size: 64, showStatusBadge: false),
-                const SizedBox(height: 12),
+                // Branded App Logo (image_16.png)
+                const BrandedAppLogo(size: 80),
+                const SizedBox(height: 14),
                 const Text(
-                  AppConstants.appName,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: CyberColors.textPrimary),
+                  UserFriendlyStrings.appName,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: CyberColors.textPrimary),
+                ),
+                const SizedBox(height: 3),
+                const Text(
+                  UserFriendlyStrings.appTagline,
+                  style: TextStyle(fontSize: 12, color: CyberColors.electricCyan, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 const Text(
                   AppConstants.appVersion,
-                  style: TextStyle(fontSize: 12, color: CyberColors.electricCyan, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 11, color: CyberColors.textSecondary),
                 ),
               ],
             ),
@@ -47,13 +54,13 @@ class AboutScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Architecture & Tech Stack', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: CyberColors.electricCyan)),
+                const Text('Key Benefits', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: CyberColors.electricCyan)),
                 const SizedBox(height: 8),
-                _buildTechRow('UI Framework', 'Flutter (Android, iOS, PC)'),
-                _buildTechRow('High-Speed Channel', '5GHz Wi-Fi Direct (40MB/s+)'),
-                _buildTechRow('Auto-Discovery', 'Bluetooth Low Energy (BLE 1-sec)'),
-                _buildTechRow('Green Code Engine', 'Zero-Copy Linux sendfile() C++'),
-                _buildTechRow('PC Connectivity', 'Embedded Local Web Server (No App Needed)'),
+                _buildTechRow('Internet Required', 'None (100% Offline)'),
+                _buildTechRow('Connection Speed', 'Up to 50 MB/s'),
+                _buildTechRow('Battery Protection', 'Smart Battery Saver Mode'),
+                _buildTechRow('PC Connectivity', 'Connects in any PC Browser'),
+                _buildTechRow('Save Location', 'Standard Downloads Folder'),
               ],
             ),
           ),
@@ -69,11 +76,11 @@ class AboutScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Developer Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: CyberColors.techEmerald)),
+                const Text('App Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: CyberColors.techEmerald)),
                 const SizedBox(height: 8),
-                _buildTechRow('Lead Engineer', 'DaxAPro'),
-                _buildTechRow('Repository', 'github.com/DaxAPro/Next-to-me-file-transfer'),
-                _buildTechRow('License', 'MIT Open Source'),
+                _buildTechRow('Developer', 'DaxAPro'),
+                _buildTechRow('GitHub', 'github.com/DaxAPro/Next-to-me-file-transfer'),
+                _buildTechRow('License', 'Open Source (MIT)'),
               ],
             ),
           ),

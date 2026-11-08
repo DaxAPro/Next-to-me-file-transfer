@@ -152,7 +152,7 @@ class TransferCard extends StatelessWidget {
                       onPressed: onStreamPlay,
                       icon: const Icon(Icons.play_circle_fill, color: CyberColors.electricCyan, size: 16),
                       label: const Text(
-                        'Stream Now (5%)',
+                        'Watch while downloading ▶',
                         style: TextStyle(color: CyberColors.electricCyan, fontSize: 11, fontWeight: FontWeight.bold),
                       ),
                       style: TextButton.styleFrom(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/user_friendly_strings.dart';
 import '../../../core/theme/cyber_colors.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
+import '../../common_widgets/branded_app_logo.dart';
 import '../../common_widgets/custom_cyber_icons.dart';
 import '../home/home_screen.dart';
 
@@ -21,21 +23,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, dynamic>> _slides = [
     {
-      'iconType': CyberIconType.wifiDirect,
-      'title': '40MB/s+ Zero-Copy Speed',
-      'desc': 'Direct 5GHz Wi-Fi handover with BLE 1-second auto-discovery. No internet or cables required.',
-      'color': CyberColors.electricCyan,
-    },
-    {
-      'iconType': CyberIconType.speedometer,
-      'title': 'Granular Hotspot Limits',
-      'desc': 'Control per-device bandwidth and data quotas at the stream level without touching OS settings.',
+      'useLogo': true,
+      'title': UserFriendlyStrings.appTagline,
+      'desc': 'Share videos, photos, and files in seconds with nearby phones & PCs. No internet or data needed.',
       'color': CyberColors.techEmerald,
     },
     {
+      'useLogo': false,
+      'iconType': CyberIconType.speedometer,
+      'title': 'Set Speed & Data Limits',
+      'desc': 'Control transfer speed per device with an interactive speed dial to keep your phone smooth and cool.',
+      'color': CyberColors.electricCyan,
+    },
+    {
+      'useLogo': false,
       'iconType': CyberIconType.chat,
-      'title': 'Offline Chat & Clipboard',
-      'desc': 'WhatsApp-style group messaging and real-time universal clipboard sync over direct Wi-Fi.',
+      'title': 'Chat & Share Links Offline',
+      'desc': 'Chat with connected friends, send emojis, and sync copied links without any internet connection.',
       'color': CyberColors.cyberViolet,
     },
   ];
@@ -78,28 +82,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPageChanged: (index) => setState(() => _currentPage = index),
                 itemBuilder: (context, index) {
                   final slide = _slides[index];
+                  final isLogo = slide['useLogo'] == true;
                   final color = slide['color'] as Color;
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 88,
-                          height: 88,
-                          decoration: BoxDecoration(
-                            color: CyberColors.darkSurface,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: color, width: 2),
-                          ),
-                          child: Center(
-                            child: CyberIcon(
-                              type: slide['iconType'] as CyberIconType,
-                              size: 44,
-                              color: color,
+                        if (isLogo)
+                          const BrandedAppLogo(size: 96)
+                        else
+                          Container(
+                            width: 88,
+                            height: 88,
+                            decoration: BoxDecoration(
+                              color: CyberColors.darkSurface,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: color, width: 2),
+                            ),
+                            child: Center(
+                              child: CyberIcon(
+                                type: slide['iconType'] as CyberIconType,
+                                size: 44,
+                                color: color,
+                              ),
                             ),
                           ),
-                        ),
                         const SizedBox(height: 32),
                         Text(
                           slide['title'] as String,

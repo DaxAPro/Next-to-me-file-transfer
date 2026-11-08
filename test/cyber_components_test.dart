@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:next_to_me/core/constants/user_friendly_strings.dart';
 import 'package:next_to_me/core/models/device_peer.dart';
 import 'package:next_to_me/core/theme/cyber_colors.dart';
+import 'package:next_to_me/ui/common_widgets/branded_app_logo.dart';
 import 'package:next_to_me/ui/common_widgets/cyber_avatar.dart';
 import 'package:next_to_me/ui/common_widgets/custom_cyber_icons.dart';
 import 'package:next_to_me/ui/screens/hotspot_limits/widgets/interactive_speedometer_gauge.dart';
@@ -47,6 +49,25 @@ void main() {
         );
         expect(find.byType(CyberIcon), findsOneWidget);
       }
+    });
+
+    testWidgets('BrandedAppLogo renders vector representation properly', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: BrandedAppLogo(size: 80, useAssetIfAvailable: false),
+          ),
+        ),
+      );
+      expect(find.byType(BrandedAppLogo), findsOneWidget);
+      expect(find.byType(CustomPaint), findsWidgets);
+    });
+
+    test('UserFriendlyStrings has clean zero-jargon copy', () {
+      expect(UserFriendlyStrings.appTagline, equals('Ultra-Fast Transfers without Internet'));
+      expect(UserFriendlyStrings.navHome, equals('Home'));
+      expect(UserFriendlyStrings.navSetLimits, equals('Set Limits'));
+      expect(UserFriendlyStrings.navHistory, equals('History'));
     });
   });
 

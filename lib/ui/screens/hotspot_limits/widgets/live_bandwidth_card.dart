@@ -76,7 +76,7 @@ class LiveBandwidthCard extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  isThrottled ? 'PACED' : 'OPTIMAL',
+                  isThrottled ? 'LIMIT ACTIVE' : 'FULL SPEED',
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.bold,

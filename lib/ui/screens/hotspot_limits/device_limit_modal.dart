@@ -62,7 +62,7 @@ class _DeviceLimitModalState extends State<DeviceLimitModal> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'SPEED & QUOTA LIMITS',
+                      'SET SPEED & DATA LIMIT',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,

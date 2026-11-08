@@ -62,7 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 20),
 
           // Section: Performance & Battery
-          _buildSectionHeader('PERFORMANCE & GREEN CODE'),
+          _buildSectionHeader('BATTERY & PERFORMANCE'),
           Container(
             decoration: BoxDecoration(
               color: CyberColors.darkSurface,
@@ -72,9 +72,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: [
                 SwitchListTile(
-                  title: const Text('🌿 Eco Mode (Battery Saver)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
+                  title: const Text('🌿 Battery Saver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
                   subtitle: const Text(
-                    'Halts radar animations and throttles background polling to save battery.',
+                    'Slows down radar scans to save phone battery.',
                     style: TextStyle(fontSize: 11, color: CyberColors.textSecondary),
                   ),
                   value: cm.isEcoMode,
@@ -86,8 +86,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const Divider(color: CyberColors.borderOutline, height: 1),
                 const ListTile(
-                  title: Text('Zero-Copy Socket Transfer', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
-                  subtitle: Text('Kernel-level sendfile() enabled for high-speed file streaming.', style: TextStyle(fontSize: 11, color: CyberColors.electricCyan)),
+                  title: Text('Fast Direct File Sharing', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.textPrimary)),
+                  subtitle: Text('Transfers files smoothly without heating up your phone.', style: TextStyle(fontSize: 11, color: CyberColors.electricCyan)),
                   trailing: Icon(Icons.check_circle_outline, color: CyberColors.techEmerald, size: 20),
                 ),
               ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/constants/user_friendly_strings.dart';
 import '../../core/theme/cyber_colors.dart';
 import '../../services/connection/hybrid_connection_manager.dart';
 import '../common_widgets/cyber_avatar.dart';
@@ -13,8 +14,8 @@ import '../screens/settings/settings_screen.dart';
 
 enum DrawerItem {
   home,
-  hotspotLimits,
-  downloadHistory,
+  setLimits,
+  history,
   offlineChat,
   settings,
   about,
@@ -40,31 +41,31 @@ class AppNavigationDrawer extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // Drawer Header: Persona Avatar & Device Status
+            // Drawer Header: image_13.png Persona Avatar & Status
             _buildDrawerHeader(),
             const Divider(color: CyberColors.borderOutline, height: 1),
 
-            // Ordered Menu Items
+            // Ordered Menu Items (Unnumbered, Non-technical)
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                 children: [
-                  // 1. Home / File Share
+                  // 1. Home
                   _buildNavItem(
                     iconType: CyberIconType.wifiDirect,
-                    title: 'Home / File Share',
+                    title: UserFriendlyStrings.navHome,
                     isSelected: currentItem == DrawerItem.home,
                     onTap: () => Navigator.pop(context),
                   ),
 
-                  // 2. Hotspot Limits
+                  // 2. Set Limits
                   _buildNavItem(
                     iconType: CyberIconType.speedometer,
-                    title: 'Hotspot Limits',
+                    title: UserFriendlyStrings.navSetLimits,
                     subtitle: connectionManager.hostLimitProfile.isSpeedThrottled
-                        ? 'Throttled (${connectionManager.hostLimitProfile.formattedSpeedLimit})'
-                        : 'Granular Controls',
-                    isSelected: currentItem == DrawerItem.hotspotLimits,
+                        ? 'Limited (${connectionManager.hostLimitProfile.formattedSpeedLimit})'
+                        : 'Adjust speed dial',
+                    isSelected: currentItem == DrawerItem.setLimits,
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
@@ -76,12 +77,12 @@ class AppNavigationDrawer extends StatelessWidget {
                     },
                   ),
 
-                  // 3. Download History
+                  // 3. History
                   _buildNavItem(
                     iconType: CyberIconType.history,
-                    title: 'Download History',
-                    subtitle: '${connectionManager.activeTransfers.length} records',
-                    isSelected: currentItem == DrawerItem.downloadHistory,
+                    title: UserFriendlyStrings.navHistory,
+                    subtitle: '${connectionManager.activeTransfers.length} files saved',
+                    isSelected: currentItem == DrawerItem.history,
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
@@ -96,8 +97,8 @@ class AppNavigationDrawer extends StatelessWidget {
                   // 4. Offline Chat
                   _buildNavItem(
                     iconType: CyberIconType.chat,
-                    title: 'Offline Chat',
-                    subtitle: 'Wi-Fi P2P Group',
+                    title: UserFriendlyStrings.navOfflineChat,
+                    subtitle: 'Chat without internet',
                     isSelected: currentItem == DrawerItem.offlineChat,
                     onTap: () {
                       Navigator.pop(context);
@@ -113,8 +114,8 @@ class AppNavigationDrawer extends StatelessWidget {
                   // 5. Settings
                   _buildNavItem(
                     iconType: CyberIconType.eco,
-                    title: 'Settings',
-                    subtitle: 'Theme, Eco Mode & PIN',
+                    title: UserFriendlyStrings.navSettings,
+                    subtitle: 'Battery saver & PIN lock',
                     isSelected: currentItem == DrawerItem.settings,
                     onTap: () {
                       Navigator.pop(context);
@@ -135,7 +136,7 @@ class AppNavigationDrawer extends StatelessWidget {
                   // 6. About
                   _buildNavItem(
                     iconType: CyberIconType.phone,
-                    title: 'About',
+                    title: UserFriendlyStrings.navAbout,
                     isSelected: currentItem == DrawerItem.about,
                     onTap: () {
                       Navigator.pop(context);
@@ -151,7 +152,7 @@ class AppNavigationDrawer extends StatelessWidget {
                   // 7. Privacy Policy
                   _buildNavItem(
                     iconType: CyberIconType.shield,
-                    title: 'Privacy Policy',
+                    title: UserFriendlyStrings.navPrivacyPolicy,
                     isSelected: currentItem == DrawerItem.privacyPolicy,
                     onTap: () {
                       Navigator.pop(context);
@@ -167,7 +168,7 @@ class AppNavigationDrawer extends StatelessWidget {
               ),
             ),
 
-            // 8. Footer: Version 1.0.0
+            // Footer: Version 1.0.0
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
@@ -208,7 +209,7 @@ class AppNavigationDrawer extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Distinct Flat 2D Digital Humanoid Persona Node
+          // Distinct Flat 2D Digital Humanoid Persona Node (image_13.png)
           const CyberAvatar(size: 46, showStatusBadge: true),
           const SizedBox(width: 12),
           Expanded(
@@ -216,9 +217,9 @@ class AppNavigationDrawer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  connectionManager.localDeviceName,
+                  '${connectionManager.localDeviceName} (ME)',
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: CyberColors.textPrimary,
                   ),
@@ -239,7 +240,9 @@ class AppNavigationDrawer extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      connectionManager.isConnected ? 'Connected' : 'Ready to share',
+                      connectionManager.isConnected
+                          ? UserFriendlyStrings.statusConnected
+                          : 'Ready to share',
                       style: const TextStyle(
                         fontSize: 11,
                         color: CyberColors.textSecondary,

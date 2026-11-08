@@ -18,7 +18,7 @@ class HotspotLimitsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: CyberColors.oledBlack,
       appBar: AppBar(
-        title: const Text('Hotspot Limits'),
+        title: const Text('Set Limits'),
         backgroundColor: CyberColors.darkSurface,
         elevation: 0,
       ),
@@ -45,18 +45,18 @@ class HotspotLimitsScreen extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Application Stream-Level Pacing',
+                    children: const [
+                      Text(
+                        'Smooth Device Pacing',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                           color: CyberColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      const Text(
-                        'Throttles socket transmission byte-rates and enforces transfer quotas per connected device without touching OS-level hotspot settings.',
+                      SizedBox(height: 3),
+                      Text(
+                        'Control transfer speed and data limits per device to keep your transfers running smoothly without overheating.',
                         style: TextStyle(
                           fontSize: 11,
                           color: CyberColors.textSecondary,
