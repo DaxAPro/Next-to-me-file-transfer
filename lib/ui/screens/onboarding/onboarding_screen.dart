@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
-import '../home/home_screen.dart';
+import '../home_screen.dart';
 
 /// 4-Step Welcome Onboarding Screen Slider
 /// Displayed ONLY on the very first launch of the application.
@@ -79,11 +79,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           fit: BoxFit.contain,
                           alignment: Alignment.center,
                           errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Image.asset(
-                                _slides[index].replaceFirst('assets/images/', 'assets/'),
-                                fit: BoxFit.contain,
-                              ),
+                            return const Center(
+                              child: Icon(Icons.image_outlined, size: 64, color: Colors.grey),
                             );
                           },
                         ),
