@@ -8,9 +8,12 @@ import 'package:next_to_me/core/theme/theme_controller.dart';
 import 'package:next_to_me/ui/common_widgets/branded_app_logo.dart';
 import 'package:next_to_me/ui/common_widgets/cyber_avatar.dart';
 import 'package:next_to_me/ui/common_widgets/custom_cyber_icons.dart';
+import 'package:next_to_me/ui/screens/about/about_screen.dart';
 import 'package:next_to_me/ui/screens/hotspot_limits/widgets/interactive_speedometer_gauge.dart';
 import 'package:next_to_me/ui/screens/hotspot_limits/widgets/live_bandwidth_card.dart';
+import 'package:next_to_me/ui/screens/privacy/privacy_policy_screen.dart';
 import 'package:next_to_me/ui/widgets/adaptive_radar_painter.dart';
+import 'package:next_to_me/ui/widgets/radar_scan_view.dart';
 import 'package:next_to_me/ui/widgets/wave_transfer_progress.dart';
 
 void main() {
@@ -21,6 +24,13 @@ void main() {
   });
 
   group('ThemeController & Dark/Light Mode', () {
+    test('ThemeController defaults to Light Mode initially', () async {
+      final controller = ThemeController.instance;
+      await controller.init();
+      expect(controller.isDarkMode, isFalse);
+      expect(controller.themeMode, equals(ThemeMode.light));
+    });
+
     test('ThemeController toggles seamlessly between dark and light', () async {
       final controller = ThemeController.instance;
       await controller.setThemeMode(ThemeMode.dark);
@@ -65,6 +75,73 @@ void main() {
         ),
       );
       expect(lightBg, equals(CyberColors.lightBg));
+    });
+  });
+
+  group('Orbital Constellation Radar Scanner (10+ Devices)', () {
+    testWidgets('RadarScanView renders 12 devices in orbital constellation without errors', (tester) async {
+      final twelvePeers = List.generate(
+        12,
+        (i) => DevicePeer(
+          id: 'dev-$i',
+          name: 'Device $i',
+          ipAddress: '192.168.49.${10 + i}',
+          port: 8888,
+          mode: ConnectionMode.directMode,
+          deviceType: i % 3 == 0 ? DeviceType.pc : (i % 2 == 0 ? DeviceType.tablet : DeviceType.phone),
+          rssi: -45 - (i * 3),
+        ),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RadarScanView(
+              peers: twelvePeers,
+              isScanning: true,
+              isEcoMode: false,
+              onPeerSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(RadarScanView), findsOneWidget);
+      expect(find.text('ME'), findsOneWidget);
+      expect(find.text('Device'), findsWidgets);
+    });
+  });
+
+  group('Play Store Deployment Package (About & Privacy Policy)', () {
+    testWidgets('AboutScreen displays exact required Play Store text', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: AboutScreen(),
+        ),
+      );
+
+      expect(find.text('About NextToMe'), findsWidgets);
+      expect(find.text('Version: 1.0.0'), findsOneWidget);
+      expect(
+        find.textContaining('NextToMe is the ultimate high-speed, offline file-sharing and communication hub'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('PrivacyPolicyScreen displays exact required Play Store permissions text', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: PrivacyPolicyScreen(),
+        ),
+      );
+
+      expect(find.text('Privacy Policy'), findsOneWidget);
+      expect(find.text('100% Offline & Private'), findsOneWidget);
+      expect(find.text('Permissions Explained:'), findsOneWidget);
+      expect(
+        find.textContaining('Your transfers and offline chats are routed only between the connected devices'),
+        findsOneWidget,
+      );
     });
   });
 

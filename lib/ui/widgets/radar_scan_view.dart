@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/models/device_peer.dart';
 import '../../core/theme/cyber_colors.dart';
 import '../common_widgets/cyber_avatar.dart';
-import '../common_widgets/custom_cyber_icons.dart';
-import 'adaptive_radar_painter.dart';
+import 'orbital_peer_node.dart';
 
+/// Advanced Orbital Constellation Radar Scanner (Handles 10+ Devices Gracefully)
 class RadarScanView extends StatefulWidget {
   final List<DevicePeer> peers;
   final bool isScanning;
@@ -25,24 +25,30 @@ class RadarScanView extends StatefulWidget {
 }
 
 class _RadarScanViewState extends State<RadarScanView> with TickerProviderStateMixin {
-  late AnimationController _rotationController;
-  late AnimationController _pulseController;
+  late final AnimationController _rotationController;
+  late final AnimationController _rippleController;
+  late final AnimationController _orbitalController;
 
   @override
   void initState() {
     super.initState();
     _rotationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3200),
+      duration: const Duration(milliseconds: 3600),
     );
-    _pulseController = AnimationController(
+    _rippleController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 2400),
+    );
+    _orbitalController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 16000),
     );
 
     if (widget.isScanning && !widget.isEcoMode) {
       _rotationController.repeat();
-      _pulseController.repeat();
+      _rippleController.repeat();
+      _orbitalController.repeat();
     }
   }
 
@@ -52,10 +58,12 @@ class _RadarScanViewState extends State<RadarScanView> with TickerProviderStateM
     if (widget.isScanning != oldWidget.isScanning || widget.isEcoMode != oldWidget.isEcoMode) {
       if (widget.isScanning && !widget.isEcoMode) {
         if (!_rotationController.isAnimating) _rotationController.repeat();
-        if (!_pulseController.isAnimating) _pulseController.repeat();
+        if (!_rippleController.isAnimating) _rippleController.repeat();
+        if (!_orbitalController.isAnimating) _orbitalController.repeat();
       } else {
         if (_rotationController.isAnimating) _rotationController.stop();
-        if (_pulseController.isAnimating) _pulseController.stop();
+        if (_rippleController.isAnimating) _rippleController.stop();
+        if (_orbitalController.isAnimating) _orbitalController.stop();
       }
     }
   }
@@ -63,21 +71,37 @@ class _RadarScanViewState extends State<RadarScanView> with TickerProviderStateM
   @override
   void dispose() {
     _rotationController.dispose();
-    _pulseController.dispose();
+    _rippleController.dispose();
+    _orbitalController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryAccent = CyberColors.primaryAccent(context);
     final borderColor = CyberColors.border(context);
-    final surfaceColor = CyberColors.surface(context);
-    final textPrimary = CyberColors.text(context);
+    final primaryAccent = CyberColors.primaryAccent(context);
+    final emeraldAccent = CyberColors.emeraldAccent(context);
+
+    final crowdScale = widget.peers.length >= 10
+        ? 0.74
+        : widget.peers.length >= 6
+            ? 0.85
+            : 1.0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = min(constraints.maxWidth, 280.0);
+        final size = min(constraints.maxWidth, 300.0);
+        final maxRadius = size / 2;
+
+        // Orbital Track radii: Inner (0.38), Middle (0.62), Outer (0.86)
+        final trackRadii = [maxRadius * 0.38, maxRadius * 0.62, maxRadius * 0.86];
+
+        // Group peers into orbits to avoid overlapping
+        final Map<int, List<DevicePeer>> orbitGroups = {0: [], 1: [], 2: []};
+        for (int i = 0; i < widget.peers.length; i++) {
+          final track = _assignOrbitTrack(i, widget.peers.length);
+          orbitGroups[track]!.add(widget.peers[i]);
+        }
 
         return Center(
           child: SizedBox(
@@ -86,13 +110,31 @@ class _RadarScanViewState extends State<RadarScanView> with TickerProviderStateM
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Concentric Sonar Rings
+                // 1. Orbital Constellation Grid Rings
                 CustomPaint(
                   size: Size(size, size),
-                  painter: _RadarGridPainter(gridColor: borderColor),
+                  painter: _RadarGridPainter(
+                    gridColor: borderColor,
+                    trackRadii: trackRadii,
+                  ),
                 ),
 
-                // Rotating Radar Sweep Beam
+                // 2. Smooth Outward-Rippling Sonar Pulses
+                if (widget.isScanning && !widget.isEcoMode)
+                  AnimatedBuilder(
+                    animation: _rippleController,
+                    builder: (context, child) {
+                      return CustomPaint(
+                        size: Size(size, size),
+                        painter: _SonarRipplesPainter(
+                          animationValue: _rippleController.value,
+                          rippleColor: primaryAccent,
+                        ),
+                      );
+                    },
+                  ),
+
+                // 3. Rotating Radar Sweep Beam
                 if (widget.isScanning && !widget.isEcoMode)
                   AnimatedBuilder(
                     animation: _rotationController,
@@ -107,98 +149,29 @@ class _RadarScanViewState extends State<RadarScanView> with TickerProviderStateM
                     },
                   ),
 
-                // Center local device identity node: Distinct Flat 2D Cyber Persona
-                const CyberAvatar(size: 48, showStatusBadge: true),
+                // 4. Center "ME" User Node (assets/user_icon.png)
+                _buildCenterUserNode(primaryAccent, emeraldAccent),
 
-                // Discovered Peer Nodes placed radially based on RSSI
-                ...widget.peers.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final peer = entry.value;
-
-                  final angle = (index * (2 * pi / max(1, widget.peers.length))) - (pi / 2);
-                  final normalizedDistance = ((peer.rssi.abs() - 40) / 55.0).clamp(0.35, 0.85);
-                  final radius = (size / 2) * normalizedDistance;
-
-                  final x = (size / 2) + radius * cos(angle) - 22;
-                  final y = (size / 2) + radius * sin(angle) - 22;
-
-                  final peerAccent = peer.isConnected ? CyberColors.techEmerald : primaryAccent;
-
-                  return Positioned(
-                    left: x,
-                    top: y,
-                    child: GestureDetector(
-                      onTap: () => widget.onPeerSelected(peer),
-                      child: Tooltip(
-                        message: '${peer.name} (${peer.rssi} dBm)',
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 44,
-                              height: 44,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  if (peer.isConnected && !widget.isEcoMode)
-                                    AnimatedBuilder(
-                                      animation: _pulseController,
-                                      builder: (context, child) {
-                                        return CustomPaint(
-                                          size: const Size(44, 44),
-                                          painter: DeviceAdaptivePulsePainter(
-                                            animationValue: _pulseController.value,
-                                            deviceType: peer.deviceType,
-                                            baseColor: CyberColors.techEmerald,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: surfaceColor,
-                                      border: Border.all(color: peerAccent, width: 1.8),
-                                    ),
-                                    child: Center(
-                                      child: CyberIcon(
-                                        type: _getPeerCyberIcon(peer.deviceType),
-                                        size: 18,
-                                        color: peerAccent,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? CyberColors.oledBlack.withValues(alpha: 0.85)
-                                    : Colors.white.withValues(alpha: 0.95),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: borderColor, width: 0.8),
-                              ),
-                              child: Text(
-                                peer.name.split(' ').first,
-                                style: TextStyle(
-                                  color: textPrimary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+                // 5. Orbital Constellation Peer Nodes (No overlap for 10+ devices)
+                AnimatedBuilder(
+                  animation: _orbitalController,
+                  builder: (context, child) {
+                    final orbitalTime = _orbitalController.value * 2 * pi;
+                    return Stack(
+                      children: [
+                        for (int track = 0; track < 3; track++)
+                          ..._buildTrackPeers(
+                            orbitGroups[track]!,
+                            track,
+                            trackRadii[track],
+                            size,
+                            orbitalTime,
+                            crowdScale,
+                          ),
+                      ],
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -207,39 +180,104 @@ class _RadarScanViewState extends State<RadarScanView> with TickerProviderStateM
     );
   }
 
-  CyberIconType _getPeerCyberIcon(DeviceType type) {
-    switch (type) {
-      case DeviceType.pc:
-        return CyberIconType.pc;
-      case DeviceType.tablet:
-        return CyberIconType.tablet;
-      case DeviceType.phone:
-      case DeviceType.unknown:
-        return CyberIconType.phone;
-    }
+  Widget _buildCenterUserNode(Color primaryAccent, Color emeraldAccent) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const CyberAvatar(size: 46, showStatusBadge: true),
+        const SizedBox(height: 2),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(
+            color: emeraldAccent.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: emeraldAccent, width: 0.8),
+          ),
+          child: Text(
+            'ME',
+            style: TextStyle(
+              fontSize: 8.5,
+              fontWeight: FontWeight.bold,
+              color: emeraldAccent,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  int _assignOrbitTrack(int index, int total) {
+    if (total <= 3) return 1; // Middle
+    if (total <= 6) return (index % 2 == 0) ? 0 : 1; // Inner and Middle
+    // 7 to 10+ devices distributed across 3 distinct concentric rings
+    return index % 3;
+  }
+
+  List<Widget> _buildTrackPeers(
+    List<DevicePeer> peers,
+    int track,
+    double radius,
+    double size,
+    double orbitalTime,
+    double crowdScale,
+  ) {
+    if (peers.isEmpty) return [];
+
+    // Slow orbital rotation per ring (different speeds & directions prevent clustering)
+    final trackRotation = (track == 0)
+        ? orbitalTime * 0.12
+        : (track == 1)
+            ? -orbitalTime * 0.08
+            : orbitalTime * 0.05;
+
+    final center = size / 2;
+
+    return peers.asMap().entries.map((entry) {
+      final slotIndex = entry.key;
+      final peer = entry.value;
+
+      final angleStep = (2 * pi) / max(1, peers.length);
+      final angle = (slotIndex * angleStep) - (pi / 2) + trackRotation;
+
+      final x = center + radius * cos(angle) - 22;
+      final y = center + radius * sin(angle) - 22;
+
+      return Positioned(
+        left: x,
+        top: y,
+        child: OrbitalPeerNode(
+          peer: peer,
+          crowdScale: crowdScale,
+          isEcoMode: widget.isEcoMode,
+          pulseValue: _rippleController.value,
+          onTap: () => widget.onPeerSelected(peer),
+        ),
+      );
+    }).toList();
   }
 }
 
 class _RadarGridPainter extends CustomPainter {
   final Color gridColor;
-  _RadarGridPainter({required this.gridColor});
+  final List<double> trackRadii;
+
+  _RadarGridPainter({required this.gridColor, required this.trackRadii});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = size.width / 2;
 
     final circlePaint = Paint()
-      ..color = gridColor
+      ..color = gridColor.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
-    canvas.drawCircle(center, maxRadius * 0.35, circlePaint);
-    canvas.drawCircle(center, maxRadius * 0.65, circlePaint);
-    canvas.drawCircle(center, maxRadius - 2, circlePaint);
+    for (final r in trackRadii) {
+      canvas.drawCircle(center, r, circlePaint);
+    }
 
     final crosshairPaint = Paint()
-      ..color = gridColor.withValues(alpha: 0.5)
+      ..color = gridColor.withValues(alpha: 0.35)
       ..strokeWidth = 0.8;
 
     canvas.drawLine(Offset(center.dx, 0), Offset(center.dx, size.height), crosshairPaint);
@@ -247,7 +285,37 @@ class _RadarGridPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RadarGridPainter oldDelegate) => oldDelegate.gridColor != gridColor;
+  bool shouldRepaint(covariant _RadarGridPainter oldDelegate) =>
+      oldDelegate.gridColor != gridColor;
+}
+
+class _SonarRipplesPainter extends CustomPainter {
+  final double animationValue;
+  final Color rippleColor;
+
+  _SonarRipplesPainter({required this.animationValue, required this.rippleColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = size.width / 2;
+
+    for (int i = 0; i < 3; i++) {
+      final waveProgress = (animationValue + (i * 0.33)) % 1.0;
+      final currentRadius = waveProgress * maxRadius;
+      final alpha = (1.0 - waveProgress) * 0.40;
+
+      final paint = Paint()
+        ..color = rippleColor.withValues(alpha: alpha.clamp(0.0, 1.0))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5;
+
+      canvas.drawCircle(center, currentRadius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SonarRipplesPainter oldDelegate) => true;
 }
 
 class _RadarBeamPainter extends CustomPainter {
@@ -266,7 +334,7 @@ class _RadarBeamPainter extends CustomPainter {
       endAngle: pi / 4,
       colors: [
         beamColor.withValues(alpha: 0.0),
-        beamColor.withValues(alpha: 0.25),
+        beamColor.withValues(alpha: 0.22),
       ],
     );
 
@@ -278,7 +346,7 @@ class _RadarBeamPainter extends CustomPainter {
 
     final linePaint = Paint()
       ..color = beamColor
-      ..strokeWidth = 1.5;
+      ..strokeWidth = 1.4;
 
     final edgeX = center.dx + radius * cos(pi / 4);
     final edgeY = center.dy + radius * sin(pi / 4);
@@ -286,5 +354,6 @@ class _RadarBeamPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RadarBeamPainter oldDelegate) => oldDelegate.beamColor != beamColor;
+  bool shouldRepaint(covariant _RadarBeamPainter oldDelegate) =>
+      oldDelegate.beamColor != beamColor;
 }

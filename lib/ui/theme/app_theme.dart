@@ -17,10 +17,10 @@ class AppTheme {
   static const Color accentAmber = amber;
   static const Color secondaryAccent = violet;
 
-  // Dark Palette (Flat & High-Contrast)
-  static const Color darkBg = Color(0xFF0B0E14);
-  static const Color darkSurface = Color(0xFF121824);
-  static const Color darkBorder = Color(0xFF1E2638);
+  // Dark Palette (Flat & High-Contrast Obsidian #121212)
+  static const Color darkBg = Color(0xFF121212);
+  static const Color darkSurface = Color(0xFF1E1E1E);
+  static const Color darkBorder = Color(0xFF2C2C2C);
   static const Color darkTextPrimary = Color(0xFFE6EDF3);
   static const Color darkTextSecondary = Color(0xFF8B949E);
 
@@ -33,12 +33,12 @@ class AppTheme {
   static const Color textSecondary = darkTextSecondary;
   static const Color textMuted = darkTextSecondary;
 
-  // Light Palette (Flat & Crisp)
-  static const Color lightBg = Color(0xFFF6F8FA);
+  // Light Palette (Pure White #FFFFFF & Crisp Slate Surfaces)
+  static const Color lightBg = Color(0xFFFFFFFF);
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightBorder = Color(0xFFD0D7DE);
-  static const Color lightTextPrimary = Color(0xFF1F2328);
-  static const Color lightTextSecondary = Color(0xFF656D76);
+  static const Color lightBorder = Color(0xFFE2E8F0);
+  static const Color lightTextPrimary = Color(0xFF1E2638);
+  static const Color lightTextSecondary = Color(0xFF64748B);
 
   static ThemeData get darkTheme {
     return ThemeData(

@@ -21,7 +21,7 @@ class BrandedAppLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     if (useAssetIfAvailable) {
       return Image.asset(
-        'assets/images/logo no background.png',
+        'assets/logo.png',
         width: size,
         height: size,
         fit: BoxFit.contain,

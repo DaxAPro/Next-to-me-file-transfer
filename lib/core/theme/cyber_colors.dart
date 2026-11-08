@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 
 /// Cyber-Material Brand Colors & Speedometer Gradients
 class CyberColors {
-  // Dark Palette (OLED Black & Slate Surfaces)
-  static const Color oledBlack = Color(0xFF080B10);
-  static const Color darkSurface = Color(0xFF101622);
-  static const Color borderOutline = Color(0xFF1C2638);
-  static const Color cardSubtle = Color(0xFF151D2C);
+  // Dark Palette (Deep Obsidian #121212 & Slate Surfaces)
+  static const Color oledBlack = Color(0xFF121212);
+  static const Color darkSurface = Color(0xFF1E1E1E);
+  static const Color borderOutline = Color(0xFF2C2C2C);
+  static const Color cardSubtle = Color(0xFF242424);
 
-  // Light Palette (Pearl White & Crisp Slate Surfaces)
-  static const Color lightBg = Color(0xFFF6F8FA);
-  static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightBorder = Color(0xFFD0D7DE);
-  static const Color lightTextPrimary = Color(0xFF1F2328);
-  static const Color lightTextSecondary = Color(0xFF656D76);
+  // Light Palette (Pure White #FFFFFF & Crisp Slate Surfaces)
+  static const Color lightBg = Color(0xFFFFFFFF);
+  static const Color lightSurface = Color(0xFFF8FAFC);
+  static const Color lightBorder = Color(0xFFE2E8F0);
+  static const Color lightTextPrimary = Color(0xFF1E2638);
+  static const Color lightTextSecondary = Color(0xFF64748B);
 
   // Speedometer & Status Accents
   static const Color electricCyan = Color(0xFF00E5FF);       // Low / Idle Speed
@@ -24,8 +24,8 @@ class CyberColors {
   static const Color cyberViolet = Color(0xFF7C4DFF);        // LAN Mode
 
   // Text Hierarchy
-  static const Color textPrimary = Color(0xFFF0F4F8);
-  static const Color textSecondary = Color(0xFF8B98A5);
+  static const Color textPrimary = Color(0xFFE6EDF3);
+  static const Color textSecondary = Color(0xFF8B949E);
   static const Color textMuted = Color(0xFF5A6675);
 
   // Dynamic Theme-Aware Color Resolvers
@@ -45,7 +45,7 @@ class CyberColors {
       Theme.of(context).brightness == Brightness.dark ? textSecondary : lightTextSecondary;
 
   static Color primaryAccent(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? electricCyan : const Color(0xFF00838F);
+      Theme.of(context).brightness == Brightness.dark ? electricCyan : const Color(0xFF0097A7);
 
   static Color emeraldAccent(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? techEmerald : const Color(0xFF00C853);

@@ -34,7 +34,7 @@ class CyberAvatar extends StatelessWidget {
         children: [
           ClipOval(
             child: Image.asset(
-              'assets/images/user icon.png',
+              'assets/user_icon.png',
               width: size,
               height: size,
               fit: BoxFit.cover,

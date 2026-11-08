@@ -8,7 +8,7 @@ import 'cyber_colors.dart';
 class ThemeController extends ChangeNotifier {
   static final ThemeController instance = ThemeController._internal();
 
-  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode _themeMode = ThemeMode.light;
 
   ThemeController._internal();
 
@@ -18,8 +18,13 @@ class ThemeController extends ChangeNotifier {
   /// Initialize theme mode from SharedPreferences
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    final isDark = prefs.getBool(AppConstants.keyDarkMode) ?? true;
-    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    if (!prefs.containsKey(AppConstants.keyDarkMode)) {
+      // Default launch state: Light Mode (Pure white #FFFFFF)
+      _themeMode = ThemeMode.light;
+    } else {
+      final isDark = prefs.getBool(AppConstants.keyDarkMode) ?? false;
+      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    }
     _updateSystemOverlay();
     notifyListeners();
   }
@@ -47,7 +52,7 @@ class ThemeController extends ChangeNotifier {
       SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        systemNavigationBarColor: isDark ? CyberColors.oledBlack : const Color(0xFFF6F8FA),
+        systemNavigationBarColor: isDark ? CyberColors.oledBlack : CyberColors.lightBg,
         systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
       ),
     );

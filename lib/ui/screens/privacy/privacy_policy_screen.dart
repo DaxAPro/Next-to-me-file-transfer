@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/cyber_colors.dart';
-import '../../common_widgets/custom_cyber_icons.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
@@ -8,92 +7,185 @@ class PrivacyPolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textPrimary = CyberColors.text(context);
+    final textSecondary = CyberColors.subtext(context);
     final surfaceColor = CyberColors.surface(context);
+    final borderColor = CyberColors.border(context);
     final primaryAccent = CyberColors.primaryAccent(context);
     final emeraldAccent = CyberColors.emeraldAccent(context);
 
     return Scaffold(
       backgroundColor: CyberColors.background(context),
       appBar: AppBar(
-        title: Text('Privacy Policy', style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Privacy Policy',
+          style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: surfaceColor,
         elevation: 0,
         iconTheme: IconThemeData(color: textPrimary),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         children: [
-          _buildPolicyCard(
-            context: context,
-            icon: Icon(Icons.cloud_off_rounded, size: 20, color: primaryAccent),
-            title: '100% Serverless & Offline',
-            body: 'NextToMe does not upload files, chats, or personal information to any cloud server. All connections are direct device-to-device via Wi-Fi Direct, Local LAN, or BLE.',
+          // Banner Card: 100% Offline & Private
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: emeraldAccent.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.shield_rounded, color: emeraldAccent, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '100% Offline & Private',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: emeraldAccent,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'NextToMe is designed with strict privacy principles. We do NOT collect, store, or transmit your personal data, files, or chat history to any external servers.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    color: textPrimary,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          _buildPolicyCard(
-            context: context,
-            icon: Icon(Icons.location_off_rounded, size: 20, color: primaryAccent),
-            title: 'Location & Nearby Devices Permission',
-            body: 'Location access is required by Android OS strictly to detect nearby Wi-Fi Direct beacons and BLE signals. NextToMe NEVER tracks, records, or shares your geographic location.',
+          const SizedBox(height: 16),
+
+          // Permissions Explained Card
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.verified_user_outlined, color: primaryAccent, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Permissions Explained:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: primaryAccent,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                _buildPermissionItem(
+                  context,
+                  title: 'Location',
+                  description:
+                      'Required by Android strictly to discover nearby Wi-Fi devices. We do not track your physical location.',
+                ),
+                const SizedBox(height: 12),
+                _buildPermissionItem(
+                  context,
+                  title: 'Wi-Fi & Bluetooth',
+                  description:
+                      'Used exclusively to establish high-speed, secure local peer-to-peer connections.',
+                ),
+                const SizedBox(height: 12),
+                _buildPermissionItem(
+                  context,
+                  title: 'Storage',
+                  description:
+                      'Required to save the files you receive directly to your device\'s local memory.',
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          _buildPolicyCard(
-            context: context,
-            icon: CyberIcon(type: CyberIconType.shield, size: 20, color: emeraldAccent),
-            title: 'Storage & Zero-Tampering Policy',
-            body: 'Storage permission is used solely to read files you choose to send and to write received files to public download folders. System directories are never touched.',
-          ),
-          const SizedBox(height: 12),
-          _buildPolicyCard(
-            context: context,
-            icon: Icon(Icons.ad_units_outlined, size: 20, color: primaryAccent),
-            title: 'Ad Transparency',
-            body: 'Only non-intrusive bottom banner ads are displayed. Full-screen interstitial, pop-up, or blocking video ads are strictly prohibited to ensure an uninterrupted experience.',
+          const SizedBox(height: 16),
+
+          // Local Network Guarantee Card
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.cloud_off_rounded, color: primaryAccent, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Your transfers and offline chats are routed only between the connected devices on your local network. No internet connection is used, and no tracking analytics are embedded.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.5,
+                      color: textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPolicyCard({
-    required BuildContext context,
-    required Widget icon,
+  Widget _buildPermissionItem(
+    BuildContext context, {
     required String title,
-    required String body,
+    required String description,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: CyberColors.surface(context),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: CyberColors.border(context)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              icon,
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
-                ),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '• $title',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: CyberColors.text(context),
           ),
-          const SizedBox(height: 8),
-          Text(
-            body,
+        ),
+        const SizedBox(height: 2),
+        Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Text(
+            description,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               height: 1.4,
               color: CyberColors.subtext(context),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
