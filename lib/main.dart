@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/constants/app_constants.dart';
 import 'services/connection/hybrid_connection_manager.dart';
 import 'ui/screens/home_screen.dart';
+import 'ui/screens/onboarding/onboarding_screen.dart';
 import 'ui/theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Configure system navigation bar & status bar colors for OLED Dark aesthetic
+  // Configure system navigation & status bar colors for flat aesthetics
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -17,11 +20,16 @@ void main() {
     ),
   );
 
-  runApp(const NextToMeApp());
+  final prefs = await SharedPreferences.getInstance();
+  final isFirstLaunchDone = prefs.getBool(AppConstants.keyFirstLaunch) ?? false;
+
+  runApp(NextToMeApp(isFirstLaunchDone: isFirstLaunchDone));
 }
 
 class NextToMeApp extends StatefulWidget {
-  const NextToMeApp({super.key});
+  final bool isFirstLaunchDone;
+
+  const NextToMeApp({super.key, this.isFirstLaunchDone = true});
 
   @override
   State<NextToMeApp> createState() => _NextToMeAppState();
@@ -48,10 +56,14 @@ class _NextToMeAppState extends State<NextToMeApp> {
       listenable: _connectionManager,
       builder: (context, child) {
         return MaterialApp(
-          title: 'NextToMe P2P',
+          title: 'NextToMe',
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.darkTheme,
-          home: HomeScreen(connectionManager: _connectionManager),
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.dark, // Default to Dark OLED
+          home: widget.isFirstLaunchDone
+              ? HomeScreen(connectionManager: _connectionManager)
+              : OnboardingScreen(connectionManager: _connectionManager),
         );
       },
     );

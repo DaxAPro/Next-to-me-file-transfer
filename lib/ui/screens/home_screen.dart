@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import '../../core/models/device_peer.dart';
 import '../../core/models/transfer_models.dart';
 import '../../services/connection/hybrid_connection_manager.dart';
+import '../drawer/app_navigation_drawer.dart';
 import '../theme/app_theme.dart';
 import '../widgets/radar_scan_view.dart';
 import '../widgets/peer_card.dart';
 import '../widgets/transfer_card.dart';
-import '../widgets/speed_limit_dialog.dart';
 import '../widgets/bottom_banner_ad.dart';
 import '../widgets/permission_disclosure_dialog.dart';
 
@@ -20,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _hasAcceptedPermissions = false;
 
   @override
@@ -47,30 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showLimitDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => SpeedLimitDialog(
-        currentProfile: widget.connectionManager.hostLimitProfile,
-        onSave: (speedBytes, quotaBytes) {
-          widget.connectionManager.updateHostLimits(
-            maxBytesPerSecond: speedBytes,
-            maxTotalQuotaBytes: quotaBytes,
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Host limits updated: ${widget.connectionManager.hostLimitProfile.formattedSpeedLimit} • ${widget.connectionManager.hostLimitProfile.formattedQuotaLimit}',
-              ),
-              backgroundColor: AppTheme.cardDark,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   void _handlePeerTap(DevicePeer peer) async {
     final success = await widget.connectionManager.connectToPeer(peer);
     if (success && mounted) {
@@ -79,11 +56,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showQuickSendDialog(DevicePeer peer) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.cardDark,
+      backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(20),
@@ -93,31 +71,26 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.send_rounded, color: AppTheme.primaryNeon),
+                const Icon(Icons.send_rounded, color: AppTheme.cyan),
                 const SizedBox(width: 10),
                 Text(
                   'Send File to ${peer.name}',
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Select a sample file to test high-speed 5GHz transfer with chunking, zero-copy socket simulation, and stream-while-downloading:',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            Text(
+              'Select a sample file to initiate high-speed 5GHz socket stream with stream-while-downloading:',
+              style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.movie, color: Colors.redAccent, size: 30),
-              title: const Text('4K_Nature_Documentary.mp4 (450 MB)'),
-              subtitle: const Text('Video • Supports Stream-While-Downloading at 5%'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.textSecondary),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              tileColor: AppTheme.surfaceElevated,
+              leading: const Icon(Icons.movie_outlined, color: AppTheme.red, size: 28),
+              title: const Text('4K_Nature_Documentary.mp4 (450 MB)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              subtitle: const Text('Supports 5% buffer streaming preview', style: TextStyle(fontSize: 11)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              tileColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
               onTap: () {
                 Navigator.pop(ctx);
                 widget.connectionManager.enqueueTransfer(
@@ -127,24 +100,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             ListTile(
-              leading: const Icon(Icons.android, color: AppTheme.accentGreen, size: 30),
-              title: const Text('ModernApp_v3.2.0.apk (85 MB)'),
-              subtitle: const Text('Application • Auto-categorized to /NextToMe/APKs'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.textSecondary),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              tileColor: AppTheme.surfaceElevated,
+              leading: const Icon(Icons.android_outlined, color: AppTheme.green, size: 28),
+              title: const Text('AppInstaller_v2.0.apk (85 MB)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              subtitle: const Text('Auto-categorizes into /NextToMe/APKs', style: TextStyle(fontSize: 11)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              tileColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
               onTap: () {
                 Navigator.pop(ctx);
                 widget.connectionManager.enqueueTransfer(
-                  fileName: 'ModernApp_v3.2.0.apk',
+                  fileName: 'AppInstaller_v2.0.apk',
                   fileSize: 85 * 1024 * 1024,
                   isIncoming: false,
                 );
               },
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -155,42 +126,34 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.cardDark,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.play_circle_fill, color: AppTheme.primaryNeon),
+        title: Row(
+          children: const [
+            Icon(Icons.play_circle_fill, color: AppTheme.cyan),
             SizedBox(width: 8),
-            Text('Stream While Downloading', style: TextStyle(fontSize: 16)),
+            Text('Stream Preview', style: TextStyle(fontSize: 15)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Playing: ${task.fileName}',
-              style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
+            Text('Playing: ${task.fileName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
             Container(
-              height: 120,
+              height: 110,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.black,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.primaryNeon.withValues(alpha: 0.4)),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.cyan),
               ),
               child: const Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.live_tv, size: 36, color: AppTheme.primaryNeon),
+                    Icon(Icons.live_tv, size: 32, color: AppTheme.cyan),
                     SizedBox(height: 6),
-                    Text(
-                      'HLS Direct Stream Active (0.05+ threshold met)',
-                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 11),
-                    ),
+                    Text('Direct HLS Loopback Active (5% threshold met)', style: TextStyle(fontSize: 10, color: AppTheme.green)),
                   ],
                 ),
               ),
@@ -198,10 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close Player'),
-          ),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
         ],
       ),
     );
@@ -210,60 +170,41 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final cm = widget.connectionManager;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isTransferring = cm.activeTransfers.any((t) => t.status == TransferStatus.transferring);
 
     return Scaffold(
+      key: _scaffoldKey,
+      // Side Navigation Drawer
+      drawer: AppNavigationDrawer(
+        connectionManager: cm,
+        currentItem: DrawerItem.home,
+      ),
       appBar: AppBar(
+        // Hamburger Menu (three lines top-left)
+        leading: IconButton(
+          icon: const Icon(Icons.menu_rounded),
+          tooltip: 'Open Menu',
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
-                color: AppTheme.primaryNeon.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
+                color: AppTheme.cyan.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
               ),
-              child: const Icon(Icons.offline_bolt, color: AppTheme.primaryNeon, size: 22),
+              child: const Icon(Icons.bolt, color: AppTheme.cyan, size: 20),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             const Text('NextToMe'),
           ],
         ),
         actions: [
-          // Green Code: Eco Mode Toggle (Saves Battery by throttling polling and stopping non-essential animations)
           IconButton(
-            icon: Icon(
-              Icons.eco_rounded,
-              color: cm.isEcoMode ? AppTheme.accentGreen : AppTheme.textMuted,
-            ),
-            tooltip: cm.isEcoMode ? 'Eco Mode: Active (Power Saver)' : 'Eco Mode: Off',
-            onPressed: () {
-              cm.toggleEcoMode();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(cm.isEcoMode
-                      ? '🌿 Eco Mode Enabled: Battery saver active, animations paused.'
-                      : '⚡ Eco Mode Disabled: Full performance active.'),
-                  duration: const Duration(seconds: 2),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-          ),
-
-          // Host Limits Badge / Button
-          IconButton(
-            icon: Icon(
-              Icons.tune,
-              color: cm.hostLimitProfile.isSpeedThrottled ? AppTheme.accentAmber : AppTheme.textSecondary,
-            ),
-            tooltip: 'Host Speed & Quota Limits',
-            onPressed: _showLimitDialog,
-          ),
-
-          // Rescan / Refresh Button
-          IconButton(
-            icon: const Icon(Icons.refresh, color: AppTheme.textPrimary),
-            tooltip: 'Rescan Nearby Devices',
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Rescan Nearby',
             onPressed: cm.startScanning,
           ),
         ],
@@ -276,24 +217,23 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const SizedBox(height: 8),
 
-                // Mode Selector Bar (Direct Mode vs Home Mode)
-                _buildModeSelector(cm),
+                // Mode Selector Tabs (Direct vs Home)
+                _buildModeSelector(cm, isDark),
 
-                // Status message indicator
                 if (cm.statusMessage != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: Center(
                       child: Text(
                         cm.statusMessage!,
-                        style: const TextStyle(color: AppTheme.primaryNeon, fontSize: 12),
+                        style: const TextStyle(color: AppTheme.cyan, fontSize: 11, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
 
                 const SizedBox(height: 8),
 
-                // Animated Radar Scanner View (Green Code: stopped when not scanning or in Eco mode)
+                // Flat Radar Scanner
                 RadarScanView(
                   peers: cm.discoveredPeers,
                   isScanning: cm.handshakePhase == HandshakePhase.discoveringBle ||
@@ -313,21 +253,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         const Text(
                           'ACTIVE TRANSFERS',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            letterSpacing: 1.0,
-                          ),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: AppTheme.cyan),
                         ),
                         if (cm.hostLimitProfile.isSpeedThrottled)
                           Text(
                             'Throttled: ${cm.hostLimitProfile.formattedSpeedLimit}',
-                            style: const TextStyle(
-                              color: AppTheme.accentAmber,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: const TextStyle(color: AppTheme.amber, fontSize: 11, fontWeight: FontWeight.bold),
                           ),
                       ],
                     ),
@@ -350,22 +281,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         cm.activeMode == ConnectionMode.directMode
-                            ? 'NEARBY DEVICES (BLE 5GHz)'
+                            ? 'NEARBY DEVICES (5GHz)'
                             : 'LAN DEVICES (ROUTER)',
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          letterSpacing: 1.0,
-                        ),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: AppTheme.cyan),
                       ),
                       Text(
                         '${cm.discoveredPeers.length} found',
-                        style: const TextStyle(
-                          color: AppTheme.primaryNeon,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -375,15 +297,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     child: Center(
-                      child: Column(
-                        children: [
-                          Icon(Icons.radar, size: 40, color: AppTheme.textMuted.withValues(alpha: 0.5)),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Scanning for nearby devices...',
-                            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-                          ),
-                        ],
+                      child: Text(
+                        'Scanning for nearby devices...',
+                        style: TextStyle(fontSize: 12, color: isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
                       ),
                     ),
                   )
@@ -391,103 +307,70 @@ class _HomeScreenState extends State<HomeScreen> {
                   ...cm.discoveredPeers.map((peer) => PeerCard(
                         peer: peer,
                         onConnect: () => _handlePeerTap(peer),
-                        onConfigureLimits: _showLimitDialog,
+                        onConfigureLimits: () {},
                       )),
               ],
             ),
           ),
 
-          // Pinned Smart Banner Ad adhering to Blueprint Section 6
+          // Pinned Bottom Banner Ad
           BottomBannerAdWidget(isTransferring: isTransferring),
         ],
       ),
     );
   }
 
-  Widget _buildModeSelector(HybridConnectionManager cm) {
+  Widget _buildModeSelector(HybridConnectionManager cm, bool isDark) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppTheme.cardDark,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.cardBorder),
+        color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: isDark ? AppTheme.darkBorder : AppTheme.lightBorder),
       ),
       child: Row(
         children: [
-          // Direct Mode
           Expanded(
-            child: GestureDetector(
+            child: InkWell(
               onTap: () => cm.switchMode(ConnectionMode.directMode),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: cm.activeMode == ConnectionMode.directMode
-                      ? AppTheme.primaryNeon
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  color: cm.activeMode == ConnectionMode.directMode ? AppTheme.cyan : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.bolt,
-                      size: 16,
-                      color: cm.activeMode == ConnectionMode.directMode
-                          ? Colors.black
-                          : AppTheme.textSecondary,
+                child: Center(
+                  child: Text(
+                    'Direct (BLE + 5GHz)',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: cm.activeMode == ConnectionMode.directMode ? Colors.black : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Direct Mode (BLE + Wi-Fi)',
-                      style: TextStyle(
-                        color: cm.activeMode == ConnectionMode.directMode
-                            ? Colors.black
-                            : AppTheme.textSecondary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-
-          // Home Mode (LAN)
           Expanded(
-            child: GestureDetector(
+            child: InkWell(
               onTap: () => cm.switchMode(ConnectionMode.homeMode),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: cm.activeMode == ConnectionMode.homeMode
-                      ? AppTheme.secondaryAccent
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  color: cm.activeMode == ConnectionMode.homeMode ? AppTheme.violet : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.router,
-                      size: 16,
-                      color: cm.activeMode == ConnectionMode.homeMode
-                          ? Colors.white
-                          : AppTheme.textSecondary,
+                child: Center(
+                  child: Text(
+                    'Home Mode (LAN)',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: cm.activeMode == ConnectionMode.homeMode ? Colors.white : (isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Home Mode (LAN)',
-                      style: TextStyle(
-                        color: cm.activeMode == ConnectionMode.homeMode
-                            ? Colors.white
-                            : AppTheme.textSecondary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),

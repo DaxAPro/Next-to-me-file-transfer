@@ -1,10 +1,10 @@
-/// Represents the connection mode selected by the user
+import 'device_limit_profile.dart';
+
 enum ConnectionMode {
-  directMode, // Hybrid BLE (Discovery + Handshake) + Wi-Fi Direct 5GHz
-  homeMode,   // LAN Sharing (mDNS Discovery + Router Sockets)
+  directMode, // Hybrid BLE + Wi-Fi Direct 5GHz
+  homeMode,   // LAN Sharing (Router mDNS)
 }
 
-/// Device hardware platform category
 enum DeviceType {
   phone,
   tablet,
@@ -12,7 +12,7 @@ enum DeviceType {
   unknown,
 }
 
-/// Discovered peer representation across BLE and LAN
+/// Discovered peer representation across BLE, Wi-Fi Direct, and LAN
 class DevicePeer {
   final String id;
   final String name;
@@ -26,9 +26,7 @@ class DevicePeer {
   final bool supportsZeroCopy;
   final bool supportsUwb;
   bool isConnected;
-  int speedLimitBytesPerSec; // 0 = unlimited
-  int dataLimitBytes;        // 0 = unlimited
-  int transferredBytes;
+  DeviceLimitProfile limitProfile;
 
   DevicePeer({
     required this.id,
@@ -43,12 +41,32 @@ class DevicePeer {
     this.supportsZeroCopy = true,
     this.supportsUwb = false,
     this.isConnected = false,
-    this.speedLimitBytesPerSec = 0, // 0 = no throttle
-    this.dataLimitBytes = 0,        // 0 = no quota limit
-    this.transferredBytes = 0,
-  });
+    DeviceLimitProfile? limitProfile,
+    int speedLimitBytesPerSec = 0,
+    int dataLimitBytes = 0,
+    int transferredBytes = 0,
+  }) : limitProfile = limitProfile ??
+            DeviceLimitProfile(
+              maxBytesPerSecond: speedLimitBytesPerSec,
+              maxQuotaBytes: dataLimitBytes,
+              bytesUsed: transferredBytes,
+            );
 
-  /// Factory from BLE advertising service data
+  int get speedLimitBytesPerSec => limitProfile.maxBytesPerSecond;
+  set speedLimitBytesPerSec(int val) {
+    limitProfile = limitProfile.copyWith(maxBytesPerSecond: val);
+  }
+
+  int get dataLimitBytes => limitProfile.maxQuotaBytes;
+  set dataLimitBytes(int val) {
+    limitProfile = limitProfile.copyWith(maxQuotaBytes: val);
+  }
+
+  int get transferredBytes => limitProfile.bytesUsed;
+  set transferredBytes(int val) {
+    limitProfile = limitProfile.copyWith(bytesUsed: val);
+  }
+
   factory DevicePeer.fromBleAdvertisement({
     required String deviceId,
     required String name,
@@ -78,7 +96,6 @@ class DevicePeer {
     );
   }
 
-  /// Factory from mDNS LAN record
   factory DevicePeer.fromMdnsRecord({
     required String host,
     required String ip,
@@ -98,7 +115,7 @@ class DevicePeer {
       name: txtRecords?['name'] ?? host.replaceAll('.local', ''),
       deviceType: devType,
       os: txtRecords?['os'] ?? 'Windows',
-      rssi: -45, // LAN typically strong
+      rssi: -45,
       ipAddress: ip,
       port: port,
       mode: ConnectionMode.homeMode,
@@ -106,22 +123,4 @@ class DevicePeer {
       supportsZeroCopy: true,
     );
   }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'deviceType': deviceType.name,
-    'os': os,
-    'rssi': rssi,
-    'ipAddress': ipAddress,
-    'port': port,
-    'mode': mode.name,
-    'supports5GHz': supports5GHz,
-    'supportsZeroCopy': supportsZeroCopy,
-    'supportsUwb': supportsUwb,
-    'isConnected': isConnected,
-    'speedLimitBytesPerSec': speedLimitBytesPerSec,
-    'dataLimitBytes': dataLimitBytes,
-    'transferredBytes': transferredBytes,
-  };
 }

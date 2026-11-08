@@ -3,7 +3,7 @@ import 'package:next_to_me/main.dart';
 
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const NextToMeApp());
+    await tester.pumpWidget(const NextToMeApp(isFirstLaunchDone: true));
     expect(find.text('NextToMe'), findsWidgets);
   });
 }
