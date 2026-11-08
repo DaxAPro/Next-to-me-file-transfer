@@ -5,6 +5,11 @@ enum ChatMessageType {
   system,
 }
 
+enum MessageDeliveryStatus {
+  sent, // One grey tick
+  delivered, // Two green ticks
+}
+
 /// Offline P2P Group Chat Message
 class ChatMessage {
   final String id;
@@ -15,6 +20,7 @@ class ChatMessage {
   final DateTime timestamp;
   final bool isMe;
   final String? mediaPath;
+  final MessageDeliveryStatus status;
 
   ChatMessage({
     required this.id,
@@ -25,7 +31,41 @@ class ChatMessage {
     DateTime? timestamp,
     this.isMe = false,
     this.mediaPath,
+    this.status = MessageDeliveryStatus.sent,
   }) : timestamp = timestamp ?? DateTime.now();
+
+  String get formattedTime {
+    final hour = timestamp.hour == 0
+        ? 12
+        : (timestamp.hour > 12 ? timestamp.hour - 12 : timestamp.hour);
+    final minute = timestamp.minute.toString().padLeft(2, '0');
+    final ampm = timestamp.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $ampm';
+  }
+
+  ChatMessage copyWith({
+    String? id,
+    String? senderId,
+    String? senderName,
+    String? content,
+    ChatMessageType? type,
+    DateTime? timestamp,
+    bool? isMe,
+    String? mediaPath,
+    MessageDeliveryStatus? status,
+  }) {
+    return ChatMessage(
+      id: id ?? this.id,
+      senderId: senderId ?? this.senderId,
+      senderName: senderName ?? this.senderName,
+      content: content ?? this.content,
+      type: type ?? this.type,
+      timestamp: timestamp ?? this.timestamp,
+      isMe: isMe ?? this.isMe,
+      mediaPath: mediaPath ?? this.mediaPath,
+      status: status ?? this.status,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -35,6 +75,7 @@ class ChatMessage {
     'type': type.name,
     'timestamp': timestamp.millisecondsSinceEpoch,
     'mediaPath': mediaPath,
+    'status': status.name,
   };
 
   factory ChatMessage.fromJson(Map<String, dynamic> json, {required String myDeviceId}) {
@@ -53,6 +94,10 @@ class ChatMessage {
       ),
       isMe: sender == myDeviceId,
       mediaPath: json['mediaPath']?.toString(),
+      status: MessageDeliveryStatus.values.firstWhere(
+        (e) => e.name == json['status'],
+        orElse: () => MessageDeliveryStatus.delivered,
+      ),
     );
   }
 }
