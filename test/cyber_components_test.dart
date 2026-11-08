@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:next_to_me/core/constants/app_constants.dart';
 import 'package:next_to_me/core/constants/user_friendly_strings.dart';
 import 'package:next_to_me/core/models/device_peer.dart';
 import 'package:next_to_me/core/theme/cyber_colors.dart';
 import 'package:next_to_me/core/theme/theme_controller.dart';
+import 'package:next_to_me/services/connection/hybrid_connection_manager.dart';
 import 'package:next_to_me/ui/common_widgets/branded_app_logo.dart';
 import 'package:next_to_me/ui/common_widgets/cyber_avatar.dart';
 import 'package:next_to_me/ui/common_widgets/custom_cyber_icons.dart';
 import 'package:next_to_me/ui/screens/about/about_screen.dart';
 import 'package:next_to_me/ui/screens/hotspot_limits/widgets/interactive_speedometer_gauge.dart';
 import 'package:next_to_me/ui/screens/hotspot_limits/widgets/live_bandwidth_card.dart';
+import 'package:next_to_me/ui/screens/onboarding/onboarding_screen.dart';
 import 'package:next_to_me/ui/screens/privacy/privacy_policy_screen.dart';
 import 'package:next_to_me/ui/widgets/adaptive_radar_painter.dart';
 import 'package:next_to_me/ui/widgets/radar_scan_view.dart';
@@ -271,6 +274,58 @@ void main() {
         baseColor: CyberColors.techEmerald,
       );
       expect(painter.deviceType, equals(DeviceType.pc));
+    });
+  });
+
+  group('4-Step Welcome Onboarding Slider & First-Launch Logic', () {
+    testWidgets('OnboardingScreen renders first step with Skip and Next buttons and 4 dots', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final connectionManager = HybridConnectionManager();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: OnboardingScreen(connectionManager: connectionManager),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Skip button visible on Screen 1
+      expect(find.text('Skip'), findsOneWidget);
+      // Next button on screen 1
+      expect(find.text('Next ➔'), findsOneWidget);
+      // 4 circular indicator dots
+      final dotsFinder = find.byWidgetPredicate(
+        (widget) =>
+            widget is Container &&
+            widget.decoration is BoxDecoration &&
+            (widget.decoration as BoxDecoration).shape == BoxShape.circle &&
+            (widget.constraints?.maxWidth == 10 || (widget.decoration as BoxDecoration).color != null),
+      );
+      expect(dotsFinder, findsWidgets);
+
+      connectionManager.dispose();
+    });
+
+    testWidgets('Tapping Skip saves isFirstTimeLaunch=false and keyFirstLaunch=true', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final connectionManager = HybridConnectionManager();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: OnboardingScreen(connectionManager: connectionManager),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Skip'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool(AppConstants.keyIsFirstTimeLaunch), isFalse);
+      expect(prefs.getBool(AppConstants.keyFirstLaunch), isTrue);
+
+      connectionManager.dispose();
     });
   });
 }

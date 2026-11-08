@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/constants/user_friendly_strings.dart';
-import '../../../core/theme/cyber_colors.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
-import '../../common_widgets/branded_app_logo.dart';
-import '../../common_widgets/custom_cyber_icons.dart';
-import '../../common_widgets/glass_background.dart';
-import '../../common_widgets/glass_container.dart';
 import '../home/home_screen.dart';
 
+/// 4-Step Welcome Onboarding Screen Slider
+/// Displayed ONLY on the very first launch of the application.
 class OnboardingScreen extends StatefulWidget {
   final HybridConnectionManager connectionManager;
 
@@ -23,31 +19,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<Map<String, dynamic>> _slides = [
-    {
-      'useLogo': true,
-      'title': UserFriendlyStrings.appTagline,
-      'desc': 'Share videos, photos, and files in seconds with nearby phones & PCs. No internet or data needed.',
-      'color': CyberColors.techEmerald,
-    },
-    {
-      'useLogo': false,
-      'iconType': CyberIconType.speedometer,
-      'title': 'Set Speed & Data Limits',
-      'desc': 'Control transfer speed per device with an interactive speed dial to keep your phone smooth and cool.',
-      'color': CyberColors.electricCyan,
-    },
-    {
-      'useLogo': false,
-      'iconType': CyberIconType.chat,
-      'title': 'Chat & Share Links Offline',
-      'desc': 'Chat with connected friends, send emojis, and sync copied links without any internet connection.',
-      'color': CyberColors.cyberViolet,
-    },
+  // Exact 4-step onboarding image assets in strict sequence
+  static const List<String> _slides = [
+    'assets/images/image_21.png', // Step 1: Welcome to NextToMe
+    'assets/images/image_22.png', // Step 2: Set Speed & Data Limits
+    'assets/images/image_27.png', // Step 3: 100% Private & Safe
+    'assets/images/image_24.png', // Step 4: Offline Group Chat
   ];
 
+  /// Saves first-time launch flags and navigates to the Radar dashboard.
   void _finishOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.keyIsFirstTimeLaunch, false);
     await prefs.setBool(AppConstants.keyFirstLaunch, true);
 
     if (mounted) {
@@ -61,134 +44,162 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final textPrimary = CyberColors.text(context);
-    final textSecondary = CyberColors.subtext(context);
-    final primaryAccent = CyberColors.primaryAccent(context);
-    final borderColor = CyberColors.border(context);
+    const emeraldGreen = Color(0xFF10B981);
+    const lightGrey = Color(0xFFE0E0E0);
+    const pureWhite = Color(0xFFFFFFFF);
 
     return Scaffold(
-      backgroundColor: CyberColors.background(context),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          TextButton(
-            onPressed: _finishOnboarding,
-            child: Text(
-              'Skip',
-              style: TextStyle(color: primaryAccent, fontWeight: FontWeight.bold),
+      backgroundColor: pureWhite,
+      body: Stack(
+        children: [
+          // 1. Swipeable ViewPager Slider for 9:16 Portrait Images
+          PageView.builder(
+            controller: _pageController,
+            itemCount: _slides.length,
+            onPageChanged: (index) => setState(() => _currentPage = index),
+            itemBuilder: (context, index) {
+              return Container(
+                color: pureWhite,
+                width: double.infinity,
+                height: double.infinity,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 40, left: 16, right: 16),
+                        child: Image.asset(
+                          _slides[index],
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Image.asset(
+                                _slides[index].replaceFirst('assets/images/', 'assets/'),
+                                fit: BoxFit.contain,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    // Reserve bottom space for the native overlay layer
+                    const SizedBox(height: 130),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          // 2. Top Overlay Layer: Skip Button (Visible on Screens 1, 2, 3)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (_currentPage < 3)
+                      TextButton(
+                        onPressed: _finishOnboarding,
+                        style: TextButton.styleFrom(
+                          foregroundColor: emeraldGreen,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        ),
+                        child: const Text(
+                          'Skip',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: emeraldGreen,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Bottom Overlay Layer: Indicator Dots & Action Button
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Container(
+                color: pureWhite,
+                padding: const EdgeInsets.only(left: 24, right: 24, bottom: 20, top: 10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Step Progress Indicator: 4 Circular Dots
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(4, (index) {
+                        final isSelected = _currentPage == index;
+                        return Container(
+                          width: 10,
+                          height: 10,
+                          margin: const EdgeInsets.symmetric(horizontal: 5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isSelected ? emeraldGreen : lightGrey,
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Full-Width Flat Rounded Action Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_currentPage < 3) {
+                            _pageController.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          } else {
+                            _finishOnboarding();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: emeraldGreen,
+                          foregroundColor: pureWhite,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          _currentPage == 3 ? 'Get Started' : 'Next ➔',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            color: pureWhite,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
-      ),
-      body: GlassBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: _slides.length,
-                  onPageChanged: (index) => setState(() => _currentPage = index),
-                  itemBuilder: (context, index) {
-                    final slide = _slides[index];
-                    final isLogo = slide['useLogo'] == true;
-                    final color = slide['color'] as Color;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (isLogo)
-                            const BrandedAppLogo(size: 96)
-                          else
-                            GlassContainer(
-                              width: 88,
-                              height: 88,
-                              borderRadius: BorderRadius.circular(22),
-                              blur: 16,
-                              border: Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
-                              child: Center(
-                                child: CyberIcon(
-                                  type: slide['iconType'] as CyberIconType,
-                                  size: 44,
-                                  color: color,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 32),
-                          Text(
-                            slide['title'] as String,
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            slide['desc'] as String,
-                            style: TextStyle(fontSize: 13, height: 1.45, color: textSecondary),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // Pagination Dots
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _slides.length,
-                  (index) => Container(
-                    width: _currentPage == index ? 22 : 8,
-                    height: 6,
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: BoxDecoration(
-                      color: _currentPage == index ? primaryAccent : borderColor,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Action Button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_currentPage < _slides.length - 1) {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      } else {
-                        _finishOnboarding();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryAccent,
-                      foregroundColor: Theme.of(context).brightness == Brightness.dark
-                          ? CyberColors.oledBlack
-                          : Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: Text(
-                      _currentPage == _slides.length - 1 ? 'Get Started' : 'Next',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

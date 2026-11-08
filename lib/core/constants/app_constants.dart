@@ -15,6 +15,7 @@ class AppConstants {
   static const double streamReadyThreshold = 0.05; // 5% download activates media preview
 
   // Preferences Keys
+  static const String keyIsFirstTimeLaunch = 'isFirstTimeLaunch';
   static const String keyFirstLaunch = 'pref_first_launch_done';
   static const String keyEcoMode = 'pref_eco_mode';
   static const String keyDarkMode = 'pref_dark_mode';

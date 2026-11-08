@@ -14,15 +14,27 @@ void main() async {
   await ThemeController.instance.init();
 
   final prefs = await SharedPreferences.getInstance();
-  final isFirstLaunchDone = prefs.getBool(AppConstants.keyFirstLaunch) ?? false;
+  // On app launch, check isFirstTimeLaunch (default: true)
+  final isFirstTimeLaunch = prefs.getBool(AppConstants.keyIsFirstTimeLaunch) ??
+      (prefs.getBool(AppConstants.keyFirstLaunch) != null
+          ? !prefs.getBool(AppConstants.keyFirstLaunch)!
+          : true);
 
-  runApp(NextToMeApp(isFirstLaunchDone: isFirstLaunchDone));
+  runApp(NextToMeApp(
+    isFirstTimeLaunch: isFirstTimeLaunch,
+    isFirstLaunchDone: !isFirstTimeLaunch,
+  ));
 }
 
 class NextToMeApp extends StatefulWidget {
   final bool isFirstLaunchDone;
+  final bool? isFirstTimeLaunch;
 
-  const NextToMeApp({super.key, this.isFirstLaunchDone = true});
+  const NextToMeApp({
+    super.key,
+    this.isFirstLaunchDone = true,
+    this.isFirstTimeLaunch,
+  });
 
   @override
   State<NextToMeApp> createState() => _NextToMeAppState();
@@ -45,6 +57,8 @@ class _NextToMeAppState extends State<NextToMeApp> {
 
   @override
   Widget build(BuildContext context) {
+    final showOnboarding = widget.isFirstTimeLaunch ?? !widget.isFirstLaunchDone;
+
     return ListenableBuilder(
       listenable: Listenable.merge([_connectionManager, ThemeController.instance]),
       builder: (context, child) {
@@ -54,9 +68,9 @@ class _NextToMeAppState extends State<NextToMeApp> {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeController.instance.themeMode,
-          home: widget.isFirstLaunchDone
-              ? HomeScreen(connectionManager: _connectionManager)
-              : OnboardingScreen(connectionManager: _connectionManager),
+          home: showOnboarding
+              ? OnboardingScreen(connectionManager: _connectionManager)
+              : HomeScreen(connectionManager: _connectionManager),
         );
       },
     );
