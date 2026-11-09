@@ -62,7 +62,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'NextToMe is designed with strict privacy principles. We do NOT collect, store, or transmit your personal data, files, or chat history to any external servers.',
+                    'NextToMe is designed with strict privacy principles. We do NOT collect, store, or transmit your personal data, files, or chat history to any external servers. Location permission is required strictly for local Wi-Fi Direct discovery.',
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.5,
@@ -101,7 +101,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     context,
                     title: 'Location',
                     description:
-                        'Required by Android strictly to discover nearby Wi-Fi devices. We do not track your physical location.',
+                        'Required strictly for local Wi-Fi Direct discovery. We do not track your physical location.',
                   ),
                   const SizedBox(height: 12),
                   _buildPermissionItem(

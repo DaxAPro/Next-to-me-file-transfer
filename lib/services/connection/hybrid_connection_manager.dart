@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+
 import '../../core/models/device_peer.dart';
 import '../../core/models/transfer_models.dart';
 import 'ble_discovery_service.dart';
@@ -29,7 +31,8 @@ class HybridConnectionManager extends ChangeNotifier {
   String? _statusMessage;
   bool _isEcoMode = false;
 
-  final String localDeviceId = 'device-${DateTime.now().millisecondsSinceEpoch % 10000}';
+  final String localDeviceId =
+      'device-${DateTime.now().millisecondsSinceEpoch % 10000}';
   String localDeviceName = 'My Device';
 
   List<DevicePeer> _discoveredPeers = [];
@@ -56,7 +59,8 @@ class HybridConnectionManager extends ChangeNotifier {
   List<DevicePeer> get discoveredPeers => List.unmodifiable(_discoveredPeers);
   List<TransferTask> get activeTransfers => List.unmodifiable(_activeTransfers);
   SpeedLimitProfile get hostLimitProfile => _hostLimitProfile;
-  bool get isConnected => _connectedPeer != null && _wifiDirectService.isConnected;
+  bool get isConnected =>
+      _connectedPeer != null && _wifiDirectService.isConnected;
   WifiDirectService get wifiDirectService => _wifiDirectService;
 
   void toggleEcoMode() {
@@ -170,7 +174,15 @@ class HybridConnectionManager extends ChangeNotifier {
 
       final targetIp = peer.ipAddress ?? invitation.ipAddress;
       if (peer.ipAddress != null) {
-        await _wifiDirectService.connectToHost(hostIp: targetIp, port: invitation.port);
+        final connected = await _wifiDirectService.connectToHost(
+          hostIp: targetIp,
+          port: invitation.port,
+        );
+        if (!connected) {
+          throw StateError(
+            'Could not establish an encrypted session with ${peer.name}.',
+          );
+        }
       }
 
       peer.isConnected = true;
@@ -241,7 +253,10 @@ class HybridConnectionManager extends ChangeNotifier {
   }
 
   /// Green Code: Throttles UI refresh frequency to save battery during 40MB/s transfers
-  void _simulateHighSpeedTransfer(TransferTask task, {int resumeOffset = 0}) async {
+  void _simulateHighSpeedTransfer(
+    TransferTask task, {
+    int resumeOffset = 0,
+  }) async {
     task.status = TransferStatus.transferring;
     task.bytesTransferred = resumeOffset;
     notifyListeners();
@@ -267,9 +282,11 @@ class HybridConnectionManager extends ChangeNotifier {
       final bytesThisTick = (targetBytesPerSec * (tickMs / 1000.0)).round();
 
       if (_hostLimitProfile.hasQuotaLimit &&
-          (currentBytes + bytesThisTick) > _hostLimitProfile.maxTotalQuotaBytes) {
+          (currentBytes + bytesThisTick) >
+              _hostLimitProfile.maxTotalQuotaBytes) {
         task.status = TransferStatus.failed;
-        task.errorMessage = 'Host data limit (${_hostLimitProfile.formattedQuotaLimit}) exceeded.';
+        task.errorMessage =
+            'Host data limit (${_hostLimitProfile.formattedQuotaLimit}) exceeded.';
         timer.cancel();
         notifyListeners();
         return;

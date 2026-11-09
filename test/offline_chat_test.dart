@@ -17,37 +17,42 @@ void main() {
   });
 
   group('Offline Chat Local Storage & Auto-Cleanup', () {
-    test('LocalChatStorage saves, deletes, and clears messages locally', () async {
-      final storage = LocalChatStorage.instance;
-      final initial = await storage.loadMessages('me-1');
-      expect(initial.isNotEmpty, isTrue);
+    test(
+      'LocalChatStorage saves, deletes, and clears messages locally',
+      () async {
+        final storage = LocalChatStorage.instance;
+        final initial = await storage.loadMessages('me-1');
+        expect(initial.isNotEmpty, isTrue);
 
-      final msg = ChatMessage(
-        id: 'msg-test-1',
-        senderId: 'me-1',
-        senderName: 'Me',
-        content: 'Offline testing direct message',
-        status: MessageDeliveryStatus.sent,
-      );
+        final msg = ChatMessage(
+          id: 'msg-test-1',
+          senderId: 'me-1',
+          senderName: 'Me',
+          content: 'Offline testing direct message',
+          status: MessageDeliveryStatus.sent,
+        );
 
-      await storage.saveMessage(msg);
-      var current = await storage.loadMessages('me-1');
-      expect(current.any((m) => m.id == 'msg-test-1'), isTrue);
+        await storage.saveMessage(msg);
+        var current = await storage.loadMessages('me-1');
+        expect(current.any((m) => m.id == 'msg-test-1'), isTrue);
 
-      // Test delete single message ("Delete for me")
-      await storage.deleteMessage('msg-test-1');
-      current = await storage.loadMessages('me-1');
-      expect(current.any((m) => m.id == 'msg-test-1'), isFalse);
+        // Test delete single message ("Delete for me")
+        await storage.deleteMessage('msg-test-1');
+        current = await storage.loadMessages('me-1');
+        expect(current.any((m) => m.id == 'msg-test-1'), isFalse);
 
-      // Test clear all
-      await storage.clearAll();
-      final cleared = await storage.loadMessages('me-1');
-      expect(cleared.length, equals(1)); // Only default system message
-    });
+        // Test clear all
+        await storage.clearAll();
+        final cleared = await storage.loadMessages('me-1');
+        expect(cleared.length, equals(1)); // Only default system message
+      },
+    );
   });
 
   group('WhatsApp-Style Chat Message Bubble & Delivery Checkmarks', () {
-    testWidgets('Renders sent message in Emerald Green with checkmarks', (tester) async {
+    testWidgets('Renders sent message in Emerald Green with checkmarks', (
+      tester,
+    ) async {
       final sentMsg = ChatMessage(
         id: 'sent-1',
         senderId: 'me-1',
@@ -59,87 +64,93 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ChatMessageBubble(message: sentMsg),
-          ),
+          home: Scaffold(body: ChatMessageBubble(message: sentMsg)),
         ),
       );
 
       expect(find.text('Hello nearby friend!'), findsOneWidget);
-      expect(find.text('✓✓'), findsOneWidget); // Two green/white ticks for delivered
+      expect(
+        find.text('✓✓'),
+        findsOneWidget,
+      ); // Two green/white ticks for delivered
     });
 
-    testWidgets('Renders received message with humanoid avatar and sender name', (tester) async {
-      final receivedMsg = ChatMessage(
-        id: 'rec-1',
-        senderId: 'peer-2',
-        senderName: 'Alice Phone',
-        content: 'Got the offline video!',
-        isMe: false,
-      );
+    testWidgets(
+      'Renders received message with humanoid avatar and sender name',
+      (tester) async {
+        final receivedMsg = ChatMessage(
+          id: 'rec-1',
+          senderId: 'peer-2',
+          senderName: 'Alice Phone',
+          content: 'Got the offline video!',
+          isMe: false,
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChatMessageBubble(message: receivedMsg),
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(body: ChatMessageBubble(message: receivedMsg)),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Alice Phone'), findsOneWidget);
-      expect(find.text('Got the offline video!'), findsOneWidget);
-    });
+        expect(find.text('Alice Phone'), findsOneWidget);
+        expect(find.text('Got the offline video!'), findsOneWidget);
+      },
+    );
   });
 
   group('Group Roles & Active Members Modal', () {
-    testWidgets('ActiveMembersModal shows Host badge and Remove button for Admin', (tester) async {
-      bool removed = false;
-      final connectedPeer = DevicePeer(
-        id: 'peer-guest',
-        name: 'Guest Device',
-        ipAddress: '192.168.49.55',
-        port: 52520,
-        mode: ConnectionMode.directMode,
-        deviceType: DeviceType.phone,
-      );
+    testWidgets(
+      'ActiveMembersModal shows Host badge and Remove button for Admin',
+      (tester) async {
+        bool removed = false;
+        final connectedPeer = DevicePeer(
+          id: 'peer-guest',
+          name: 'Guest Device',
+          ipAddress: '192.168.49.55',
+          port: 52520,
+          mode: ConnectionMode.directMode,
+          deviceType: DeviceType.phone,
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ActiveMembersModal(
-              localDeviceName: 'Host Admin Device',
-              isHost: true,
-              connectedPeers: [connectedPeer],
-              onRemovePeer: (p) => removed = true,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ActiveMembersModal(
+                localDeviceName: 'Host Admin Device',
+                isHost: true,
+                connectedPeers: [connectedPeer],
+                onRemovePeer: (p) => removed = true,
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Active Members (2)'), findsOneWidget);
-      expect(find.text('HOST'), findsOneWidget);
-      expect(find.text('Guest Device'), findsOneWidget);
-      expect(find.text('Remove'), findsOneWidget);
-      expect(removed, isFalse);
-    });
+        expect(find.text('Active Members (2)'), findsOneWidget);
+        expect(find.text('Who is in the group?'), findsOneWidget);
+        expect(find.text('HOST'), findsOneWidget);
+        expect(find.text('Guest Device'), findsOneWidget);
+        expect(find.text('Remove'), findsOneWidget);
+        expect(removed, isFalse);
+      },
+    );
   });
 
   group('OfflineGroupChatScreen Integration', () {
-    testWidgets('OfflineGroupChatScreen renders input bar and clipboard sync button', (tester) async {
-      final cm = HybridConnectionManager();
+    testWidgets(
+      'OfflineGroupChatScreen renders input bar and clipboard sync button',
+      (tester) async {
+        final cm = HybridConnectionManager();
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: OfflineGroupChatScreen(connectionManager: cm),
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          MaterialApp(home: OfflineGroupChatScreen(connectionManager: cm)),
+        );
+        await tester.pump();
+        expect(find.text('Offline Group Chat'), findsOneWidget);
+        expect(find.byIcon(Icons.paste_rounded), findsOneWidget);
+        expect(find.byType(TextField), findsOneWidget);
 
-      expect(find.text('Offline Group Chat'), findsOneWidget);
-      expect(find.byIcon(Icons.paste_rounded), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
-
-      cm.dispose();
-    });
+        cm.dispose();
+      },
+    );
   });
 }

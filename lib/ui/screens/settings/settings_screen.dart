@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/theme/cyber_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
+import '../../../services/connection/wifi_direct_service.dart';
 import '../../common_widgets/custom_cyber_icons.dart';
 import '../../common_widgets/glass_background.dart';
 import '../../common_widgets/glass_container.dart';
@@ -18,6 +20,9 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isPinProtected = false;
   final String _pinCode = '1234';
+  LocalHotspotCredentials? _hotspotCredentials;
+  bool _isHotspotBusy = false;
+  bool _showHotspotPassword = false;
 
   @override
   Widget build(BuildContext context) {
@@ -57,12 +62,108 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   isDark ? 'OLED Black Cyber Theme' : 'Clean Pearl White Theme',
                   style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
                 ),
-                value: ThemeController.instance.isDarkMode,
+                value: isDark,
                 activeThumbColor: CyberColors.emeraldAccent(context),
-                onChanged: (val) {
-                  ThemeController.instance.toggleTheme();
-                  setState(() {});
-                },
+                onChanged: _setDarkMode,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            _buildSectionHeader(context, 'LOCAL HOTSPOT'),
+            GlassContainer(
+              padding: const EdgeInsets.all(14),
+              borderRadius: BorderRadius.circular(12),
+              blur: 16,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: Icon(
+                      Icons.wifi_tethering_rounded,
+                      color: CyberColors.primaryAccent(context),
+                    ),
+                    title: Text(
+                      'Local-only hotspot',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: CyberColors.text(context),
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Create a nearby network without internet access.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: CyberColors.subtext(context),
+                      ),
+                    ),
+                    value: _hotspotCredentials != null,
+                    activeThumbColor: CyberColors.emeraldAccent(context),
+                    onChanged: _isHotspotBusy
+                        ? null
+                        : (enabled) => enabled
+                            ? _startHotspot()
+                            : _stopHotspot(),
+                  ),
+                  if (_isHotspotBusy)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: LinearProgressIndicator(),
+                    ),
+                  if (_hotspotCredentials case final credentials?) ...[
+                    Divider(color: CyberColors.border(context), height: 20),
+                    _buildCredentialRow(context, 'Network name', credentials.ssid),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildCredentialRow(
+                            context,
+                            'Password',
+                            _showHotspotPassword
+                                ? credentials.password
+                                : '•' * credentials.password.length,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: _showHotspotPassword
+                              ? 'Hide password'
+                              : 'Show password',
+                          onPressed: () => setState(
+                            () => _showHotspotPassword = !_showHotspotPassword,
+                          ),
+                          icon: Icon(
+                            _showHotspotPassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Copy hotspot password',
+                          onPressed: () => Clipboard.setData(
+                            ClipboardData(text: credentials.password),
+                          ),
+                          icon: const Icon(Icons.copy_outlined),
+                        ),
+                      ],
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: _isHotspotBusy ? null : _regenerateHotspot,
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: const Text('Change password'),
+                      ),
+                    ),
+                    Text(
+                      'Changing the password restarts the hotspot; connected guests must reconnect.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: CyberColors.subtext(context),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: 20),
@@ -178,6 +279,116 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildCredentialRow(
+    BuildContext context,
+    String label,
+    String value,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
+        ),
+        const SizedBox(height: 2),
+        SelectableText(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: CyberColors.text(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _startHotspot() async {
+    setState(() => _isHotspotBusy = true);
+    try {
+      final service = widget.connectionManager.wifiDirectService;
+      final credentials = await service.startLocalOnlyHotspot();
+      try {
+        await service.startServer();
+      } catch (_) {
+        await service.stopLocalOnlyHotspot();
+        rethrow;
+      }
+      if (mounted) {
+        setState(() {
+          _hotspotCredentials = credentials;
+          _showHotspotPassword = false;
+        });
+      }
+    } catch (error) {
+      _showHotspotError(error);
+    } finally {
+      if (mounted) setState(() => _isHotspotBusy = false);
+    }
+  }
+
+  Future<void> _regenerateHotspot() async {
+    setState(() => _isHotspotBusy = true);
+    try {
+      final credentials = await widget.connectionManager.wifiDirectService
+          .regenerateLocalOnlyHotspotPassword();
+      if (mounted) {
+        setState(() {
+          _hotspotCredentials = credentials;
+          _showHotspotPassword = false;
+        });
+      }
+    } catch (error) {
+      _showHotspotError(error);
+    } finally {
+      if (mounted) setState(() => _isHotspotBusy = false);
+    }
+  }
+
+  Future<void> _stopHotspot() async {
+    setState(() => _isHotspotBusy = true);
+    try {
+      final service = widget.connectionManager.wifiDirectService;
+      try {
+        await service.stopLocalOnlyHotspot();
+      } finally {
+        await service.stopServer();
+      }
+      if (mounted) {
+        setState(() {
+          _hotspotCredentials = null;
+          _showHotspotPassword = false;
+        });
+      }
+    } catch (error) {
+      _showHotspotError(error);
+    } finally {
+      if (mounted) setState(() => _isHotspotBusy = false);
+    }
+  }
+
+  void _showHotspotError(Object error) {
+    if (!mounted) return;
+    final message = error is MissingPluginException
+        ? 'Local hotspot controls are available on Android. On other devices, use the system Wi-Fi hotspot settings.'
+        : 'Could not update the local hotspot: $error';
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _setDarkMode(bool enabled) async {
+    try {
+      await ThemeController.instance.setThemeMode(
+        enabled ? ThemeMode.dark : ThemeMode.light,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save theme preference: $error')),
+      );
+    }
   }
 
   void _editDeviceName(BuildContext context) {

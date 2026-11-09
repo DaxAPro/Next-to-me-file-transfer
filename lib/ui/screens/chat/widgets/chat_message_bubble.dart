@@ -18,6 +18,11 @@ class ChatMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final receivedColor =
+        isDark ? CyberColors.darkSurface : const Color(0xFFF1F5F9);
+    final receivedTextColor = CyberColors.text(context);
+
     // System status banner
     if (message.type == ChatMessageType.system) {
       return Center(
@@ -25,16 +30,16 @@ class ChatMessageBubble extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: receivedColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: CyberColors.border(context)),
           ),
           child: Text(
             message.content,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF475569),
+              color: receivedTextColor,
             ),
             textAlign: TextAlign.center,
           ),
@@ -43,7 +48,6 @@ class ChatMessageBubble extends StatelessWidget {
     }
 
     const emeraldGreen = Color(0xFF10B981);
-    const lightGrey = Color(0xFFF1F5F9);
     final isMe = message.isMe;
 
     return Padding(
@@ -66,7 +70,7 @@ class ChatMessageBubble extends StatelessWidget {
                 constraints: const BoxConstraints(maxWidth: 280),
                 padding: const EdgeInsets.only(top: 8, left: 12, right: 12, bottom: 6),
                 decoration: BoxDecoration(
-                  color: isMe ? emeraldGreen : lightGrey,
+                  color: isMe ? emeraldGreen : receivedColor,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(14),
                     topRight: const Radius.circular(14),
@@ -88,10 +92,10 @@ class ChatMessageBubble extends StatelessWidget {
                     if (!isMe) ...[
                       Text(
                         message.senderName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0284C7),
+                          color: CyberColors.primaryAccent(context),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -104,14 +108,17 @@ class ChatMessageBubble extends StatelessWidget {
                         child: Container(
                           height: 140,
                           width: double.infinity,
-                          color: isMe ? Colors.white.withValues(alpha: 0.2) : const Color(0xFFE2E8F0),
+                          color: isMe
+                              ? Colors.white.withValues(alpha: 0.2)
+                              : CyberColors.border(context),
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
                               Image.asset(
                                 'assets/images/logo.png',
                                 fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_rounded, size: 48, color: Colors.grey),
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Icon(Icons.image_rounded, size: 48, color: CyberColors.subtext(context)),
                               ),
                               Positioned(
                                 bottom: 6,
@@ -141,20 +148,22 @@ class ChatMessageBubble extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         margin: const EdgeInsets.only(bottom: 4),
                         decoration: BoxDecoration(
-                          color: isMe ? Colors.white.withValues(alpha: 0.25) : const Color(0xFFE2E8F0),
+                          color: isMe
+                              ? Colors.white.withValues(alpha: 0.25)
+                              : CyberColors.border(context),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.copy_rounded, size: 10, color: isMe ? Colors.white : const Color(0xFF0F172A)),
+                            Icon(Icons.copy_rounded, size: 10, color: isMe ? Colors.white : receivedTextColor),
                             const SizedBox(width: 4),
                             Text(
                               'Synced Clipboard',
                               style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.bold,
-                                color: isMe ? Colors.white : const Color(0xFF0F172A),
+                                color: isMe ? Colors.white : receivedTextColor,
                               ),
                             ),
                           ],
@@ -167,7 +176,7 @@ class ChatMessageBubble extends StatelessWidget {
                       message.content,
                       style: TextStyle(
                         fontSize: 13.5,
-                        color: isMe ? Colors.white : const Color(0xFF1F2328),
+                        color: isMe ? Colors.white : receivedTextColor,
                         height: 1.35,
                       ),
                     ),
@@ -182,7 +191,7 @@ class ChatMessageBubble extends StatelessWidget {
                           message.formattedTime,
                           style: TextStyle(
                             fontSize: 9.5,
-                            color: isMe ? Colors.white.withValues(alpha: 0.8) : const Color(0xFF94A3B8),
+                            color: isMe ? Colors.white.withValues(alpha: 0.8) : CyberColors.subtext(context),
                           ),
                         ),
                         if (isMe) ...[

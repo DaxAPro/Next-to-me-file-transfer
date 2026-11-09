@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../core/models/device_peer.dart';
 import '../../../core/theme/cyber_colors.dart';
-import '../../common_widgets/cyber_avatar.dart';
+import '../../common_widgets/branded_app_logo.dart';
 import 'radar_device_node.dart';
 import 'radar_painters.dart';
 
@@ -179,10 +179,10 @@ class _HomeRadarScreenState extends State<HomeRadarScreen>
                     ),
                   ),
 
-                  // 4. Center Node: User avatar "ME" placed exactly at screen center
+                  // 4. Keep the app logo's center aligned with the radar origin.
                   Positioned(
-                    left: center.dx - 27,
-                    top: center.dy - 34,
+                    left: center.dx - 36,
+                    top: center.dy - 29,
                     child: _buildCenterUserNode(emeraldGreen, electricCyan),
                   ),
 
@@ -208,46 +208,64 @@ class _HomeRadarScreenState extends State<HomeRadarScreen>
   }
 
   Widget _buildCenterUserNode(Color emeraldColor, Color cyanColor) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // User profile avatar node with glowing neon border
-        Container(
-          padding: const EdgeInsets.all(2.5),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: cyanColor, width: 2.2),
-            boxShadow: [
-              BoxShadow(
-                color: cyanColor.withValues(alpha: 0.40),
-                blurRadius: 12,
-                spreadRadius: 2,
+    return SizedBox(
+      width: 72,
+      height: 90,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: 7,
+            child: Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: cyanColor, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: cyanColor.withValues(alpha: 0.42),
+                    blurRadius: 16,
+                    spreadRadius: 2,
+                  ),
+                  BoxShadow(
+                    color: emeraldColor.withValues(alpha: 0.24),
+                    blurRadius: 22,
+                    spreadRadius: 4,
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: const CyberAvatar(size: 48, showStatusBadge: true),
-        ),
-        const SizedBox(height: 4),
-
-        // Brand-exclusive "ME" pill badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
-          decoration: BoxDecoration(
-            color: emeraldColor.withValues(alpha: 0.16),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: emeraldColor, width: 1.0),
-          ),
-          child: Text(
-            'ME',
-            style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-              color: emeraldColor,
+              child: const Center(
+                child: BrandedAppLogo(size: 54, useAssetIfAvailable: false),
+              ),
             ),
           ),
-        ),
-      ],
+          Positioned(
+            top: 63,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: emeraldColor.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: emeraldColor, width: 1),
+                ),
+                child: Text(
+                  'ME',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                    color: emeraldColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

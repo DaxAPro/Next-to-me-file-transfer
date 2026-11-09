@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:next_to_me/core/models/device_peer.dart';
+import 'package:next_to_me/ui/common_widgets/branded_app_logo.dart';
 import 'package:next_to_me/ui/screens/radar/home_radar_screen.dart';
 import 'package:next_to_me/ui/screens/radar/radar_device_node.dart';
 import 'package:next_to_me/ui/screens/radar/radar_painters.dart';
@@ -36,6 +37,24 @@ void main() {
 
       // Verify Center Node ME badge
       expect(find.text('ME'), findsOneWidget);
+      expect(find.byType(BrandedAppLogo), findsOneWidget);
+
+      final radarCanvas = find.byWidgetPredicate(
+        (widget) =>
+            widget is CustomPaint &&
+            widget.painter is GraphPaperGridPainter,
+      );
+      final radarBox = tester.renderObject<RenderBox>(radarCanvas);
+      final logoBox = tester.renderObject<RenderBox>(
+        find.byType(BrandedAppLogo),
+      );
+      final radarCenter = radarBox.localToGlobal(
+        radarBox.size.center(Offset.zero),
+      );
+      final logoCenter = logoBox.localToGlobal(
+        logoBox.size.center(Offset.zero),
+      );
+      expect((radarCenter - logoCenter).distance, lessThan(1));
 
       // Verify Discovery Header
       expect(find.text('Discovering Peers (12 found)'), findsOneWidget);

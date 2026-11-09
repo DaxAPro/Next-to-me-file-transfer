@@ -61,11 +61,17 @@ class SonarPulsePainter extends CustomPainter {
       // Alternate wave color between Emerald Green and Cyan
       final waveColor = i % 2 == 0 ? emeraldColor : cyanColor;
 
+      final glowPaint = Paint()
+        ..color = waveColor.withValues(alpha: (opacity * 0.42).clamp(0.0, 1.0))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 7
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9);
       final wavePaint = Paint()
         ..color = waveColor.withValues(alpha: opacity.clamp(0.0, 1.0))
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.8;
+        ..strokeWidth = 1.6;
 
+      canvas.drawCircle(center, currentRadius, glowPaint);
       canvas.drawCircle(center, currentRadius, wavePaint);
     }
   }
@@ -88,45 +94,42 @@ class DynamicConnectionLinesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const dashLength = 4.5;
-    const dashSpace = 4.5;
-
     for (int i = 0; i < devicePositions.length; i++) {
       final target = devicePositions[i];
       final color = i < lineColors.length ? lineColors[i] : const Color(0xFF00E5FF);
 
-      final linePaint = Paint()
-        ..color = color.withValues(alpha: 0.42)
-        ..strokeWidth = 1.2
-        ..style = PaintingStyle.stroke;
-
       final dx = target.dx - center.dx;
       final dy = target.dy - center.dy;
       final distance = sqrt(dx * dx + dy * dy);
+      if (distance <= 56) continue;
 
-      if (distance <= 50.0) continue;
-
-      final unitX = dx / distance;
-      final unitY = dy / distance;
-
-      // Padding around central avatar (28px) and target node (22px)
-      double currentDist = 28.0;
-      final endThreshold = distance - 22.0;
-
-      while (currentDist < endThreshold) {
-        final start = Offset(
-          center.dx + unitX * currentDist,
-          center.dy + unitY * currentDist,
-        );
-        final nextDist = min(currentDist + dashLength, endThreshold);
-        final end = Offset(
-          center.dx + unitX * nextDist,
-          center.dy + unitY * nextDist,
+      final direction = Offset(dx / distance, dy / distance);
+      final start = center + direction * 34;
+      final end = target - direction * 24;
+      final curveOffset = Offset(-direction.dy, direction.dx) * min(distance * 0.035, 18);
+      final path = Path()
+        ..moveTo(start.dx, start.dy)
+        ..quadraticBezierTo(
+          (start.dx + end.dx) / 2 + curveOffset.dx,
+          (start.dy + end.dy) / 2 + curveOffset.dy,
+          end.dx,
+          end.dy,
         );
 
-        canvas.drawLine(start, end, linePaint);
-        currentDist += dashLength + dashSpace;
-      }
+      final glowPaint = Paint()
+        ..color = color.withValues(alpha: 0.18)
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+      glowPaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+      final linePaint = Paint()
+        ..color = color.withValues(alpha: 0.48)
+        ..strokeWidth = 1.1
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+
+      canvas.drawPath(path, glowPaint);
+      canvas.drawPath(path, linePaint);
     }
   }
 

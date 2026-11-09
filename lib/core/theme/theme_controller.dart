@@ -38,12 +38,13 @@ class ThemeController extends ChangeNotifier {
   /// Explicitly set theme mode
   Future<void> setThemeMode(ThemeMode mode) async {
     if (_themeMode == mode) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.keyDarkMode, mode == ThemeMode.dark);
+
     _themeMode = mode;
     _updateSystemOverlay();
     notifyListeners();
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(AppConstants.keyDarkMode, _themeMode == ThemeMode.dark);
   }
 
   void _updateSystemOverlay() {

@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 /// Zero faux glassmorphism, zero bloated glow shadows.
 class AppTheme {
   // Brand Solid Accents
-  static const Color cyan = Color(0xFF00E5FF);       // Direct / Active Cyan
-  static const Color green = Color(0xFF00E676);      // Connected / Eco Green
+  static const Color cyan = Color(0xFF00E5FF);       // Electric Cyan Blue
+  static const Color green = Color(0xFF10B981);      // Tech Emerald Green
   static const Color amber = Color(0xFFFFB300);      // Warning / Throttled
   static const Color red = Color(0xFFFF5252);        // Error / Danger
   static const Color violet = Color(0xFF7C4DFF);     // LAN / P2P Mode
@@ -46,8 +46,8 @@ class AppTheme {
       scaffoldBackgroundColor: darkBg,
       primaryColor: cyan,
       colorScheme: const ColorScheme.dark(
-        primary: cyan,
-        secondary: green,
+        primary: green,
+        secondary: cyan,
         surface: darkSurface,
         error: red,
       ),
@@ -111,8 +111,8 @@ class AppTheme {
       scaffoldBackgroundColor: lightBg,
       primaryColor: const Color(0xFF00838F),
       colorScheme: const ColorScheme.light(
-        primary: Color(0xFF00838F),
-        secondary: Color(0xFF2E7D32),
+        primary: green,
+        secondary: cyan,
         surface: lightSurface,
         error: red,
       ),
@@ -146,7 +146,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF00838F),
+          backgroundColor: green,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

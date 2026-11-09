@@ -2,14 +2,45 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:flutter/services.dart';
+import 'package:cryptography/cryptography.dart';
+
 import 'speed_throttler.dart';
 import '../../core/models/transfer_models.dart';
+
+class LocalHotspotCredentials {
+  final String ssid;
+  final String password;
+
+  const LocalHotspotCredentials({required this.ssid, required this.password});
+
+  factory LocalHotspotCredentials.fromMap(Map<Object?, Object?> map) {
+    final ssid = map['ssid'] as String?;
+    final password = map['password'] as String?;
+    if (ssid == null || password == null || ssid.isEmpty || password.isEmpty) {
+      throw const FormatException(
+        'Android did not return hotspot credentials.',
+      );
+    }
+    return LocalHotspotCredentials(ssid: ssid, password: password);
+  }
+}
+
+class _SecureSession {
+  Future<KeyPair>? localKeyPair;
+  bool helloSent = false;
+  final Completer<SecretKey> keyReady = Completer<SecretKey>();
+}
 
 /// Wi-Fi Direct & LAN High-Speed Socket Service
 /// Green Code: Optimized stream processing with minimal GC buffer reallocations
 class WifiDirectService {
   static const int defaultPort = 52520;
   static const int magicByte = 0x5A;
+  static const MethodChannel _hotspotChannel = MethodChannel(
+    'nexttome/wifi_direct',
+  );
 
   // Frame OpCodes
   static const int opFileMeta = 0x01;
@@ -19,10 +50,21 @@ class WifiDirectService {
   static const int opResume = 0x05;
   static const int opChatMessage = 0x06;
   static const int opGameAction = 0x07;
+  static const int opSecureHello = 0x08;
+
+  static final X25519 _keyAgreement = X25519();
+  static final Hkdf _keyDerivation = Hkdf(
+    hmac: Hmac.sha256(),
+    outputLength: 32,
+  );
+  static final AesGcm _aead = AesGcm.with256bits();
 
   ServerSocket? _serverSocket;
   Socket? _activeSocket;
   bool _isConnected = false;
+  bool _isHost = false;
+  final Map<Socket, _SecureSession> _secureSessions = {};
+  final Map<Socket, Future<void>> _frameQueues = {};
 
   final SpeedThrottler speedThrottler = SpeedThrottler();
 
@@ -35,27 +77,72 @@ class WifiDirectService {
       StreamController<Map<String, dynamic>>.broadcast();
 
   bool get isConnected => _isConnected;
-  Stream<TransferTask> get transferProgressStream => _transferProgressController.stream;
+  bool get isHost => _isHost;
+  int? get serverPort => _serverSocket?.port;
+  Stream<TransferTask> get transferProgressStream =>
+      _transferProgressController.stream;
   Stream<Map<String, dynamic>> get chatStream => _chatStreamController.stream;
   Stream<Map<String, dynamic>> get gameStream => _gameStreamController.stream;
+
+  Future<LocalHotspotCredentials> startLocalOnlyHotspot() async {
+    final result = await _hotspotChannel.invokeMapMethod<Object?, Object?>(
+      'startLocalOnlyHotspot',
+    );
+    if (result == null) {
+      throw const FormatException(
+        'Android did not return hotspot credentials.',
+      );
+    }
+    return LocalHotspotCredentials.fromMap(result);
+  }
+
+  Future<LocalHotspotCredentials> regenerateLocalOnlyHotspotPassword() async {
+    final result = await _hotspotChannel.invokeMapMethod<Object?, Object?>(
+      'regenerateLocalOnlyHotspot',
+    );
+    if (result == null) {
+      throw const FormatException(
+        'Android did not return hotspot credentials.',
+      );
+    }
+    return LocalHotspotCredentials.fromMap(result);
+  }
+
+  Future<void> stopLocalOnlyHotspot() async {
+    await _hotspotChannel.invokeMethod<void>('stopLocalOnlyHotspot');
+  }
 
   /// Start server (Host mode / Hotspot Group Owner)
   Future<void> startServer({int port = defaultPort}) async {
     await stopServer();
     try {
       _serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, port);
+      _isHost = true;
       _serverSocket?.listen(_handleIncomingClient);
-    } catch (_) {}
+    } catch (error) {
+      throw StateError('Could not start local transfer server: $error');
+    }
   }
 
   /// Connect to Host (Client mode)
-  Future<bool> connectToHost({required String hostIp, int port = defaultPort}) async {
+  Future<bool> connectToHost({
+    required String hostIp,
+    int port = defaultPort,
+  }) async {
     try {
-      _activeSocket = await Socket.connect(hostIp, port, timeout: const Duration(seconds: 8));
+      _activeSocket = await Socket.connect(
+        hostIp,
+        port,
+        timeout: const Duration(seconds: 8),
+      );
+      _isHost = false;
       _isConnected = true;
       _listenToSocket(_activeSocket!);
+      await _establishSecureSession(_activeSocket!);
       return true;
-    } catch (_) {
+    } catch (error) {
+      _activeSocket?.destroy();
+      _isHost = false;
       _isConnected = false;
       return false;
     }
@@ -65,6 +152,12 @@ class WifiDirectService {
     _activeSocket = client;
     _isConnected = true;
     _listenToSocket(client);
+    unawaited(
+      _establishSecureSession(client)
+          .catchError((Object error, StackTrace stackTrace) {
+            _handleSocketFailure(client, error, stackTrace);
+          }),
+    );
   }
 
   void _listenToSocket(Socket socket) {
@@ -77,9 +170,12 @@ class WifiDirectService {
       },
       onDone: () {
         _isConnected = false;
+        _isHost = false;
+        _secureSessions.remove(socket);
+        _frameQueues.remove(socket);
       },
-      onError: (_) {
-        _isConnected = false;
+      onError: (Object error, StackTrace stackTrace) {
+        _handleSocketFailure(socket, error, stackTrace);
       },
       cancelOnError: false,
     );
@@ -107,8 +203,12 @@ class WifiDirectService {
         break; // Frame is still partial, await next socket packet
       }
 
-      final payload = Uint8List.sublistView(bytes, offset + 14, offset + totalFrameLen);
-      _handleFrame(opCode, byteOffset, payload, socket);
+      final payload = Uint8List.sublistView(
+        bytes,
+        offset + 14,
+        offset + totalFrameLen,
+      );
+      _queueFrame(socket, opCode, byteOffset, payload);
       offset += totalFrameLen;
     }
 
@@ -120,12 +220,39 @@ class WifiDirectService {
     }
   }
 
-  void _handleFrame(int opCode, int offset, Uint8List payload, Socket socket) {
+  void _queueFrame(Socket socket, int opCode, int offset, Uint8List payload) {
+    final previous = _frameQueues[socket] ?? Future<void>.value();
+    _frameQueues[socket] = previous
+        .then<void>((_) => _handleFrame(opCode, offset, payload, socket))
+        .catchError((Object error, StackTrace stackTrace) {
+          _handleSocketFailure(socket, error, stackTrace);
+        });
+  }
+
+  Future<void> _handleFrame(
+    int opCode,
+    int offset,
+    Uint8List payload,
+    Socket socket,
+  ) async {
+    if (opCode == opSecureHello) {
+      await _handleSecureHello(socket, payload);
+      return;
+    }
+
+    final clearPayload = await _decryptFrame(socket, opCode, offset, payload);
     switch (opCode) {
       case opFileMeta:
-        final jsonStr = utf8.decode(payload);
+        final jsonStr = utf8.decode(clearPayload);
         final meta = jsonDecode(jsonStr) as Map<String, dynamic>;
-        _sendFrame(socket, opChunkAck, offset, utf8.encode(jsonEncode({'fileId': meta['id'], 'resumedOffset': offset})));
+        await _sendSecureFrame(
+          socket,
+          opChunkAck,
+          offset,
+          utf8.encode(
+            jsonEncode({'fileId': meta['id'], 'resumedOffset': offset}),
+          ),
+        );
         break;
 
       case opFileChunk:
@@ -133,16 +260,120 @@ class WifiDirectService {
         break;
 
       case opChatMessage:
-        final jsonStr = utf8.decode(payload);
+        final jsonStr = utf8.decode(clearPayload);
         final msg = jsonDecode(jsonStr) as Map<String, dynamic>;
         _chatStreamController.add(msg);
         break;
 
       case opGameAction:
-        final jsonStr = utf8.decode(payload);
+        final jsonStr = utf8.decode(clearPayload);
         final action = jsonDecode(jsonStr) as Map<String, dynamic>;
         _gameStreamController.add(action);
         break;
+    }
+  }
+
+  Future<void> _establishSecureSession(Socket socket) async {
+    final session = _secureSessions.putIfAbsent(socket, _SecureSession.new);
+    final localKeyPair = await _localKeyPair(session);
+    if (!session.helloSent) {
+      session.helloSent = true;
+      _sendFrame(socket, opSecureHello, 0, await _publicKeyBytes(localKeyPair));
+    }
+    await session.keyReady.future.timeout(const Duration(seconds: 10));
+  }
+
+  Future<KeyPair> _localKeyPair(_SecureSession session) =>
+      session.localKeyPair ??= _keyAgreement.newKeyPair();
+
+  Future<List<int>> _publicKeyBytes(KeyPair keyPair) async {
+    final publicKey = await keyPair.extractPublicKey();
+    if (publicKey is! SimplePublicKey) {
+      throw StateError('X25519 returned an unsupported public key type.');
+    }
+    return publicKey.bytes;
+  }
+
+  Future<void> _handleSecureHello(Socket socket, Uint8List remoteBytes) async {
+    if (remoteBytes.length != 32) {
+      throw const FormatException('Invalid secure-session public key.');
+    }
+
+    final session = _secureSessions.putIfAbsent(socket, _SecureSession.new);
+    final localKeyPair = await _localKeyPair(session);
+    if (!session.helloSent) {
+      session.helloSent = true;
+      _sendFrame(socket, opSecureHello, 0, await _publicKeyBytes(localKeyPair));
+    }
+
+    final sharedSecret = await _keyAgreement.sharedSecretKey(
+      keyPair: localKeyPair,
+      remotePublicKey: SimplePublicKey(remoteBytes, type: KeyPairType.x25519),
+    );
+    final sessionKey = await _keyDerivation.deriveKey(
+      secretKey: sharedSecret,
+      nonce: const <int>[],
+      info: utf8.encode('NextToMe offline transport v1'),
+    );
+    if (!session.keyReady.isCompleted) {
+      session.keyReady.complete(sessionKey);
+    }
+  }
+
+  Future<void> _sendSecureFrame(
+    Socket socket,
+    int opCode,
+    int offset,
+    List<int> payload,
+  ) async {
+    final sessionKey = await _secureSessionKey(socket);
+    final box = await _aead.encrypt(
+      payload,
+      secretKey: sessionKey,
+      aad: _frameAad(opCode, offset),
+    );
+    _sendFrame(socket, opCode, offset, box.concatenation());
+  }
+
+  Future<Uint8List> _decryptFrame(
+    Socket socket,
+    int opCode,
+    int offset,
+    Uint8List payload,
+  ) async {
+    if (payload.length < 28) {
+      throw const FormatException('Encrypted frame is incomplete.');
+    }
+    final sessionKey = await _secureSessionKey(socket);
+    final clearPayload = await _aead.decrypt(
+      SecretBox.fromConcatenation(payload, nonceLength: 12, macLength: 16),
+      secretKey: sessionKey,
+      aad: _frameAad(opCode, offset),
+    );
+    return Uint8List.fromList(clearPayload);
+  }
+
+  Future<SecretKey> _secureSessionKey(Socket socket) async {
+    await _establishSecureSession(socket);
+    return _secureSessions[socket]!.keyReady.future;
+  }
+
+  List<int> _frameAad(int opCode, int offset) => utf8.encode('$opCode:$offset');
+
+  void _handleSocketFailure(
+    Socket socket,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    _secureSessions.remove(socket);
+    _frameQueues.remove(socket);
+    if (identical(_activeSocket, socket)) {
+      _isConnected = false;
+      _activeSocket = null;
+    }
+    socket.destroy();
+    if (!_chatStreamController.isClosed) {
+      _chatStreamController.addError(error, stackTrace);
     }
   }
 
@@ -157,17 +388,17 @@ class WifiDirectService {
     socket.add(payload);
   }
 
-  void sendChatMessage(Map<String, dynamic> message) {
+  Future<void> sendChatMessage(Map<String, dynamic> message) async {
     if (_activeSocket != null && _isConnected) {
       final payload = utf8.encode(jsonEncode(message));
-      _sendFrame(_activeSocket!, opChatMessage, 0, payload);
+      await _sendSecureFrame(_activeSocket!, opChatMessage, 0, payload);
     }
   }
 
-  void sendGameAction(Map<String, dynamic> action) {
+  Future<void> sendGameAction(Map<String, dynamic> action) async {
     if (_activeSocket != null && _isConnected) {
       final payload = utf8.encode(jsonEncode(action));
-      _sendFrame(_activeSocket!, opGameAction, 0, payload);
+      await _sendSecureFrame(_activeSocket!, opGameAction, 0, payload);
     }
   }
 
@@ -188,28 +419,41 @@ class WifiDirectService {
     task.bytesTransferred = resumeFromByte;
     _transferProgressController.add(task);
 
-    final metaPayload = utf8.encode(jsonEncode({
-      'id': task.id,
-      'fileName': task.fileName,
-      'fileSize': task.fileSize,
-      'category': task.category.name,
-      'resumeFrom': resumeFromByte,
-    }));
-    _sendFrame(_activeSocket!, opFileMeta, resumeFromByte, metaPayload);
-
+    final metaPayload = utf8.encode(
+      jsonEncode({
+        'id': task.id,
+        'fileName': task.fileName,
+        'fileSize': task.fileSize,
+        'category': task.category.name,
+        'resumeFrom': resumeFromByte,
+      }),
+    );
     var currentOffset = resumeFromByte;
     var speedCounter = 0;
     var lastSpeedTime = DateTime.now().millisecondsSinceEpoch;
 
     try {
+      await _sendSecureFrame(
+        _activeSocket!,
+        opFileMeta,
+        resumeFromByte,
+        metaPayload,
+      );
+
       await for (final chunk in fileByteStream) {
-        if (task.status == TransferStatus.paused || task.status == TransferStatus.canceled) {
+        if (task.status == TransferStatus.paused ||
+            task.status == TransferStatus.canceled) {
           break;
         }
 
         await speedThrottler.throttle(chunk.length);
 
-        _sendFrame(_activeSocket!, opFileChunk, currentOffset, chunk);
+        await _sendSecureFrame(
+          _activeSocket!,
+          opFileChunk,
+          currentOffset,
+          chunk,
+        );
         currentOffset += chunk.length;
         speedCounter += chunk.length;
         task.bytesTransferred = currentOffset;
@@ -241,10 +485,13 @@ class WifiDirectService {
 
   Future<void> stopServer() async {
     _isConnected = false;
+    _isHost = false;
     await _activeSocket?.close();
     _activeSocket = null;
     await _serverSocket?.close();
     _serverSocket = null;
+    _secureSessions.clear();
+    _frameQueues.clear();
   }
 
   void dispose() {

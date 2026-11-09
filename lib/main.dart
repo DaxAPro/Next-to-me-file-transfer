@@ -68,6 +68,8 @@ class _NextToMeAppState extends State<NextToMeApp> {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeController.instance.themeMode,
+          themeAnimationDuration: const Duration(milliseconds: 350),
+          themeAnimationCurve: Curves.easeInOutCubic,
           home: showOnboarding
               ? OnboardingScreen(connectionManager: _connectionManager)
               : HomeScreen(connectionManager: _connectionManager),

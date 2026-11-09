@@ -18,7 +18,7 @@ class CyberColors {
   // Speedometer & Status Accents
   static const Color electricCyan = Color(0xFF00E5FF);       // Low / Idle Speed
   static const Color techBlue = Color(0xFF00B0FF);           // Mid-low Speed
-  static const Color techEmerald = Color(0xFF00E676);        // High / Optimal Speed
+  static const Color techEmerald = Color(0xFF10B981);        // Tech Emerald Green
   static const Color warningAmber = Color(0xFFFFB300);       // Throttled
   static const Color dangerRed = Color(0xFFFF5252);          // Quota Exceeded
   static const Color cyberViolet = Color(0xFF7C4DFF);        // LAN Mode
@@ -48,7 +48,7 @@ class CyberColors {
       Theme.of(context).brightness == Brightness.dark ? electricCyan : const Color(0xFF0097A7);
 
   static Color emeraldAccent(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? techEmerald : const Color(0xFF00C853);
+      techEmerald;
 
   /// Smoothly interpolates color from Cyan to Tech Emerald Green across 0.0 -> 1.0 ratio
   static Color getSpeedometerColor(double ratio) {

@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../../core/models/chat_message.dart';
 import '../../../core/models/device_peer.dart';
 import '../../../core/theme/cyber_colors.dart';
@@ -35,32 +37,65 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
   }
 
   Future<void> _loadLocalChatHistory() async {
-    final loaded = await LocalChatStorage.instance.loadMessages(
-      widget.connectionManager.localDeviceId,
-    );
-    if (mounted) {
+    try {
+      final loaded = await LocalChatStorage.instance.loadMessages(
+        widget.connectionManager.localDeviceId,
+      );
+      if (!mounted) return;
       setState(() {
         _messages = loaded;
         _isLoading = false;
       });
       _scrollToBottom();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not load local chat history: $error')),
+      );
     }
   }
 
   void _subscribeToPeerMessages() {
-    _chatSubscription = widget.connectionManager.wifiDirectService.chatStream.listen((data) async {
-      if (!mounted) return;
-      final incoming = ChatMessage.fromJson(
-        data,
-        myDeviceId: widget.connectionManager.localDeviceId,
-      );
-      await LocalChatStorage.instance.saveMessage(incoming);
-      setState(() => _messages.add(incoming));
-      _scrollToBottom();
-    });
+    _chatSubscription = widget.connectionManager.wifiDirectService.chatStream
+        .listen(
+          (data) async {
+            if (!mounted) return;
+            try {
+              final incoming = ChatMessage.fromJson(
+                data,
+                myDeviceId: widget.connectionManager.localDeviceId,
+              );
+              await LocalChatStorage.instance.saveMessage(incoming);
+              if (!mounted) return;
+              setState(() => _messages.add(incoming));
+              _scrollToBottom();
+            } catch (error) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Could not save received message: $error'),
+                  ),
+                );
+              }
+            }
+          },
+          onError: (Object error) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Secure chat connection failed: $error'),
+                ),
+              );
+            }
+          },
+        );
   }
 
-  void _sendMessage({String? customContent, ChatMessageType type = ChatMessageType.text}) async {
+  void _sendMessage({
+    String? customContent,
+    ChatMessageType type = ChatMessageType.text,
+  }) async {
     final text = customContent ?? _msgController.text.trim();
     if (text.isEmpty) return;
 
@@ -81,17 +116,33 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
     });
     _scrollToBottom();
 
-    await LocalChatStorage.instance.saveMessage(newMsg);
-    widget.connectionManager.wifiDirectService.sendChatMessage(newMsg.toJson());
+    try {
+      await LocalChatStorage.instance.saveMessage(newMsg);
+      await widget.connectionManager.wifiDirectService.sendChatMessage(
+        newMsg.toJson(),
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not send encrypted message: $error')),
+        );
+      }
+      return;
+    }
 
     // Transition from one tick to two ticks on broadcast acknowledgement
     Future.delayed(const Duration(milliseconds: 350), () async {
       if (!mounted) return;
-      await LocalChatStorage.instance.updateDeliveryStatus(msgId, MessageDeliveryStatus.delivered);
+      await LocalChatStorage.instance.updateDeliveryStatus(
+        msgId,
+        MessageDeliveryStatus.delivered,
+      );
       final idx = _messages.indexWhere((m) => m.id == msgId);
       if (idx != -1) {
         setState(() {
-          _messages[idx] = _messages[idx].copyWith(status: MessageDeliveryStatus.delivered);
+          _messages[idx] = _messages[idx].copyWith(
+            status: MessageDeliveryStatus.delivered,
+          );
         });
       }
     });
@@ -100,7 +151,10 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
   void _syncClipboardToChat() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     if (data?.text != null && data!.text!.trim().isNotEmpty) {
-      _sendMessage(customContent: data.text!.trim(), type: ChatMessageType.clipboard);
+      _sendMessage(
+        customContent: data.text!.trim(),
+        type: ChatMessageType.clipboard,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Clipboard text synced to group chat.')),
@@ -136,7 +190,10 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
           'This will permanently delete all local messages and shared image cache on this device.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
@@ -154,7 +211,9 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
                 );
               });
             },
-            style: ElevatedButton.styleFrom(backgroundColor: CyberColors.dangerRed),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: CyberColors.dangerRed,
+            ),
             child: const Text('Clear', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -163,8 +222,10 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
   }
 
   void _openParticipantsSheet() {
-    final isHost = widget.connectionManager.wifiDirectService.isConnected ||
-        widget.connectionManager.activeTransfers.isNotEmpty;
+    final isHost = widget.connectionManager.wifiDirectService.isHost;
+    final connectedPeers = widget.connectionManager.discoveredPeers
+        .where((peer) => peer.isConnected)
+        .toList(growable: false);
 
     showModalBottomSheet(
       context: context,
@@ -173,7 +234,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
       builder: (_) => ActiveMembersModal(
         localDeviceName: widget.connectionManager.localDeviceName,
         isHost: isHost,
-        connectedPeers: widget.connectionManager.discoveredPeers,
+        connectedPeers: connectedPeers,
         onRemovePeer: (peer) {
           _removePeerFromChat(peer);
         },
@@ -219,16 +280,21 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
   @override
   Widget build(BuildContext context) {
     const emeraldGreen = Color(0xFF10B981);
-    final isHost = widget.connectionManager.wifiDirectService.isConnected ||
-        widget.connectionManager.activeTransfers.isNotEmpty;
-    final totalPeers = widget.connectionManager.discoveredPeers.length;
+    final backgroundColor = CyberColors.background(context);
+    final surfaceColor = CyberColors.surface(context);
+    final textColor = CyberColors.text(context);
+    final subtextColor = CyberColors.subtext(context);
+    final isHost = widget.connectionManager.wifiDirectService.isHost;
+    final totalPeers = widget.connectionManager.discoveredPeers
+        .where((peer) => peer.isConnected)
+        .length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: surfaceColor,
         elevation: 0.8,
-        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+        iconTheme: IconThemeData(color: textColor),
         titleSpacing: 0,
         title: InkWell(
           onTap: _openParticipantsSheet,
@@ -237,18 +303,22 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
             children: [
               const Text(
                 'Offline Group Chat',
-                style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.bold),
               ),
               Text(
                 '${1 + totalPeers} active • ${isHost ? "You're Host (Admin)" : "Guest"}',
-                style: const TextStyle(fontSize: 11, color: emeraldGreen, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: emeraldGreen,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.group_outlined, color: Color(0xFF0F172A)),
+            icon: Icon(Icons.group_outlined, color: textColor),
             tooltip: 'Active Members',
             onPressed: _openParticipantsSheet,
           ),
@@ -258,7 +328,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
             onPressed: _syncClipboardToChat,
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF0F172A)),
+            icon: Icon(Icons.more_vert_rounded, color: textColor),
             onSelected: (val) {
               if (val == 'clear') _confirmClearHistory();
               if (val == 'members') _openParticipantsSheet();
@@ -270,7 +340,10 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
               ),
               const PopupMenuItem(
                 value: 'clear',
-                child: Text('Clear Chat History', style: TextStyle(fontSize: 13, color: CyberColors.dangerRed)),
+                child: Text(
+                  'Clear Chat History',
+                  style: TextStyle(fontSize: 13, color: CyberColors.dangerRed),
+                ),
               ),
             ],
           ),
@@ -299,7 +372,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
           // Quick Emoji Bar
           Container(
             height: 38,
-            color: const Color(0xFFF8FAFC),
+            color: surfaceColor,
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -308,7 +381,10 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
                     (e) => InkWell(
                       onTap: () => _sendMessage(customContent: e),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
                         child: Text(e, style: const TextStyle(fontSize: 18)),
                       ),
                     ),
@@ -320,30 +396,37 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
           // Flat WhatsApp-Style Input Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              border: Border(
+                top: BorderSide(color: CyberColors.border(context)),
+              ),
             ),
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.attach_file_rounded, color: Color(0xFF64748B), size: 22),
+                  icon: Icon(
+                    Icons.attach_file_rounded,
+                    color: subtextColor,
+                    size: 22,
+                  ),
                   tooltip: 'Attach Image',
                   onPressed: _sendPhotoAttachment,
                 ),
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                      color: CyberColors.border(context)
+                          .withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: TextField(
                       controller: _msgController,
-                      style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A)),
+                      style: TextStyle(fontSize: 14, color: textColor),
                       decoration: const InputDecoration(
                         hintText: 'Type offline message...',
-                        hintStyle: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
+                        hintStyle: TextStyle(fontSize: 13),
                         border: InputBorder.none,
                         isDense: true,
                         contentPadding: EdgeInsets.symmetric(vertical: 10),
@@ -357,7 +440,11 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
                   radius: 20,
                   backgroundColor: emeraldGreen,
                   child: IconButton(
-                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     onPressed: () => _sendMessage(),
                   ),
                 ),
