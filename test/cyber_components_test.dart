@@ -324,6 +324,7 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getBool(AppConstants.keyIsFirstTimeLaunch), isFalse);
       expect(prefs.getBool(AppConstants.keyFirstLaunch), isTrue);
+      expect(prefs.getBool(AppConstants.keyHasSeenOnboarding), isTrue);
 
       connectionManager.dispose();
     });
