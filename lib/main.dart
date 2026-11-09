@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'core/constants/app_constants.dart';
 import 'core/theme/theme_controller.dart';
 import 'services/connection/hybrid_connection_manager.dart';
@@ -14,16 +15,17 @@ void main() async {
   await ThemeController.instance.init();
 
   final prefs = await SharedPreferences.getInstance();
-  // On app launch, check isFirstTimeLaunch (default: true)
-  final isFirstTimeLaunch = prefs.getBool(AppConstants.keyIsFirstTimeLaunch) ??
-      (prefs.getBool(AppConstants.keyFirstLaunch) != null
-          ? !prefs.getBool(AppConstants.keyFirstLaunch)!
-          : true);
+  final hasSeenOnboarding =
+      prefs.getBool(AppConstants.keyHasSeenOnboarding) ??
+      (prefs.getBool(AppConstants.keyIsFirstTimeLaunch) == false ||
+          prefs.getBool(AppConstants.keyFirstLaunch) == true);
 
-  runApp(NextToMeApp(
-    isFirstTimeLaunch: isFirstTimeLaunch,
-    isFirstLaunchDone: !isFirstTimeLaunch,
-  ));
+  runApp(
+    NextToMeApp(
+      isFirstTimeLaunch: !hasSeenOnboarding,
+      isFirstLaunchDone: hasSeenOnboarding,
+    ),
+  );
 }
 
 class NextToMeApp extends StatefulWidget {
@@ -57,10 +59,14 @@ class _NextToMeAppState extends State<NextToMeApp> {
 
   @override
   Widget build(BuildContext context) {
-    final showOnboarding = widget.isFirstTimeLaunch ?? !widget.isFirstLaunchDone;
+    final showOnboarding =
+        widget.isFirstTimeLaunch ?? !widget.isFirstLaunchDone;
 
     return ListenableBuilder(
-      listenable: Listenable.merge([_connectionManager, ThemeController.instance]),
+      listenable: Listenable.merge([
+        _connectionManager,
+        ThemeController.instance,
+      ]),
       builder: (context, child) {
         return MaterialApp(
           title: 'NextToMe',
