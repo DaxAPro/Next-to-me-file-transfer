@@ -1,4 +1,4 @@
-# NextToMe ⚡
+# NextToMe
 ### Next-Gen High-Speed, Zero-Copy P2P File Sharing Application
 
 <div align="center">
@@ -8,7 +8,7 @@
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 * **Hybrid Fast Connectivity**:
   * **BLE Auto-Discovery (1-2s)**: Instant nearby beacon discovery without manual pairing.
@@ -36,7 +36,7 @@
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 lib/
@@ -54,7 +54,7 @@ lib/
 
 ---
 
-## 🛠 Getting Started
+## Getting Started
 
 ### Prerequisites
 * Flutter SDK (3.13+)
@@ -78,5 +78,5 @@ flutter run
 
 ---
 
-## 📄 License
+## License
 This project is licensed under the MIT License.

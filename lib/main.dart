@@ -17,8 +17,8 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final hasSeenOnboarding =
       prefs.getBool(AppConstants.keyHasSeenOnboarding) ??
-      (prefs.getBool(AppConstants.keyIsFirstTimeLaunch) == false ||
-          prefs.getBool(AppConstants.keyFirstLaunch) == true);
+      prefs.getBool(AppConstants.keyFirstLaunch) ??
+      false;
 
   runApp(
     NextToMeApp(

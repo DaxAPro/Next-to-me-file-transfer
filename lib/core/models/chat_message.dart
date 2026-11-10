@@ -1,9 +1,4 @@
-enum ChatMessageType {
-  text,
-  image,
-  clipboard,
-  system,
-}
+enum ChatMessageType { text, image, clipboard, system }
 
 enum MessageDeliveryStatus {
   sent, // One grey tick
@@ -20,6 +15,7 @@ class ChatMessage {
   final DateTime timestamp;
   final bool isMe;
   final String? mediaPath;
+  final String? mediaData;
   final MessageDeliveryStatus status;
 
   ChatMessage({
@@ -31,6 +27,7 @@ class ChatMessage {
     DateTime? timestamp,
     this.isMe = false,
     this.mediaPath,
+    this.mediaData,
     this.status = MessageDeliveryStatus.sent,
   }) : timestamp = timestamp ?? DateTime.now();
 
@@ -52,6 +49,7 @@ class ChatMessage {
     DateTime? timestamp,
     bool? isMe,
     String? mediaPath,
+    String? mediaData,
     MessageDeliveryStatus? status,
   }) {
     return ChatMessage(
@@ -63,6 +61,7 @@ class ChatMessage {
       timestamp: timestamp ?? this.timestamp,
       isMe: isMe ?? this.isMe,
       mediaPath: mediaPath ?? this.mediaPath,
+      mediaData: mediaData ?? this.mediaData,
       status: status ?? this.status,
     );
   }
@@ -74,11 +73,14 @@ class ChatMessage {
     'content': content,
     'type': type.name,
     'timestamp': timestamp.millisecondsSinceEpoch,
-    'mediaPath': mediaPath,
     'status': status.name,
+    if (mediaData != null) 'mediaData': mediaData,
   };
 
-  factory ChatMessage.fromJson(Map<String, dynamic> json, {required String myDeviceId}) {
+  factory ChatMessage.fromJson(
+    Map<String, dynamic> json, {
+    required String myDeviceId,
+  }) {
     final sender = json['senderId']?.toString() ?? '';
     return ChatMessage(
       id: json['id']?.toString() ?? '',
@@ -94,6 +96,7 @@ class ChatMessage {
       ),
       isMe: sender == myDeviceId,
       mediaPath: json['mediaPath']?.toString(),
+      mediaData: json['mediaData']?.toString(),
       status: MessageDeliveryStatus.values.firstWhere(
         (e) => e.name == json['status'],
         orElse: () => MessageDeliveryStatus.delivered,

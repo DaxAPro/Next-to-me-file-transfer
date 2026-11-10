@@ -32,8 +32,7 @@ class LocalChatStorage {
           id: 'welcome-system-msg',
           senderId: 'sys',
           senderName: 'System',
-          content:
-              'Offline Wi-Fi Group Chat active. Messages route directly between connected peers without internet.',
+          content: 'Offline Wi-Fi Group Chat active. Messages route directly between connected peers without internet.',
           type: ChatMessageType.system,
           status: MessageDeliveryStatus.delivered,
         ),
@@ -41,10 +40,7 @@ class LocalChatStorage {
     }
 
     return rows
-        .map((row) => ChatMessage.fromJson(
-              row,
-              myDeviceId: myDeviceId,
-            ))
+        .map((row) => ChatMessage.fromJson(row, myDeviceId: myDeviceId))
         .toList();
   }
 
@@ -72,13 +68,49 @@ class LocalChatStorage {
 
   Future<void> deleteMessage(String messageId) async {
     final db = await _database;
+    final rows = await db.query(
+      'messages',
+      columns: ['mediaPath'],
+      where: 'id = ?',
+      whereArgs: [messageId],
+      limit: 1,
+    );
+    if (rows.isNotEmpty) {
+      await _deleteMediaFile(rows.first['mediaPath'] as String?);
+    }
     await db.delete('messages', where: 'id = ?', whereArgs: [messageId]);
   }
 
   Future<void> clearAll() async {
     final db = await _database;
+    final rows = await db.query('messages', columns: ['mediaPath']);
+    for (final row in rows) {
+      await _deleteMediaFile(row['mediaPath'] as String?);
+    }
+    await _clearImageCache();
     await db.delete('messages');
   }
+
+  Future<String> saveImageBytes({
+    required List<int> bytes,
+    required String messageId,
+    required String fileName,
+  }) async {
+    final mediaDirectory = await _imageDirectory;
+    await mediaDirectory.create(recursive: true);
+    final extension = path.extension(fileName).toLowerCase();
+    final safeExtension = RegExp(r'^\.[a-z0-9]{1,8}$').hasMatch(extension)
+        ? extension
+        : '.jpg';
+    final safeMessageId = messageId.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
+    final imageFile = File(
+      path.join(mediaDirectory.path, '$safeMessageId$safeExtension'),
+    );
+    await imageFile.writeAsBytes(bytes, flush: true);
+    return imageFile.path;
+  }
+
+  Future<void> deleteImageFile(String mediaPath) => _deleteMediaFile(mediaPath);
 
   Future<Database> get _database => _databaseFuture ??= _openDatabase();
 
@@ -156,14 +188,38 @@ class LocalChatStorage {
     }
   }
 
+  Future<void> _deleteMediaFile(String? mediaPath) async {
+    if (mediaPath == null || mediaPath.isEmpty) return;
+    final ownedDirectory = path.absolute((await _imageDirectory).path);
+    final resolvedPath = path.absolute(mediaPath);
+    if (!path.isWithin(ownedDirectory, resolvedPath)) return;
+    final file = File(resolvedPath);
+    if (await file.exists()) {
+      await file.delete();
+    }
+  }
+
+  Future<void> _clearImageCache() async {
+    final mediaDirectory = await _imageDirectory;
+    if (!await mediaDirectory.exists()) return;
+    await for (final entity in mediaDirectory.list(followLinks: false)) {
+      if (entity is File) await entity.delete();
+    }
+  }
+
+  Future<Directory> get _imageDirectory async {
+    final databasePath = await _databaseFactory.getDatabasesPath();
+    return Directory(path.join(databasePath, 'offline_chat_images'));
+  }
+
   Map<String, Object?> _toDatabaseRow(ChatMessage message) => {
-        'id': message.id,
-        'senderId': message.senderId,
-        'senderName': message.senderName,
-        'content': message.content,
-        'type': message.type.name,
-        'timestamp': message.timestamp.millisecondsSinceEpoch,
-        'mediaPath': message.mediaPath,
-        'status': message.status.name,
-      };
+    'id': message.id,
+    'senderId': message.senderId,
+    'senderName': message.senderName,
+    'content': message.content,
+    'type': message.type.name,
+    'timestamp': message.timestamp.millisecondsSinceEpoch,
+    'mediaPath': message.mediaPath,
+    'status': message.status.name,
+  };
 }

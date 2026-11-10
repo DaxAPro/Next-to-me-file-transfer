@@ -1,185 +1,155 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/cyber_colors.dart';
-import '../../common_widgets/glass_background.dart';
-import '../../common_widgets/glass_container.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
+  static const String offlinePrivacyStatement =
+      'NextToMe is a 100% offline application. We do not use cloud servers. '
+      'Location, Bluetooth, and Wi-Fi permissions are used EXCLUSIVELY for '
+      'local peer-to-peer device discovery (Wi-Fi Direct/BLE) and file '
+      'transfers. No personal data, files, or chat logs are collected, '
+      'transmitted, or shared with third parties.';
+
   @override
   Widget build(BuildContext context) {
-    final textPrimary = CyberColors.text(context);
-    final textSecondary = CyberColors.subtext(context);
-    final surfaceColor = CyberColors.surface(context);
-    final primaryAccent = CyberColors.primaryAccent(context);
-    final emeraldAccent = CyberColors.emeraldAccent(context);
+    final textColor = CyberColors.text(context);
+    final secondaryColor = CyberColors.subtext(context);
 
     return Scaffold(
       backgroundColor: CyberColors.background(context),
       appBar: AppBar(
         title: Text(
           'Privacy Policy',
-          style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: textColor,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        backgroundColor: surfaceColor,
+        backgroundColor: CyberColors.surface(context),
         elevation: 0,
-        iconTheme: IconThemeData(color: textPrimary),
+        iconTheme: IconThemeData(color: textColor),
       ),
-      body: GlassBackground(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          children: [
-            // Banner Card: 100% Offline & Private
-            GlassContainer(
-              padding: const EdgeInsets.all(18),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: CyberColors.surface(context),
               borderRadius: BorderRadius.circular(14),
-              blur: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: emeraldAccent.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(Icons.shield_rounded, color: emeraldAccent, size: 22),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          '100% Offline & Private',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: emeraldAccent,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'NextToMe is designed with strict privacy principles. We do NOT collect, store, or transmit your personal data, files, or chat history to any external servers. Location permission is required strictly for local Wi-Fi Direct discovery.',
+              border: Border.all(color: CyberColors.border(context)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.shield_outlined,
+                  color: CyberColors.techEmerald,
+                  size: 23,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    offlinePrivacyStatement,
                     style: TextStyle(
                       fontSize: 13,
-                      height: 1.5,
-                      color: textPrimary,
+                      height: 1.55,
+                      color: textColor,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-
-            // Permissions Explained Card
-            GlassContainer(
-              padding: const EdgeInsets.all(18),
-              borderRadius: BorderRadius.circular(14),
-              blur: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.verified_user_outlined, color: primaryAccent, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Permissions Explained:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: primaryAccent,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  _buildPermissionItem(
-                    context,
-                    title: 'Location',
-                    description:
-                        'Required strictly for local Wi-Fi Direct discovery. We do not track your physical location.',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPermissionItem(
-                    context,
-                    title: 'Wi-Fi & Bluetooth',
-                    description:
-                        'Used exclusively to establish high-speed, secure local peer-to-peer connections.',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPermissionItem(
-                    context,
-                    title: 'Storage',
-                    description:
-                        'Required to save the files you receive directly to your device\'s local memory.',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Local Network Guarantee Card
-            GlassContainer(
-              padding: const EdgeInsets.all(18),
-              borderRadius: BorderRadius.circular(14),
-              blur: 16,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.cloud_off_rounded, color: primaryAccent, size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Your transfers and offline chats are routed only between the connected devices on your local network. No internet connection is used, and no tracking analytics are embedded.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.5,
-                        color: textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 18),
+          _policySection(
+            context,
+            title: 'Local storage and deletion',
+            content:
+                'Chat history is stored in a local database on your device. '
+                'Chat images are stored in the app’s private local storage. '
+                'Use the chat controls to delete an individual message or '
+                'clear the chat history and its saved images.',
+          ),
+          _policySection(
+            context,
+            title: 'Peer-to-peer sharing',
+            content:
+                'When you choose to send a message, image, or file, the '
+                'selected content is sent directly to connected nearby '
+                'devices over the local connection. NextToMe does not route '
+                'content through a cloud service or share it with analytics '
+                'or advertising providers.',
+          ),
+          _policySection(
+            context,
+            title: 'Device permissions',
+            content:
+                'Bluetooth and Wi-Fi access enable nearby discovery and '
+                'local connections. Location permission may be required by '
+                'some Android versions for nearby-device discovery; the app '
+                'does not read or record your physical location. Camera and '
+                'photo access are used only when you choose to take or select '
+                'an image for a chat.',
+          ),
+          _policySection(
+            context,
+            title: 'Your choices',
+            content:
+                'You can deny optional permissions, stop sharing, delete '
+                'messages, or clear locally stored chat history at any time. '
+                'Disabling Wi-Fi or Bluetooth prevents nearby discovery and '
+                'transfers until they are enabled again.',
+          ),
+          _policySection(
+            context,
+            title: 'Changes to this policy',
+            content:
+                'If this policy changes, the updated text will be published '
+                'with a future version of the app.',
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'NextToMe works without an internet connection.',
+            style: TextStyle(fontSize: 12, height: 1.5, color: secondaryColor),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildPermissionItem(
+  Widget _policySection(
     BuildContext context, {
     required String title,
-    required String description,
+    required String content,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '• $title',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: CyberColors.text(context),
-          ),
-        ),
-        const SizedBox(height: 2),
-        Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Text(
-            description,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
             style: TextStyle(
-              fontSize: 12,
-              height: 1.4,
-              color: CyberColors.subtext(context),
+              color: CyberColors.techEmerald,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            content,
+            style: TextStyle(
+              color: CyberColors.text(context),
+              fontSize: 12,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

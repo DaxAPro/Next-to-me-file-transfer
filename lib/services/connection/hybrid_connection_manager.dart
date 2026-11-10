@@ -37,6 +37,7 @@ class HybridConnectionManager extends ChangeNotifier {
 
   List<DevicePeer> _discoveredPeers = [];
   final List<TransferTask> _activeTransfers = [];
+  final Map<String, Timer> _transferTimers = {};
 
   // Host configuration for speed throttling & limits
   SpeedLimitProfile _hostLimitProfile = const SpeedLimitProfile();
@@ -47,6 +48,10 @@ class HybridConnectionManager extends ChangeNotifier {
   StreamSubscription? _transferSub;
 
   HybridConnectionManager() {
+    _wifiDirectService.setLocalDeviceIdentity(
+      deviceId: localDeviceId,
+      deviceName: localDeviceName,
+    );
     _initStreams();
   }
 
@@ -70,6 +75,10 @@ class HybridConnectionManager extends ChangeNotifier {
 
   void renameLocalDevice(String newName) {
     localDeviceName = newName;
+    _wifiDirectService.setLocalDeviceIdentity(
+      deviceId: localDeviceId,
+      deviceName: newName,
+    );
     notifyListeners();
   }
 
@@ -164,6 +173,13 @@ class HybridConnectionManager extends ChangeNotifier {
         throw Exception('Handshake security verification failed');
       }
 
+      final targetIp = peer.ipAddress?.trim();
+      if (targetIp == null || targetIp.isEmpty) {
+        throw StateError(
+          'This peer does not expose a valid network address for a direct connection.',
+        );
+      }
+
       await Future.delayed(const Duration(milliseconds: 300));
 
       _handshakePhase = HandshakePhase.connectingWifiDirect;
@@ -172,17 +188,14 @@ class HybridConnectionManager extends ChangeNotifier {
 
       await _wifiDirectService.startServer(port: invitation.port);
 
-      final targetIp = peer.ipAddress ?? invitation.ipAddress;
-      if (peer.ipAddress != null) {
-        final connected = await _wifiDirectService.connectToHost(
-          hostIp: targetIp,
-          port: invitation.port,
+      final connected = await _wifiDirectService.connectToHost(
+        hostIp: targetIp,
+        port: invitation.port,
+      );
+      if (!connected) {
+        throw StateError(
+          'Could not establish an encrypted session with ${peer.name}.',
         );
-        if (!connected) {
-          throw StateError(
-            'Could not establish an encrypted session with ${peer.name}.',
-          );
-        }
       }
 
       peer.isConnected = true;
@@ -193,6 +206,7 @@ class HybridConnectionManager extends ChangeNotifier {
 
       return true;
     } catch (e) {
+      _connectedPeer = null;
       _handshakePhase = HandshakePhase.failed;
       _statusMessage = 'Connection failed: ${e.toString()}';
       notifyListeners();
@@ -252,11 +266,17 @@ class HybridConnectionManager extends ChangeNotifier {
     _simulateHighSpeedTransfer(task, resumeOffset: resumeOffset);
   }
 
+  void _cancelTransferTimer(String taskId) {
+    final existingTimer = _transferTimers.remove(taskId);
+    existingTimer?.cancel();
+  }
+
   /// Green Code: Throttles UI refresh frequency to save battery during 40MB/s transfers
   void _simulateHighSpeedTransfer(
     TransferTask task, {
     int resumeOffset = 0,
-  }) async {
+  }) {
+    _cancelTransferTimer(task.id);
     task.status = TransferStatus.transferring;
     task.bytesTransferred = resumeOffset;
     notifyListeners();
@@ -266,11 +286,12 @@ class HybridConnectionManager extends ChangeNotifier {
     var currentBytes = resumeOffset;
     var lastUiNotify = DateTime.now().millisecondsSinceEpoch;
 
-    Timer.periodic(Duration(milliseconds: tickMs), (timer) {
+    final timer = Timer.periodic(Duration(milliseconds: tickMs), (timer) {
       if (task.status == TransferStatus.paused ||
           task.status == TransferStatus.canceled ||
-          task.status == TransferStatus.completed) {
-        timer.cancel();
+          task.status == TransferStatus.completed ||
+          task.status == TransferStatus.failed) {
+        _cancelTransferTimer(task.id);
         return;
       }
 
@@ -287,7 +308,7 @@ class HybridConnectionManager extends ChangeNotifier {
         task.status = TransferStatus.failed;
         task.errorMessage =
             'Host data limit (${_hostLimitProfile.formattedQuotaLimit}) exceeded.';
-        timer.cancel();
+        _cancelTransferTimer(task.id);
         notifyListeners();
         return;
       }
@@ -298,7 +319,7 @@ class HybridConnectionManager extends ChangeNotifier {
         task.status = TransferStatus.completed;
         task.finishedAt = DateTime.now();
         task.speedBytesPerSec = 0;
-        timer.cancel();
+        _cancelTransferTimer(task.id);
         notifyListeners();
       } else {
         task.speedBytesPerSec = targetBytesPerSec;
@@ -315,11 +336,14 @@ class HybridConnectionManager extends ChangeNotifier {
         notifyListeners();
       }
     });
+
+    _transferTimers[task.id] = timer;
   }
 
   void pauseTransfer(String taskId) {
     final index = _activeTransfers.indexWhere((t) => t.id == taskId);
     if (index >= 0) {
+      _cancelTransferTimer(taskId);
       _activeTransfers[index].status = TransferStatus.paused;
       _activeTransfers[index].speedBytesPerSec = 0;
       notifyListeners();
@@ -330,12 +354,21 @@ class HybridConnectionManager extends ChangeNotifier {
     final index = _activeTransfers.indexWhere((t) => t.id == taskId);
     if (index >= 0) {
       final task = _activeTransfers[index];
+      if (task.status == TransferStatus.completed ||
+          task.status == TransferStatus.failed ||
+          task.status == TransferStatus.canceled) {
+        return;
+      }
       _simulateHighSpeedTransfer(task, resumeOffset: task.bytesTransferred);
     }
   }
 
   @override
   void dispose() {
+    for (final timer in _transferTimers.values) {
+      timer.cancel();
+    }
+    _transferTimers.clear();
     _bleSub?.cancel();
     _lanSub?.cancel();
     _transferSub?.cancel();

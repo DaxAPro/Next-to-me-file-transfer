@@ -49,7 +49,9 @@ void main() {
       expect(controller.themeMode, equals(ThemeMode.dark));
     });
 
-    testWidgets('CyberColors dynamically adapts to theme brightness', (tester) async {
+    testWidgets('CyberColors dynamically adapts to theme brightness', (
+      tester,
+    ) async {
       Color? darkBg;
       Color? lightBg;
 
@@ -82,92 +84,105 @@ void main() {
   });
 
   group('Orbital Constellation Radar Scanner (10+ Devices)', () {
-    testWidgets('RadarScanView renders 12 devices in orbital constellation without errors', (tester) async {
-      final twelvePeers = List.generate(
-        12,
-        (i) => DevicePeer(
-          id: 'dev-$i',
-          name: 'Device $i',
-          ipAddress: '192.168.49.${10 + i}',
-          port: 8888,
-          mode: ConnectionMode.directMode,
-          deviceType: i % 3 == 0 ? DeviceType.pc : (i % 2 == 0 ? DeviceType.tablet : DeviceType.phone),
-          rssi: -45 - (i * 3),
-        ),
-      );
+    testWidgets(
+      'RadarScanView renders 12 devices in orbital constellation without errors',
+      (tester) async {
+        final twelvePeers = List.generate(
+          12,
+          (i) => DevicePeer(
+            id: 'dev-$i',
+            name: 'Device $i',
+            ipAddress: '192.168.49.${10 + i}',
+            port: 8888,
+            mode: ConnectionMode.directMode,
+            deviceType: i % 3 == 0
+                ? DeviceType.pc
+                : (i % 2 == 0 ? DeviceType.tablet : DeviceType.phone),
+            rssi: -45 - (i * 3),
+          ),
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: RadarScanView(
-              peers: twelvePeers,
-              isScanning: true,
-              isEcoMode: false,
-              onPeerSelected: (_) {},
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: RadarScanView(
+                peers: twelvePeers,
+                isScanning: true,
+                isEcoMode: false,
+                onPeerSelected: (_) {},
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.byType(RadarScanView), findsOneWidget);
-      expect(find.text('ME'), findsOneWidget);
-      expect(find.text('Device'), findsWidgets);
-    });
+        expect(find.byType(RadarScanView), findsOneWidget);
+        expect(find.text('ME'), findsOneWidget);
+        expect(find.text('Device'), findsWidgets);
+      },
+    );
   });
 
   group('Play Store Deployment Package (About & Privacy Policy)', () {
-    testWidgets('AboutScreen displays exact required Play Store text', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: AboutScreen(),
-        ),
-      );
+    testWidgets('AboutScreen displays exact required Play Store text', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: AboutScreen()));
 
       expect(find.text('About NextToMe'), findsWidgets);
       expect(find.text('Version: 1.0.0'), findsOneWidget);
       expect(
-        find.textContaining('NextToMe is the ultimate high-speed, offline file-sharing and communication hub'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('PrivacyPolicyScreen displays exact required Play Store permissions text', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: PrivacyPolicyScreen(),
+        find.textContaining(
+          'NextToMe is the ultimate high-speed, offline file-sharing and communication hub',
         ),
-      );
-
-      expect(find.text('Privacy Policy'), findsOneWidget);
-      expect(find.text('100% Offline & Private'), findsOneWidget);
-      expect(find.text('Permissions Explained:'), findsOneWidget);
-      expect(
-        find.textContaining('Your transfers and offline chats are routed only between the connected devices'),
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'PrivacyPolicyScreen displays exact required Play Store permissions text',
+      (tester) async {
+        await tester.pumpWidget(const MaterialApp(home: PrivacyPolicyScreen()));
+
+        expect(find.text('Privacy Policy'), findsOneWidget);
+        expect(
+          find.textContaining('NextToMe is a 100% offline application.'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining(
+            'Location, Bluetooth, and Wi-Fi permissions are used EXCLUSIVELY',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('We do not use cloud servers.'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('Cyber Colors & Gradients', () {
-    test('Speedometer color transitions smoothly from Cyan to Tech Emerald', () {
-      final lowColor = CyberColors.getSpeedometerColor(0.0);
-      expect(lowColor, equals(CyberColors.electricCyan));
+    test(
+      'Speedometer color transitions smoothly from Cyan to Tech Emerald',
+      () {
+        final lowColor = CyberColors.getSpeedometerColor(0.0);
+        expect(lowColor, equals(CyberColors.electricCyan));
 
-      final highColor = CyberColors.getSpeedometerColor(1.0);
-      expect(highColor, equals(CyberColors.techEmerald));
+        final highColor = CyberColors.getSpeedometerColor(1.0);
+        expect(highColor, equals(CyberColors.techEmerald));
 
-      final midColor = CyberColors.getSpeedometerColor(0.5);
-      expect(midColor, equals(CyberColors.techBlue));
-    });
+        final midColor = CyberColors.getSpeedometerColor(0.5);
+        expect(midColor, equals(CyberColors.techBlue));
+      },
+    );
   });
 
   group('Cyber Persona Avatar & Custom Icons', () {
     testWidgets('CyberAvatar renders with status badge', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: CyberAvatar(size: 56, showStatusBadge: true),
-          ),
+          home: Scaffold(body: CyberAvatar(size: 56, showStatusBadge: true)),
         ),
       );
       expect(find.byType(CyberAvatar), findsOneWidget);
@@ -178,16 +193,16 @@ void main() {
       for (final type in CyberIconType.values) {
         await tester.pumpWidget(
           MaterialApp(
-            home: Scaffold(
-              body: CyberIcon(type: type, size: 24),
-            ),
+            home: Scaffold(body: CyberIcon(type: type, size: 24)),
           ),
         );
         expect(find.byType(CyberIcon), findsOneWidget);
       }
     });
 
-    testWidgets('BrandedAppLogo renders vector representation properly', (tester) async {
+    testWidgets('BrandedAppLogo renders vector representation properly', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -200,7 +215,10 @@ void main() {
     });
 
     test('UserFriendlyStrings has clean zero-jargon copy', () {
-      expect(UserFriendlyStrings.appTagline, equals('Ultra-Fast Transfers without Internet'));
+      expect(
+        UserFriendlyStrings.appTagline,
+        equals('Ultra-Fast Transfers without Internet'),
+      );
       expect(UserFriendlyStrings.navHome, equals('Home'));
       expect(UserFriendlyStrings.navSetLimits, equals('Set Limits'));
       expect(UserFriendlyStrings.navHistory, equals('History'));
@@ -208,7 +226,9 @@ void main() {
   });
 
   group('Speedometer-Style Hotspot Throttling Meter', () {
-    testWidgets('InteractiveSpeedometerGauge renders and handles step taps', (tester) async {
+    testWidgets('InteractiveSpeedometerGauge renders and handles step taps', (
+      tester,
+    ) async {
       double selectedSpeed = 0.0;
 
       await tester.pumpWidget(
@@ -256,10 +276,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: WaveTransferProgress(
-              progress: 0.45,
-              isTransferring: true,
-            ),
+            body: WaveTransferProgress(progress: 0.45, isTransferring: true),
           ),
         ),
       );
@@ -277,56 +294,85 @@ void main() {
     });
   });
 
+  group('Connection Safety Checks', () {
+    test('HybridConnectionManager refuses peers without a network address', () async {
+      final manager = HybridConnectionManager();
+      final peer = DevicePeer(
+        id: 'peer-no-ip',
+        name: 'Peer Without IP',
+        ipAddress: null,
+        port: 52520,
+        mode: ConnectionMode.directMode,
+      );
+
+      final result = await manager.connectToPeer(peer);
+
+      expect(result, isFalse);
+      expect(manager.connectedPeer, isNull);
+      expect(manager.handshakePhase, equals(HandshakePhase.failed));
+
+      manager.dispose();
+    });
+  });
+
   group('4-Step Welcome Onboarding Slider & First-Launch Logic', () {
-    testWidgets('OnboardingScreen renders first step with Skip and Next buttons and 4 dots', (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      final connectionManager = HybridConnectionManager();
+    testWidgets(
+      'OnboardingScreen renders first step with Skip and Next buttons and 4 dots',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final connectionManager = HybridConnectionManager();
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: OnboardingScreen(connectionManager: connectionManager),
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: OnboardingScreen(connectionManager: connectionManager),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // Skip button visible on Screen 1
-      expect(find.text('Skip'), findsOneWidget);
-      // Next button on screen 1
-      expect(find.text('Next ➔'), findsOneWidget);
-      // 4 circular indicator dots
-      final dotsFinder = find.byWidgetPredicate(
-        (widget) =>
-            widget is Container &&
-            widget.decoration is BoxDecoration &&
-            (widget.decoration as BoxDecoration).shape == BoxShape.circle &&
-            (widget.constraints?.maxWidth == 10 || (widget.decoration as BoxDecoration).color != null),
-      );
-      expect(dotsFinder, findsWidgets);
+        // Skip button visible on Screen 1
+        expect(find.text('Skip'), findsOneWidget);
+        // Next button on screen 1
+        expect(find.text('Next'), findsOneWidget);
+        expect(find.byIcon(Icons.arrow_forward_rounded), findsOneWidget);
+        // 4 circular indicator dots
+        final dotsFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is Container &&
+              widget.decoration is BoxDecoration &&
+              (widget.decoration as BoxDecoration).shape == BoxShape.circle &&
+              (widget.constraints?.maxWidth == 10 ||
+                  (widget.decoration as BoxDecoration).color != null),
+        );
+        expect(dotsFinder, findsWidgets);
 
-      connectionManager.dispose();
-    });
+        connectionManager.dispose();
+      },
+    );
 
-    testWidgets('Tapping Skip saves isFirstTimeLaunch=false and keyFirstLaunch=true', (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      final connectionManager = HybridConnectionManager();
+    testWidgets(
+      'Tapping Skip saves isFirstTimeLaunch=false and keyFirstLaunch=true',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final connectionManager = HybridConnectionManager();
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: OnboardingScreen(connectionManager: connectionManager),
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: OnboardingScreen(connectionManager: connectionManager),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Skip'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
+        await tester.tap(find.text('Skip'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
 
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getBool(AppConstants.keyIsFirstTimeLaunch), isFalse);
-      expect(prefs.getBool(AppConstants.keyFirstLaunch), isTrue);
-      expect(prefs.getBool(AppConstants.keyHasSeenOnboarding), isTrue);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getBool(AppConstants.keyIsFirstTimeLaunch), isFalse);
+        expect(prefs.getBool(AppConstants.keyFirstLaunch), isTrue);
+        expect(prefs.getBool(AppConstants.keyHasSeenOnboarding), isTrue);
 
-      connectionManager.dispose();
-    });
+        connectionManager.dispose();
+      },
+    );
   });
 }

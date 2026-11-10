@@ -17,17 +17,19 @@ class UserFriendlyStrings {
   // Home Screen
   static const String modeNearby = 'Nearby Mode';
   static const String modeHomeWifi = 'Home Wi-Fi Mode';
-  static const String statusScanning = 'Looking for nearby phones & computers...';
+  static const String statusScanning =
+      'Looking for nearby phones & computers...';
   static const String statusConnecting = 'Connecting instantly...';
   static const String statusConnected = 'Connected & ready to share';
   static const String sectionActiveTransfers = 'ACTIVE TRANSFERS';
   static const String sectionNearbyDevices = 'NEARBY DEVICES';
   static const String btnSendFile = 'Send File';
-  static const String watchWhileDownloading = 'Watch while downloading ▶';
+  static const String watchWhileDownloading = 'Watch while downloading';
 
   // Speed & Data Limits (Zero Jargon)
   static const String titleSetLimits = 'Set Speed Limit';
-  static const String subtitleLimits = 'Control transfer speed and data usage per device';
+  static const String subtitleLimits =
+      'Control transfer speed and data usage per device';
   static const String speedDialLabel = 'MAX SPEED';
   static const String dataLimitLabel = 'DATA LIMIT';
   static const String unlimited = 'Unlimited';
@@ -36,7 +38,8 @@ class UserFriendlyStrings {
 
   // Offline Chat
   static const String chatTitle = 'Offline Group Chat';
-  static const String chatBanner = 'Chat with nearby connected friends without internet';
+  static const String chatBanner =
+      'Chat with nearby connected friends without internet';
   static const String typeMessageHint = 'Type a message...';
   static const String clearChatAction = 'Clear Chat';
   static const String syncClipboardAction = 'Share Copied Link';
@@ -44,10 +47,12 @@ class UserFriendlyStrings {
 
   // Settings & Battery
   static const String settingsTitle = 'Settings';
-  static const String batterySaverTitle = '🌿 Battery Saver';
-  static const String batterySaverSubtitle = 'Slows down radar scans to save phone battery';
+  static const String batterySaverTitle = 'Battery Saver';
+  static const String batterySaverSubtitle =
+      'Slows down radar scans to save phone battery';
   static const String pinLockTitle = 'Require 4-Digit PIN to Connect';
-  static const String pinLockSubtitle = 'Ask for your PIN before accepting incoming files';
+  static const String pinLockSubtitle =
+      'Ask for your PIN before accepting incoming files';
   static const String deviceNameTitle = 'My Phone Name';
 
   // Success Celebration

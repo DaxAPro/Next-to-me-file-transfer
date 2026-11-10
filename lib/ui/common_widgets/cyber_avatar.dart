@@ -1,5 +1,7 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import '../../core/theme/cyber_colors.dart';
 
 /// Distinct Flat 2D Digital Humanoid "ME" Avatar Node (image_13.png)
@@ -37,7 +39,7 @@ class CyberAvatar extends StatelessWidget {
               'assets/user_icon.png',
               width: size,
               height: size,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => CustomPaint(
                 size: Size(size, size),
                 painter: _CyberAvatarPainter(
@@ -57,10 +59,7 @@ class CyberAvatar extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: CyberColors.techEmerald,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: surfaceColor,
-                    width: 2.0,
-                  ),
+                  border: Border.all(color: surfaceColor, width: 2.0),
                 ),
               ),
             ),
@@ -74,7 +73,10 @@ class _CyberAvatarPainter extends CustomPainter {
   final Color? borderColor;
   final Color backgroundColor;
 
-  _CyberAvatarPainter({this.borderColor, this.backgroundColor = CyberColors.darkSurface});
+  _CyberAvatarPainter({
+    this.borderColor,
+    this.backgroundColor = CyberColors.darkSurface,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -133,9 +135,27 @@ class _CyberAvatarPainter extends CustomPainter {
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawCircle(wifiCenter, 1.4, Paint()..color = CyberColors.electricCyan..style = PaintingStyle.fill);
-    canvas.drawArc(Rect.fromCircle(center: wifiCenter, radius: radius * 0.14), -math.pi * 0.6, math.pi * 0.6, false, wifiPaint);
-    canvas.drawArc(Rect.fromCircle(center: wifiCenter, radius: radius * 0.24), -math.pi * 0.6, math.pi * 0.6, false, wifiPaint);
+    canvas.drawCircle(
+      wifiCenter,
+      1.4,
+      Paint()
+        ..color = CyberColors.electricCyan
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: wifiCenter, radius: radius * 0.14),
+      -math.pi * 0.6,
+      math.pi * 0.6,
+      false,
+      wifiPaint,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: wifiCenter, radius: radius * 0.24),
+      -math.pi * 0.6,
+      math.pi * 0.6,
+      false,
+      wifiPaint,
+    );
 
     // Digital Humanoid Bust Silhouette (Center)
     // Head circle

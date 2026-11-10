@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/models/transfer_models.dart';
 import '../../core/theme/cyber_colors.dart';
 import '../common_widgets/glass_container.dart';
@@ -39,7 +40,8 @@ class TransferCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _getCategoryColor(task.category).withValues(alpha: 0.15),
+                  color: _getCategoryColor(task.category)
+                      .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -79,16 +81,25 @@ class TransferCard extends StatelessWidget {
               // Live Speed Badge
               if (isTransferring)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: CyberColors.techEmerald.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: CyberColors.techEmerald.withValues(alpha: 0.4)),
+                    border: Border.all(
+                      color: CyberColors.techEmerald.withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.bolt, size: 14, color: CyberColors.techEmerald),
+                      const Icon(
+                        Icons.bolt,
+                        size: 14,
+                        color: CyberColors.techEmerald,
+                      ),
                       Text(
                         '$speedMb MB/s',
                         style: const TextStyle(
@@ -101,10 +112,17 @@ class TransferCard extends StatelessWidget {
                   ),
                 )
               else if (isCompleted)
-                const Icon(Icons.check_circle, color: CyberColors.techEmerald, size: 22)
+                const Icon(
+                  Icons.check_circle,
+                  color: CyberColors.techEmerald,
+                  size: 22,
+                )
               else if (isPaused)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: CyberColors.warningAmber.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(6),
@@ -148,13 +166,24 @@ class TransferCard extends StatelessWidget {
                   if (task.checkStreamReady() && !isCompleted)
                     TextButton.icon(
                       onPressed: onStreamPlay,
-                      icon: const Icon(Icons.play_circle_fill, color: CyberColors.electricCyan, size: 16),
+                      icon: const Icon(
+                        Icons.play_circle_fill,
+                        color: CyberColors.electricCyan,
+                        size: 16,
+                      ),
                       label: const Text(
-                        'Watch while downloading ▶',
-                        style: TextStyle(color: CyberColors.electricCyan, fontSize: 11, fontWeight: FontWeight.bold),
+                        'Watch while downloading',
+                        style: TextStyle(
+                          color: CyberColors.electricCyan,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         visualDensity: VisualDensity.compact,
                       ),
                     ),
@@ -166,7 +195,9 @@ class TransferCard extends StatelessWidget {
                         color: CyberColors.textPrimary,
                         size: 20,
                       ),
-                      tooltip: isPaused ? 'Auto-Resume from exact byte' : 'Pause Transfer',
+                      tooltip: isPaused
+                          ? 'Auto-Resume from exact byte'
+                          : 'Pause Transfer',
                       onPressed: isPaused ? onResume : onPause,
                     ),
                 ],
@@ -178,7 +209,10 @@ class TransferCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 task.errorMessage!,
-                style: const TextStyle(color: CyberColors.dangerRed, fontSize: 11),
+                style: const TextStyle(
+                  color: CyberColors.dangerRed,
+                  fontSize: 11,
+                ),
               ),
             ),
         ],

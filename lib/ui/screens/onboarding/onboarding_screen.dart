@@ -153,10 +153,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
-                        _currentPage == _slides.length - 1
-                            ? 'Get Started'
-                            : 'Next ➔',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _currentPage == _slides.length - 1
+                                ? 'Get Started'
+                                : 'Next',
+                          ),
+                          if (_currentPage != _slides.length - 1) ...[
+                            const SizedBox(width: 6),
+                            const Icon(Icons.arrow_forward_rounded, size: 16),
+                          ],
+                        ],
                       ),
                     ),
                   ],

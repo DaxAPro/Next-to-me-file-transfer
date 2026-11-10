@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../../core/theme/cyber_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
@@ -60,7 +61,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 subtitle: Text(
                   isDark ? 'OLED Black Cyber Theme' : 'Clean Pearl White Theme',
-                  style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: CyberColors.subtext(context),
+                  ),
                 ),
                 value: isDark,
                 activeThumbColor: CyberColors.emeraldAccent(context),
@@ -101,9 +105,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     activeThumbColor: CyberColors.emeraldAccent(context),
                     onChanged: _isHotspotBusy
                         ? null
-                        : (enabled) => enabled
-                            ? _startHotspot()
-                            : _stopHotspot(),
+                        : (enabled) =>
+                              enabled ? _startHotspot() : _stopHotspot(),
                   ),
                   if (_isHotspotBusy)
                     const Padding(
@@ -112,7 +115,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   if (_hotspotCredentials case final credentials?) ...[
                     Divider(color: CyberColors.border(context), height: 20),
-                    _buildCredentialRow(context, 'Network name', credentials.ssid),
+                    _buildCredentialRow(
+                      context,
+                      'Network name',
+                      credentials.ssid,
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -176,22 +183,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
               blur: 16,
               child: Row(
                 children: [
-                  CyberIcon(type: CyberIconType.phone, size: 22, color: CyberColors.primaryAccent(context)),
+                  CyberIcon(
+                    type: CyberIconType.phone,
+                    size: 22,
+                    color: CyberColors.primaryAccent(context),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Device Nickname', style: TextStyle(fontSize: 11, color: CyberColors.subtext(context))),
+                        Text(
+                          'Device Nickname',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: CyberColors.subtext(context),
+                          ),
+                        ),
                         Text(
                           cm.localDeviceName,
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: CyberColors.text(context),
+                          ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.edit_outlined, size: 20, color: CyberColors.subtext(context)),
+                    icon: Icon(
+                      Icons.edit_outlined,
+                      size: 20,
+                      color: CyberColors.subtext(context),
+                    ),
                     onPressed: () => _editDeviceName(context),
                   ),
                 ],
@@ -208,12 +233,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   SwitchListTile(
                     title: Text(
-                      '🌿 Battery Saver',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                      'Battery Saver',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: CyberColors.text(context),
+                      ),
+                    ),
+                    secondary: Icon(
+                      Icons.eco_outlined,
+                      color: CyberColors.emeraldAccent(context),
                     ),
                     subtitle: Text(
                       'Slows down radar scans to save phone battery.',
-                      style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: CyberColors.subtext(context),
+                      ),
                     ),
                     value: cm.isEcoMode,
                     activeThumbColor: CyberColors.emeraldAccent(context),
@@ -226,13 +262,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ListTile(
                     title: Text(
                       'Fast Direct File Sharing',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: CyberColors.text(context),
+                      ),
                     ),
                     subtitle: Text(
                       'Transfers files smoothly without heating up your phone.',
-                      style: TextStyle(fontSize: 11, color: CyberColors.primaryAccent(context)),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: CyberColors.primaryAccent(context),
+                      ),
                     ),
-                    trailing: Icon(Icons.check_circle_outline, color: CyberColors.emeraldAccent(context), size: 20),
+                    trailing: Icon(
+                      Icons.check_circle_outline,
+                      color: CyberColors.emeraldAccent(context),
+                      size: 20,
+                    ),
                   ),
                 ],
               ),
@@ -247,11 +294,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: SwitchListTile(
                 title: Text(
                   '4-Digit PIN Verification',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CyberColors.text(context)),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: CyberColors.text(context),
+                  ),
                 ),
                 subtitle: Text(
-                  _isPinProtected ? 'Active (PIN: $_pinCode)' : 'Incoming transfers accept automatically',
-                  style: TextStyle(fontSize: 11, color: CyberColors.subtext(context)),
+                  _isPinProtected
+                      ? 'Active (PIN: $_pinCode)'
+                      : 'Incoming transfers accept automatically',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: CyberColors.subtext(context),
+                  ),
                 ),
                 value: _isPinProtected,
                 activeThumbColor: CyberColors.primaryAccent(context),
@@ -281,11 +337,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildCredentialRow(
-    BuildContext context,
-    String label,
-    String value,
-  ) {
+  Widget _buildCredentialRow(BuildContext context, String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -375,7 +427,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final message = error is MissingPluginException
         ? 'Local hotspot controls are available on Android. On other devices, use the system Wi-Fi hotspot settings.'
         : 'Could not update the local hotspot: $error';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _setDarkMode(bool enabled) async {
@@ -392,7 +445,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _editDeviceName(BuildContext context) {
-    final controller = TextEditingController(text: widget.connectionManager.localDeviceName);
+    final controller = TextEditingController(
+      text: widget.connectionManager.localDeviceName,
+    );
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -401,32 +456,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(color: CyberColors.border(context)),
         ),
-        title: Text('Rename Device', style: TextStyle(color: CyberColors.text(context), fontSize: 15)),
+        title: Text(
+          'Rename Device',
+          style: TextStyle(color: CyberColors.text(context), fontSize: 15),
+        ),
         content: TextField(
           controller: controller,
           style: TextStyle(color: CyberColors.text(context)),
           decoration: InputDecoration(
             labelText: 'New Name',
             labelStyle: TextStyle(color: CyberColors.primaryAccent(context)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: CyberColors.primaryAccent(context))),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: CyberColors.primaryAccent(context)),
+            ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: TextStyle(color: CyberColors.subtext(context))),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: CyberColors.subtext(context)),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               if (controller.text.trim().isNotEmpty) {
-                widget.connectionManager.renameLocalDevice(controller.text.trim());
+                widget.connectionManager.renameLocalDevice(
+                  controller.text.trim(),
+                );
                 setState(() {});
               }
               Navigator.pop(ctx);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: CyberColors.primaryAccent(context),
-              foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white,
+              foregroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black
+                  : Colors.white,
             ),
             child: const Text('Save'),
           ),

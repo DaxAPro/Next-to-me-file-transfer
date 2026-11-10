@@ -1,8 +1,10 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
+
 import '../../../core/models/device_peer.dart';
 import '../../../core/theme/cyber_colors.dart';
-import '../../common_widgets/branded_app_logo.dart';
+import '../../common_widgets/cyber_avatar.dart';
 import 'radar_device_node.dart';
 import 'radar_painters.dart';
 
@@ -86,11 +88,19 @@ class _HomeRadarScreenState extends State<HomeRadarScreen>
       backgroundColor: CyberColors.background(context),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final center = Offset(constraints.maxWidth / 2, constraints.maxHeight / 2);
-          final maxRadius = min(constraints.maxWidth, constraints.maxHeight) * 0.44;
+          final center = Offset(
+            constraints.maxWidth / 2,
+            constraints.maxHeight / 2,
+          );
+          final maxRadius =
+              min(constraints.maxWidth, constraints.maxHeight) * 0.44;
 
           // 3 Concentric orbital tracks: Inner (36%), Middle (64%), Outer (92%)
-          final orbitRadii = [maxRadius * 0.36, maxRadius * 0.64, maxRadius * 0.92];
+          final orbitRadii = [
+            maxRadius * 0.36,
+            maxRadius * 0.64,
+            maxRadius * 0.92,
+          ];
 
           // Distribute peers into 2 or 3 concentric orbits
           final List<List<DevicePeer>> orbits = [[], [], []];
@@ -100,7 +110,10 @@ class _HomeRadarScreenState extends State<HomeRadarScreen>
           }
 
           return AnimatedBuilder(
-            animation: Listenable.merge([_sonarController, _orbitalDriftController]),
+            animation: Listenable.merge([
+              _sonarController,
+              _orbitalDriftController,
+            ]),
             builder: (context, child) {
               final driftAngle = _orbitalDriftController.value * 2 * pi;
 
@@ -117,8 +130,8 @@ class _HomeRadarScreenState extends State<HomeRadarScreen>
                 final trackDrift = (track == 0)
                     ? driftAngle * 0.15
                     : (track == 1)
-                        ? -driftAngle * 0.10
-                        : driftAngle * 0.06;
+                    ? -driftAngle * 0.10
+                    : driftAngle * 0.06;
 
                 final step = (2 * pi) / trackPeers.length;
 
@@ -236,7 +249,7 @@ class _HomeRadarScreenState extends State<HomeRadarScreen>
                 ],
               ),
               child: const Center(
-                child: BrandedAppLogo(size: 54, useAssetIfAvailable: false),
+                child: CyberAvatar(size: 54, showStatusBadge: false),
               ),
             ),
           ),
@@ -246,7 +259,10 @@ class _HomeRadarScreenState extends State<HomeRadarScreen>
             right: 0,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: emeraldColor.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(6),

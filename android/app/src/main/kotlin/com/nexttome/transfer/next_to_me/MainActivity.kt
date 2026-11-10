@@ -1,10 +1,13 @@
 package com.nexttome.transfer.next_to_me
 
 import android.content.Context
+import android.content.Intent
+import android.bluetooth.BluetoothAdapter
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -20,6 +23,10 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "startLocalOnlyHotspot" -> startLocalOnlyHotspot(result)
+                    "getAndroidSdkVersion" -> result.success(Build.VERSION.SDK_INT)
+                    "getHardwareStatus" -> getHardwareStatus(result)
+                    "openWifiSettings" -> openSystemSettings(Settings.ACTION_WIFI_SETTINGS, result)
+                    "openBluetoothSettings" -> openSystemSettings(Settings.ACTION_BLUETOOTH_SETTINGS, result)
                     "stopLocalOnlyHotspot" -> {
                         stopLocalOnlyHotspot()
                         result.success(null)
@@ -33,6 +40,32 @@ class MainActivity : FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun getHardwareStatus(result: MethodChannel.Result) {
+        try {
+            val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            result.success(
+                mapOf(
+                    "wifiEnabled" to wifiManager.isWifiEnabled,
+                    "bluetoothEnabled" to (bluetoothAdapter?.isEnabled == true),
+                    "sdkVersion" to Build.VERSION.SDK_INT,
+                ),
+            )
+        } catch (error: SecurityException) {
+            result.error("HARDWARE_PERMISSION_DENIED", error.message, null)
+        }
+    }
+
+    private fun openSystemSettings(action: String, result: MethodChannel.Result) {
+        try {
+            startActivity(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            result.success(null)
+        } catch (error: Exception) {
+            result.error("SETTINGS_UNAVAILABLE", error.message, null)
+        }
     }
 
     private fun startLocalOnlyHotspot(result: MethodChannel.Result) {

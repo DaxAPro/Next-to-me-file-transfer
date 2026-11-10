@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:cryptography/cryptography.dart';
 
 import 'speed_throttler.dart';
+import '../../core/models/device_peer.dart';
 import '../../core/models/transfer_models.dart';
 
 class LocalHotspotCredentials {
@@ -38,6 +39,8 @@ class _SecureSession {
 class WifiDirectService {
   static const int defaultPort = 52520;
   static const int magicByte = 0x5A;
+  static const int maximumFramePayloadBytes = 16 * 1024 * 1024;
+  static const int maximumChatPayloadBytes = 9 * 1024 * 1024;
   static const MethodChannel _hotspotChannel = MethodChannel(
     'nexttome/wifi_direct',
   );
@@ -51,6 +54,9 @@ class WifiDirectService {
   static const int opChatMessage = 0x06;
   static const int opGameAction = 0x07;
   static const int opSecureHello = 0x08;
+  static const int opChatAcknowledgement = 0x09;
+  static const int opPeerRemoved = 0x0A;
+  static const int opPeerIdentity = 0x0B;
 
   static final X25519 _keyAgreement = X25519();
   static final Hkdf _keyDerivation = Hkdf(
@@ -65,6 +71,10 @@ class WifiDirectService {
   bool _isHost = false;
   final Map<Socket, _SecureSession> _secureSessions = {};
   final Map<Socket, Future<void>> _frameQueues = {};
+  final Set<Socket> _serverClients = {};
+  final Map<Socket, String> _peerIds = {};
+  final Map<Socket, String> _peerNames = {};
+  final Map<Socket, String> _peerAddresses = {};
 
   final SpeedThrottler speedThrottler = SpeedThrottler();
 
@@ -75,14 +85,46 @@ class WifiDirectService {
       StreamController<Map<String, dynamic>>.broadcast();
   final StreamController<Map<String, dynamic>> _gameStreamController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<String> _chatDeliveryController =
+      StreamController<String>.broadcast();
+  final StreamController<List<DevicePeer>> _membersController =
+      StreamController<List<DevicePeer>>.broadcast();
+
+  String _localDeviceId = '';
+  String _localDeviceName = 'My Device';
 
   bool get isConnected => _isConnected;
   bool get isHost => _isHost;
+  bool get canSendChat => _isHost
+      ? _serverClients.isNotEmpty
+      : _isConnected && _activeSocket != null;
   int? get serverPort => _serverSocket?.port;
   Stream<TransferTask> get transferProgressStream =>
       _transferProgressController.stream;
   Stream<Map<String, dynamic>> get chatStream => _chatStreamController.stream;
   Stream<Map<String, dynamic>> get gameStream => _gameStreamController.stream;
+  Stream<String> get chatDeliveryStream => _chatDeliveryController.stream;
+  Stream<List<DevicePeer>> get membersStream => _membersController.stream;
+  List<DevicePeer> get connectedPeers => _serverClients
+      .map((socket) {
+        final address = _peerAddresses[socket];
+        return DevicePeer(
+          id: _peerIds[socket] ?? 'peer-${address ?? socket.hashCode}',
+          name: _peerNames[socket] ?? 'Nearby device',
+          ipAddress: address,
+          mode: ConnectionMode.directMode,
+          isConnected: true,
+        );
+      })
+      .toList(growable: false);
+
+  void setLocalDeviceIdentity({
+    required String deviceId,
+    required String deviceName,
+  }) {
+    _localDeviceId = deviceId;
+    _localDeviceName = deviceName;
+  }
 
   Future<LocalHotspotCredentials> startLocalOnlyHotspot() async {
     final result = await _hotspotChannel.invokeMapMethod<Object?, Object?>(
@@ -139,6 +181,7 @@ class WifiDirectService {
       _isConnected = true;
       _listenToSocket(_activeSocket!);
       await _establishSecureSession(_activeSocket!);
+      await _sendPeerIdentity(_activeSocket!);
       return true;
     } catch (error) {
       _activeSocket?.destroy();
@@ -149,11 +192,14 @@ class WifiDirectService {
   }
 
   void _handleIncomingClient(Socket client) {
-    _activeSocket = client;
+    _serverClients.add(client);
+    _peerAddresses[client] = client.remoteAddress.address;
     _isConnected = true;
+    _publishConnectedPeers();
     _listenToSocket(client);
     unawaited(
       _establishSecureSession(client)
+          .then((_) => _sendPeerIdentity(client))
           .catchError((Object error, StackTrace stackTrace) {
             _handleSocketFailure(client, error, stackTrace);
           }),
@@ -169,10 +215,7 @@ class WifiDirectService {
         _processBufferOptimized(buffer, socket);
       },
       onDone: () {
-        _isConnected = false;
-        _isHost = false;
-        _secureSessions.remove(socket);
-        _frameQueues.remove(socket);
+        _removeSocket(socket);
       },
       onError: (Object error, StackTrace stackTrace) {
         _handleSocketFailure(socket, error, stackTrace);
@@ -197,6 +240,15 @@ class WifiDirectService {
       final byteData = ByteData.sublistView(bytes, offset + 2, offset + 14);
       final payloadLen = byteData.getUint32(0);
       final byteOffset = byteData.getUint64(4);
+
+      if (payloadLen > maximumFramePayloadBytes) {
+        _handleSocketFailure(
+          socket,
+          const FormatException('Received an oversized network message.'),
+          StackTrace.current,
+        );
+        return;
+      }
 
       final totalFrameLen = 14 + payloadLen;
       if (totalLen - offset < totalFrameLen) {
@@ -262,7 +314,70 @@ class WifiDirectService {
       case opChatMessage:
         final jsonStr = utf8.decode(clearPayload);
         final msg = jsonDecode(jsonStr) as Map<String, dynamic>;
+        final senderId = msg['senderId']?.toString();
+        final senderName = msg['senderName']?.toString();
+        if (senderId != null && senderId.isNotEmpty) {
+          _peerIds[socket] = senderId;
+        }
+        if (senderName != null && senderName.isNotEmpty) {
+          _peerNames[socket] = senderName;
+        }
+        _publishConnectedPeers();
         _chatStreamController.add(msg);
+        final messageId = msg['id']?.toString();
+        if (_isHost && messageId != null) {
+          for (final peerSocket in _serverClients) {
+            if (identical(peerSocket, socket)) continue;
+            await _sendSecureFrame(
+              peerSocket,
+              opChatMessage,
+              0,
+              utf8.encode(jsonStr),
+            );
+          }
+        }
+        if (messageId != null) {
+          await _sendSecureFrame(
+            socket,
+            opChatAcknowledgement,
+            0,
+            utf8.encode(jsonEncode({'id': messageId})),
+          );
+        }
+        break;
+
+      case opChatAcknowledgement:
+        final acknowledgement =
+            jsonDecode(utf8.decode(clearPayload)) as Map<String, dynamic>;
+        final messageId = acknowledgement['id']?.toString();
+        if (messageId != null && !_chatDeliveryController.isClosed) {
+          _chatDeliveryController.add(messageId);
+        }
+        break;
+
+      case opPeerIdentity:
+        final identity =
+            jsonDecode(utf8.decode(clearPayload)) as Map<String, dynamic>;
+        final peerId = identity['id']?.toString();
+        final peerName = identity['name']?.toString();
+        if (peerId != null && peerId.isNotEmpty) _peerIds[socket] = peerId;
+        if (peerName != null && peerName.isNotEmpty) {
+          _peerNames[socket] = peerName;
+        }
+        _publishConnectedPeers();
+        break;
+
+      case opPeerRemoved:
+        _chatStreamController.add({
+          'id': 'removed-${DateTime.now().millisecondsSinceEpoch}',
+          'senderId': 'system',
+          'senderName': 'System',
+          'content': 'The host removed this device from the group.',
+          'type': 'system',
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+          'status': 'delivered',
+        });
+        socket.destroy();
         break;
 
       case opGameAction:
@@ -280,7 +395,17 @@ class WifiDirectService {
       session.helloSent = true;
       _sendFrame(socket, opSecureHello, 0, await _publicKeyBytes(localKeyPair));
     }
+
     await session.keyReady.future.timeout(const Duration(seconds: 10));
+  }
+
+  Future<void> _sendPeerIdentity(Socket socket) async {
+    await _sendSecureFrame(
+      socket,
+      opPeerIdentity,
+      0,
+      utf8.encode(jsonEncode({'id': _localDeviceId, 'name': _localDeviceName})),
+    );
   }
 
   Future<KeyPair> _localKeyPair(_SecureSession session) =>
@@ -365,15 +490,28 @@ class WifiDirectService {
     Object error,
     StackTrace stackTrace,
   ) {
-    _secureSessions.remove(socket);
-    _frameQueues.remove(socket);
-    if (identical(_activeSocket, socket)) {
-      _isConnected = false;
-      _activeSocket = null;
-    }
+    _removeSocket(socket);
     socket.destroy();
     if (!_chatStreamController.isClosed) {
       _chatStreamController.addError(error, stackTrace);
+    }
+  }
+
+  void _removeSocket(Socket socket) {
+    _serverClients.remove(socket);
+    _secureSessions.remove(socket);
+    _frameQueues.remove(socket);
+    _peerIds.remove(socket);
+    _peerNames.remove(socket);
+    _peerAddresses.remove(socket);
+    if (identical(_activeSocket, socket)) _activeSocket = null;
+    _isConnected = _activeSocket != null || _serverClients.isNotEmpty;
+    _publishConnectedPeers();
+  }
+
+  void _publishConnectedPeers() {
+    if (!_membersController.isClosed) {
+      _membersController.add(connectedPeers);
     }
   }
 
@@ -389,10 +527,42 @@ class WifiDirectService {
   }
 
   Future<void> sendChatMessage(Map<String, dynamic> message) async {
-    if (_activeSocket != null && _isConnected) {
-      final payload = utf8.encode(jsonEncode(message));
+    if (!canSendChat) {
+      throw StateError('Connect to a nearby device before sending a message.');
+    }
+    final payload = utf8.encode(jsonEncode(message));
+    if (payload.length > maximumChatPayloadBytes) {
+      throw const FormatException('The chat message is too large to send.');
+    }
+    if (_isHost) {
+      for (final socket in _serverClients.toList(growable: false)) {
+        await _sendSecureFrame(socket, opChatMessage, 0, payload);
+      }
+    } else {
       await _sendSecureFrame(_activeSocket!, opChatMessage, 0, payload);
     }
+  }
+
+  Future<void> removePeer(DevicePeer peer) async {
+    if (!_isHost) {
+      throw StateError('Only the network host can remove a group member.');
+    }
+    Socket? socket;
+    for (final client in _serverClients) {
+      if (_peerIds[client] == peer.id ||
+          _peerNames[client] == peer.name ||
+          (peer.ipAddress != null &&
+              _peerAddresses[client] == peer.ipAddress)) {
+        socket = client;
+        break;
+      }
+    }
+    if (socket == null) {
+      throw StateError('${peer.name} is no longer connected.');
+    }
+    await _sendSecureFrame(socket, opPeerRemoved, 0, const <int>[]);
+    await socket.flush();
+    socket.destroy();
   }
 
   Future<void> sendGameAction(Map<String, dynamic> action) async {
@@ -486,12 +656,21 @@ class WifiDirectService {
   Future<void> stopServer() async {
     _isConnected = false;
     _isHost = false;
-    await _activeSocket?.close();
+    final sockets = <Socket>{..._serverClients};
+    if (_activeSocket != null) sockets.add(_activeSocket!);
+    for (final socket in sockets) {
+      await socket.close();
+    }
     _activeSocket = null;
+    _serverClients.clear();
     await _serverSocket?.close();
     _serverSocket = null;
     _secureSessions.clear();
     _frameQueues.clear();
+    _peerIds.clear();
+    _peerNames.clear();
+    _peerAddresses.clear();
+    _publishConnectedPeers();
   }
 
   void dispose() {
@@ -499,5 +678,7 @@ class WifiDirectService {
     _transferProgressController.close();
     _chatStreamController.close();
     _gameStreamController.close();
+    _chatDeliveryController.close();
+    _membersController.close();
   }
 }

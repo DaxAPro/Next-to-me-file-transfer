@@ -24,6 +24,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>NextToMe uses the camera when you choose to take a photo to share in an offline chat.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>NextToMe accesses photos only when you choose an image to share in an offline chat.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

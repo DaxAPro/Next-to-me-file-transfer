@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../../../core/models/chat_message.dart';
 import '../../../../core/theme/cyber_colors.dart';
 import '../../../common_widgets/cyber_avatar.dart';
@@ -10,17 +13,14 @@ class ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
   final VoidCallback? onDelete;
 
-  const ChatMessageBubble({
-    super.key,
-    required this.message,
-    this.onDelete,
-  });
+  const ChatMessageBubble({super.key, required this.message, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final receivedColor =
-        isDark ? CyberColors.darkSurface : const Color(0xFFF1F5F9);
+    final receivedColor = isDark
+        ? CyberColors.darkSurface
+        : const Color(0xFFF1F5F9);
     final receivedTextColor = CyberColors.text(context);
 
     // System status banner
@@ -53,7 +53,9 @@ class ChatMessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 10),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // Received message: Digital humanoid avatar on left (assets/user_icon.png)
@@ -68,7 +70,12 @@ class ChatMessageBubble extends StatelessWidget {
               onLongPress: () => _showBubbleContextMenu(context),
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 280),
-                padding: const EdgeInsets.only(top: 8, left: 12, right: 12, bottom: 6),
+                padding: const EdgeInsets.only(
+                  top: 8,
+                  left: 12,
+                  right: 12,
+                  bottom: 6,
+                ),
                 decoration: BoxDecoration(
                   color: isMe ? emeraldGreen : receivedColor,
                   borderRadius: BorderRadius.only(
@@ -105,39 +112,30 @@ class ChatMessageBubble extends StatelessWidget {
                     if (message.type == ChatMessageType.image) ...[
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          height: 140,
-                          width: double.infinity,
-                          color: isMe
-                              ? Colors.white.withValues(alpha: 0.2)
-                              : CyberColors.border(context),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/images/logo.png',
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Icon(Icons.image_rounded, size: 48, color: CyberColors.subtext(context)),
-                              ),
-                              Positioned(
-                                bottom: 6,
-                                left: 6,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.55),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: const Text(
-                                    'Offline Photo (2.4 MB)',
-                                    style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                                  ),
+                        child: message.mediaPath == null
+                            ? const SizedBox(
+                                width: 220,
+                                height: 140,
+                                child: Center(
+                                  child: Icon(Icons.broken_image_outlined),
                                 ),
+                              )
+                            : Image.file(
+                                File(message.mediaPath!),
+                                width: 220,
+                                height: 180,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const SizedBox(
+                                      width: 220,
+                                      height: 140,
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.broken_image_outlined,
+                                        ),
+                                      ),
+                                    ),
                               ),
-                            ],
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 4),
                     ],
@@ -145,7 +143,10 @@ class ChatMessageBubble extends StatelessWidget {
                     // Universal Clipboard badge
                     if (message.type == ChatMessageType.clipboard) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         margin: const EdgeInsets.only(bottom: 4),
                         decoration: BoxDecoration(
                           color: isMe
@@ -156,7 +157,11 @@ class ChatMessageBubble extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.copy_rounded, size: 10, color: isMe ? Colors.white : receivedTextColor),
+                            Icon(
+                              Icons.copy_rounded,
+                              size: 10,
+                              color: isMe ? Colors.white : receivedTextColor,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               'Synced Clipboard',
@@ -172,14 +177,15 @@ class ChatMessageBubble extends StatelessWidget {
                     ],
 
                     // Message text content
-                    Text(
-                      message.content,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        color: isMe ? Colors.white : receivedTextColor,
-                        height: 1.35,
+                    if (message.content.isNotEmpty)
+                      Text(
+                        message.content,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          color: isMe ? Colors.white : receivedTextColor,
+                          height: 1.35,
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 3),
 
                     // Timestamp and Delivery Ticks
@@ -191,7 +197,9 @@ class ChatMessageBubble extends StatelessWidget {
                           message.formattedTime,
                           style: TextStyle(
                             fontSize: 9.5,
-                            color: isMe ? Colors.white.withValues(alpha: 0.8) : CyberColors.subtext(context),
+                            color: isMe
+                                ? Colors.white.withValues(alpha: 0.8)
+                                : CyberColors.subtext(context),
                           ),
                         ),
                         if (isMe) ...[
@@ -215,13 +223,21 @@ class ChatMessageBubble extends StatelessWidget {
     if (status == MessageDeliveryStatus.sent) {
       return const Text(
         '✓',
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFE0E0E0)),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFFE0E0E0),
+        ),
       );
     }
-    // Delivered: Two ticks (white on green bubble)
+    // Keep the received state visible on the green sent-message bubble.
     return const Text(
       '✓✓',
-      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF065F46),
+      ),
     );
   }
 
@@ -239,19 +255,37 @@ class ChatMessageBubble extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.copy_rounded, color: Color(0xFF0F172A)),
-                title: const Text('Copy Text', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                leading: const Icon(
+                  Icons.copy_rounded,
+                  color: Color(0xFF0F172A),
+                ),
+                title: const Text(
+                  'Copy Text',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: message.content));
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Message copied to clipboard.')),
+                    const SnackBar(
+                      content: Text('Message copied to clipboard.'),
+                    ),
                   );
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline_rounded, color: CyberColors.dangerRed),
-                title: const Text('Delete for me', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: CyberColors.dangerRed)),
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: CyberColors.dangerRed,
+                ),
+                title: const Text(
+                  'Delete for me',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: CyberColors.dangerRed,
+                  ),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   onDelete?.call();

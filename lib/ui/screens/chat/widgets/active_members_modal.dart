@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../core/models/device_peer.dart';
 import '../../../../core/theme/cyber_colors.dart';
 import '../../../common_widgets/cyber_avatar.dart';
@@ -83,13 +84,26 @@ class ActiveMembersModal extends StatelessWidget {
                       : CyberColors.electricCyan.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(
-                  isHost ? '👑 Network Host' : 'Guest Device',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isHost ? emeraldGreen : CyberColors.electricCyan,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isHost
+                          ? Icons.admin_panel_settings_outlined
+                          : Icons.devices_outlined,
+                      size: 14,
+                      color: isHost ? emeraldGreen : CyberColors.electricCyan,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isHost ? 'Network Host' : 'Guest Device',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isHost ? emeraldGreen : CyberColors.electricCyan,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -102,25 +116,19 @@ class ActiveMembersModal extends StatelessWidget {
             leading: const CyberAvatar(size: 38, showStatusBadge: true),
             title: Text(
               '$localDeviceName (You)',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textPrimary),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: textPrimary,
+              ),
             ),
             subtitle: Text(
-              isHost ? 'Group Owner • Can remove peers' : 'Connected to Local Wi-Fi Group',
+              isHost
+                  ? 'Group Owner • Can remove peers'
+                  : 'Connected to Local Wi-Fi Group',
               style: TextStyle(fontSize: 11, color: textSecondary),
             ),
-            trailing: isHost
-                ? Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: emeraldGreen,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'HOST',
-                      style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                  )
-                : null,
+            trailing: _roleBadge(isHost ? 'HOST' : 'GUEST', emeraldGreen),
           ),
           const Divider(),
 
@@ -151,38 +159,49 @@ class ActiveMembersModal extends StatelessWidget {
                   child: Center(
                     child: Text(
                       peer.name.isNotEmpty ? peer.name[0].toUpperCase() : '?',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: emeraldGreen),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: emeraldGreen,
+                      ),
                     ),
                   ),
                 ),
                 title: Text(
                   peer.name,
-                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: textPrimary),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
                 ),
                 subtitle: Text(
                   '${peer.ipAddress} • ${peer.deviceType.name.toUpperCase()}',
                   style: TextStyle(fontSize: 11, color: textSecondary),
                 ),
                 trailing: isHost
-                    ? TextButton.icon(
-                        icon: const Icon(Icons.person_remove_outlined, size: 16, color: CyberColors.dangerRed),
-                        label: const Text('Remove', style: TextStyle(fontSize: 11, color: CyberColors.dangerRed, fontWeight: FontWeight.bold)),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _confirmRemovePeer(context, peer);
-                        },
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _roleBadge('GUEST', emeraldGreen),
+                          TextButton.icon(
+                            icon: const Icon(
+                              Icons.person_remove_outlined,
+                              size: 16,
+                              color: CyberColors.dangerRed,
+                            ),
+                            label: const Text(
+                              'Remove',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: CyberColors.dangerRed,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onPressed: () => _confirmRemovePeer(context, peer),
+                          ),
+                        ],
                       )
-                    : Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'GUEST',
-                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: textSecondary),
-                        ),
-                      ),
+                    : _roleBadge('HOST', emeraldGreen),
               );
             }),
         ],
@@ -190,11 +209,30 @@ class ActiveMembersModal extends StatelessWidget {
     );
   }
 
+  Widget _roleBadge(String role, Color emeraldGreen) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    decoration: BoxDecoration(
+      color: role == 'HOST' ? emeraldGreen : const Color(0xFFF1F5F9),
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Text(
+      role,
+      style: TextStyle(
+        fontSize: 9,
+        fontWeight: FontWeight.bold,
+        color: role == 'HOST' ? Colors.white : emeraldGreen,
+      ),
+    ),
+  );
+
   void _confirmRemovePeer(BuildContext context, DevicePeer peer) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Remove ${peer.name}?', style: const TextStyle(fontSize: 16)),
+        title: Text(
+          'Remove ${peer.name}?',
+          style: const TextStyle(fontSize: 16),
+        ),
         content: Text(
           'As the Network Host, removing ${peer.name} will disconnect them from this offline chat session.',
           style: const TextStyle(fontSize: 13),
@@ -207,9 +245,12 @@ class ActiveMembersModal extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
+              Navigator.pop(context);
               onRemovePeer(peer);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: CyberColors.dangerRed),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: CyberColors.dangerRed,
+            ),
             child: const Text('Remove', style: TextStyle(color: Colors.white)),
           ),
         ],
