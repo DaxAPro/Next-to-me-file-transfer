@@ -218,33 +218,21 @@ class ChatMessageBubble extends StatelessWidget {
     );
   }
 
-  /// Delivery checkmarks: One grey tick (sent), Two green ticks (received by peers)
   Widget _buildDeliveryTicks(MessageDeliveryStatus status) {
     if (status == MessageDeliveryStatus.sent) {
-      return const Text(
-        '✓',
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFE0E0E0),
-        ),
-      );
+      return const Icon(Icons.done_rounded, size: 13, color: Color(0xFFE0E0E0));
     }
-    // Keep the received state visible on the green sent-message bubble.
-    return const Text(
-      '✓✓',
-      style: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.bold,
-        color: Color(0xFF065F46),
-      ),
+    return const Icon(
+      Icons.done_all_rounded,
+      size: 13,
+      color: Color(0xFF065F46),
     );
   }
 
   void _showBubbleContextMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: CyberColors.surface(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -257,7 +245,7 @@ class ChatMessageBubble extends StatelessWidget {
               ListTile(
                 leading: const Icon(
                   Icons.copy_rounded,
-                  color: Color(0xFF0F172A),
+                  color: CyberColors.techEmerald,
                 ),
                 title: const Text(
                   'Copy Text',

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/cyber_colors.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
@@ -60,7 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 subtitle: Text(
-                  isDark ? 'OLED Black Cyber Theme' : 'Clean Pearl White Theme',
+                  isDark ? 'Dark Green Code Theme' : 'Light Green Code Theme',
                   style: TextStyle(
                     fontSize: 11,
                     color: CyberColors.subtext(context),
@@ -462,6 +464,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         content: TextField(
           controller: controller,
+          maxLength: 32,
           style: TextStyle(color: CyberColors.text(context)),
           decoration: InputDecoration(
             labelText: 'New Name',
@@ -480,14 +483,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                widget.connectionManager.renameLocalDevice(
-                  controller.text.trim(),
-                );
-                setState(() {});
+            onPressed: () async {
+              final name = controller.text.trim();
+              if (name.isEmpty || name.runes.length > 32) return;
+              try {
+                final preferences = await SharedPreferences.getInstance();
+                await preferences.setString(AppConstants.keyDisplayName, name);
+                widget.connectionManager.renameLocalDevice(name);
+                if (mounted) setState(() {});
+                if (ctx.mounted) Navigator.pop(ctx);
+              } catch (error) {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(
+                      content: Text('Could not save device name: $error'),
+                    ),
+                  );
+                }
               }
-              Navigator.pop(ctx);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: CyberColors.primaryAccent(context),

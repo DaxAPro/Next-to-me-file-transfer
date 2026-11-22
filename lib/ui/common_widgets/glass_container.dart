@@ -1,7 +1,8 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
-/// Premium Frosted Glassmorphism Container with backdrop blur and luminous sheen.
+import '../../core/theme/cyber_colors.dart';
+
+/// Flat, bordered surface kept under its original name for compatibility.
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final double? width;
@@ -32,22 +33,7 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final rRadius = borderRadius ?? BorderRadius.circular(16);
-
-    // Glass frosted gradient & sheen
-    final defaultGlassColor = isDark
-        ? const Color(0xFF1E1E1E).withValues(alpha: 0.65)
-        : Colors.white.withValues(alpha: 0.72);
-
-    final glassBorder = border ??
-        Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.12)
-              : Colors.white.withValues(alpha: 0.85),
-          width: 1.2,
-        );
-
     final content = Container(
       width: width,
       height: height,
@@ -55,41 +41,28 @@ class GlassContainer extends StatelessWidget {
       decoration: BoxDecoration(
         shape: shape,
         borderRadius: shape == BoxShape.circle ? null : rRadius,
-        color: color ?? defaultGlassColor,
-        border: glassBorder,
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.35)
-                : const Color(0xFF64748B).withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: color ?? CyberColors.surface(context),
+        border: border ?? Border.all(color: CyberColors.border(context)),
       ),
       child: child,
     );
 
-    Widget frosted = ClipRRect(
-      borderRadius: shape == BoxShape.circle ? BorderRadius.circular(999) : rRadius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: content,
-      ),
-    );
+    Widget surface = content;
 
     if (margin != null) {
-      frosted = Padding(padding: margin!, child: frosted);
+      surface = Padding(padding: margin!, child: surface);
     }
 
     if (onTap != null) {
-      frosted = InkWell(
+      surface = InkWell(
         onTap: onTap,
-        borderRadius: shape == BoxShape.circle ? BorderRadius.circular(999) : rRadius,
-        child: frosted,
+        borderRadius: shape == BoxShape.circle
+            ? BorderRadius.circular(999)
+            : rRadius,
+        child: surface,
       );
     }
 
-    return frosted;
+    return surface;
   }
 }

@@ -15,6 +15,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     private val channelName = "nexttome/wifi_direct"
     private var hotspotReservation: WifiManager.LocalOnlyHotspotReservation? = null
+    private var multicastLock: WifiManager.MulticastLock? = null
     private var hotspotGeneration = 0
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -25,6 +26,8 @@ class MainActivity : FlutterActivity() {
                     "startLocalOnlyHotspot" -> startLocalOnlyHotspot(result)
                     "getAndroidSdkVersion" -> result.success(Build.VERSION.SDK_INT)
                     "getHardwareStatus" -> getHardwareStatus(result)
+                    "acquireMulticastLock" -> acquireMulticastLock(result)
+                    "releaseMulticastLock" -> releaseMulticastLock(result)
                     "openWifiSettings" -> openSystemSettings(Settings.ACTION_WIFI_SETTINGS, result)
                     "openBluetoothSettings" -> openSystemSettings(Settings.ACTION_BLUETOOTH_SETTINGS, result)
                     "stopLocalOnlyHotspot" -> {
@@ -65,6 +68,35 @@ class MainActivity : FlutterActivity() {
             result.success(null)
         } catch (error: Exception) {
             result.error("SETTINGS_UNAVAILABLE", error.message, null)
+        }
+    }
+
+    private fun acquireMulticastLock(result: MethodChannel.Result) {
+        try {
+            val wifiManager =
+                applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            val lock = multicastLock
+                ?: wifiManager.createMulticastLock("NextToMeMdns").also {
+                    it.setReferenceCounted(false)
+                    multicastLock = it
+                }
+            if (!lock.isHeld) lock.acquire()
+            result.success(null)
+        } catch (error: SecurityException) {
+            result.error("MULTICAST_PERMISSION_DENIED", error.message, null)
+        } catch (error: RuntimeException) {
+            result.error("MULTICAST_LOCK_FAILED", error.message, null)
+        }
+    }
+
+    private fun releaseMulticastLock(result: MethodChannel.Result) {
+        try {
+            multicastLock?.let { lock ->
+                if (lock.isHeld) lock.release()
+            }
+            result.success(null)
+        } catch (error: RuntimeException) {
+            result.error("MULTICAST_UNLOCK_FAILED", error.message, null)
         }
     }
 
@@ -151,6 +183,10 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         stopLocalOnlyHotspot()
+        multicastLock?.let { lock ->
+            if (lock.isHeld) lock.release()
+        }
+        multicastLock = null
         super.onDestroy()
     }
 }

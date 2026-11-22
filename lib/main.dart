@@ -6,6 +6,7 @@ import 'core/theme/theme_controller.dart';
 import 'services/connection/hybrid_connection_manager.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/onboarding/onboarding_screen.dart';
+import 'ui/screens/onboarding/local_profile_setup_screen.dart';
 import 'ui/theme/app_theme.dart';
 
 void main() async {
@@ -19,11 +20,16 @@ void main() async {
       prefs.getBool(AppConstants.keyHasSeenOnboarding) ??
       prefs.getBool(AppConstants.keyFirstLaunch) ??
       false;
+  final hasLocalProfile =
+      (prefs.getString(AppConstants.keyDisplayName)?.trim().isNotEmpty ??
+      false);
 
   runApp(
     NextToMeApp(
       isFirstTimeLaunch: !hasSeenOnboarding,
       isFirstLaunchDone: hasSeenOnboarding,
+      hasLocalProfile: hasLocalProfile,
+      initialDisplayName: prefs.getString(AppConstants.keyDisplayName),
     ),
   );
 }
@@ -31,11 +37,15 @@ void main() async {
 class NextToMeApp extends StatefulWidget {
   final bool isFirstLaunchDone;
   final bool? isFirstTimeLaunch;
+  final bool? hasLocalProfile;
+  final String? initialDisplayName;
 
   const NextToMeApp({
     super.key,
     this.isFirstLaunchDone = true,
     this.isFirstTimeLaunch,
+    this.hasLocalProfile,
+    this.initialDisplayName,
   });
 
   @override
@@ -49,6 +59,10 @@ class _NextToMeAppState extends State<NextToMeApp> {
   void initState() {
     super.initState();
     _connectionManager = HybridConnectionManager();
+    final displayName = widget.initialDisplayName?.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      _connectionManager.renameLocalDevice(displayName);
+    }
   }
 
   @override
@@ -78,6 +92,8 @@ class _NextToMeAppState extends State<NextToMeApp> {
           themeAnimationCurve: Curves.easeInOutCubic,
           home: showOnboarding
               ? OnboardingScreen(connectionManager: _connectionManager)
+              : widget.hasLocalProfile == false
+              ? LocalProfileSetupScreen(connectionManager: _connectionManager)
               : HomeScreen(connectionManager: _connectionManager),
         );
       },

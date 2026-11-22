@@ -5,12 +5,12 @@ import '../../../core/theme/cyber_colors.dart';
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
-  static const String offlinePrivacyStatement =
-      'NextToMe is a 100% offline application. We do not use cloud servers. '
-      'Location, Bluetooth, and Wi-Fi permissions are used EXCLUSIVELY for '
-      'local peer-to-peer device discovery (Wi-Fi Direct/BLE) and file '
-      'transfers. No personal data, files, or chat logs are collected, '
-      'transmitted, or shared with third parties.';
+  static const String localPeerPrivacyStatement =
+      'NextToMe offers secure local peer-to-peer file transfers and '
+      'communication which operate over local networks. We do not collect '
+      'or store your transferred files. Location permissions are used '
+      'strictly for local device discovery. However, features such as the '
+      'Global Internet Speed Test require an active internet connection.';
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    offlinePrivacyStatement,
+                    localPeerPrivacyStatement,
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.55,
@@ -72,7 +72,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 'Chat history is stored in a local database on your device. '
                 'Chat images are stored in the app’s private local storage. '
                 'Use the chat controls to delete an individual message or '
-                'clear the chat history and its saved images.',
+                'clear the chat history and its saved images. Files uploaded '
+                'through the PC portal are stored only in this device’s app '
+                'storage and can be deleted from the portal.',
           ),
           _policySection(
             context,
@@ -89,11 +91,20 @@ class PrivacyPolicyScreen extends StatelessWidget {
             title: 'Device permissions',
             content:
                 'Bluetooth and Wi-Fi access enable nearby discovery and '
-                'local connections. Location permission may be required by '
-                'some Android versions for nearby-device discovery; the app '
-                'does not read or record your physical location. Camera and '
+                'local connections. Location permission is used strictly for '
+                'local device discovery; the app does not read or record your '
+                'physical location. Camera and '
                 'photo access are used only when you choose to take or select '
                 'an image for a chat.',
+          ),
+          _policySection(
+            context,
+            title: 'Global speed test',
+            content:
+                'The optional speed test sends generated measurement data to '
+                'Cloudflare over the internet and displays download, upload, '
+                'and HTTPS round-trip latency results. It does not send shared '
+                'files or chat messages.',
           ),
           _policySection(
             context,
@@ -113,7 +124,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'NextToMe works without an internet connection.',
+            'Local transfers and chat work over a local network without cloud servers.',
             style: TextStyle(fontSize: 12, height: 1.5, color: secondaryColor),
           ),
         ],

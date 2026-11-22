@@ -1,5 +1,7 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
 import '../../../../core/theme/cyber_colors.dart';
 
 /// Speedometer-Inspired Circular Gauge for Socket Pacing & Speed Throttling
@@ -14,13 +16,16 @@ class InteractiveSpeedometerGauge extends StatefulWidget {
   });
 
   @override
-  State<InteractiveSpeedometerGauge> createState() => _InteractiveSpeedometerGaugeState();
+  State<InteractiveSpeedometerGauge> createState() =>
+      _InteractiveSpeedometerGaugeState();
 }
 
-class _InteractiveSpeedometerGaugeState extends State<InteractiveSpeedometerGauge> {
+class _InteractiveSpeedometerGaugeState
+    extends State<InteractiveSpeedometerGauge> {
   static const double maxSpeed = 50.0;
 
-  double get _ratio => widget.speedMb == 0 ? 1.0 : (widget.speedMb / maxSpeed).clamp(0.0, 1.0);
+  double get _ratio =>
+      widget.speedMb == 0 ? 1.0 : (widget.speedMb / maxSpeed).clamp(0.0, 1.0);
 
   void _handlePan(Offset localPos, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -63,7 +68,10 @@ class _InteractiveSpeedometerGaugeState extends State<InteractiveSpeedometerGaug
           onPanUpdate: (details) {
             final box = context.findRenderObject() as RenderBox?;
             if (box != null) {
-              _handlePan(box.globalToLocal(details.globalPosition), const Size(200, 180));
+              _handlePan(
+                box.globalToLocal(details.globalPosition),
+                const Size(200, 180),
+              );
             }
           },
           onTapDown: (details) {
@@ -73,10 +81,13 @@ class _InteractiveSpeedometerGaugeState extends State<InteractiveSpeedometerGaug
             width: 200,
             height: 180,
             child: CustomPaint(
-              painter: _SpeedometerDialPainter(
+              painter: SpeedometerPainter(
                 ratio: _ratio,
                 speedMb: widget.speedMb,
                 activeColor: activeColor,
+                trackColor: CyberColors.border(context),
+                tickColor: CyberColors.subtext(context),
+                needleColor: CyberColors.background(context),
               ),
               child: Center(
                 child: Padding(
@@ -85,7 +96,9 @@ class _InteractiveSpeedometerGaugeState extends State<InteractiveSpeedometerGaug
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        widget.speedMb == 0 ? 'MAX' : widget.speedMb.toStringAsFixed(0),
+                        widget.speedMb == 0
+                            ? 'MAX'
+                            : widget.speedMb.toStringAsFixed(0),
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
@@ -104,11 +117,16 @@ class _InteractiveSpeedometerGaugeState extends State<InteractiveSpeedometerGaug
                       ),
                       const SizedBox(height: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: CyberColors.darkSurface,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: activeColor.withValues(alpha: 0.5)),
+                          border: Border.all(
+                            color: activeColor.withValues(alpha: 0.5),
+                          ),
                         ),
                         child: Text(
                           widget.speedMb == 0
@@ -161,10 +179,14 @@ class _InteractiveSpeedometerGaugeState extends State<InteractiveSpeedometerGaug
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? CyberColors.electricCyan : CyberColors.darkSurface,
+          color: isSelected
+              ? CyberColors.electricCyan
+              : CyberColors.darkSurface,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isSelected ? CyberColors.electricCyan : CyberColors.borderOutline,
+            color: isSelected
+                ? CyberColors.electricCyan
+                : CyberColors.borderOutline,
           ),
         ),
         child: Text(
@@ -180,15 +202,21 @@ class _InteractiveSpeedometerGaugeState extends State<InteractiveSpeedometerGaug
   }
 }
 
-class _SpeedometerDialPainter extends CustomPainter {
+class SpeedometerPainter extends CustomPainter {
   final double ratio;
   final double speedMb;
   final Color activeColor;
+  final Color trackColor;
+  final Color tickColor;
+  final Color needleColor;
 
-  _SpeedometerDialPainter({
+  SpeedometerPainter({
     required this.ratio,
     required this.speedMb,
     required this.activeColor,
+    required this.trackColor,
+    required this.tickColor,
+    required this.needleColor,
   });
 
   @override
@@ -201,7 +229,7 @@ class _SpeedometerDialPainter extends CustomPainter {
 
     // Background track arc
     final trackPaint = Paint()
-      ..color = CyberColors.borderOutline
+      ..color = trackColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8.0
       ..strokeCap = StrokeCap.round;
@@ -224,7 +252,7 @@ class _SpeedometerDialPainter extends CustomPainter {
     // Tick marks around gauge
     const int tickCount = 13;
     final tickPaint = Paint()
-      ..color = CyberColors.textMuted
+      ..color = tickColor
       ..strokeWidth = 1.5;
 
     for (int i = 0; i < tickCount; i++) {
@@ -244,7 +272,9 @@ class _SpeedometerDialPainter extends CustomPainter {
         center.dy + outerR * math.sin(tickAngle),
       );
 
-      tickPaint.color = tickRatio <= ratio ? activeColor : CyberColors.textMuted;
+      tickPaint.color = tickRatio <= ratio
+          ? activeColor
+          : tickColor;
       canvas.drawLine(p1, p2, tickPaint);
     }
 
@@ -256,7 +286,7 @@ class _SpeedometerDialPainter extends CustomPainter {
     );
 
     final needlePaint = Paint()
-      ..color = CyberColors.oledBlack
+      ..color = needleColor
       ..style = PaintingStyle.fill;
     canvas.drawCircle(needlePos, 7, needlePaint);
 
@@ -267,8 +297,11 @@ class _SpeedometerDialPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SpeedometerDialPainter oldDelegate) =>
+  bool shouldRepaint(covariant SpeedometerPainter oldDelegate) =>
       oldDelegate.ratio != ratio ||
       oldDelegate.speedMb != speedMb ||
-      oldDelegate.activeColor != activeColor;
+      oldDelegate.activeColor != activeColor ||
+      oldDelegate.trackColor != trackColor ||
+      oldDelegate.tickColor != tickColor ||
+      oldDelegate.needleColor != needleColor;
 }

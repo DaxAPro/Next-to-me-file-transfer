@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/cyber_colors.dart';
 import '../../common_widgets/branded_app_logo.dart';
@@ -9,10 +10,9 @@ class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   static const String aboutDescription =
-      'NextToMe is the ultimate high-speed, offline file-sharing and communication hub. '
-      'Built for professionals and everyday users alike, it transfers files at lightning speeds '
-      'without using a single byte of internet data. Experience ultra-fast transfers, '
-      'custom device speed limits, and secure off-grid group chats.';
+      'NextToMe provides high-speed peer-to-peer file sharing and communication over local networks. '
+      'Share files directly with nearby devices, chat offline, and use the local PC web portal '
+      'without routing shared content through cloud servers. An optional global speed test uses an internet connection.';
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,11 @@ class AboutScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'About NextToMe',
-          style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: surfaceColor,
         elevation: 0,
@@ -53,11 +57,16 @@ class AboutScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: emeraldAccent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: emeraldAccent.withValues(alpha: 0.4)),
+                      border: Border.all(
+                        color: emeraldAccent.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: Text(
                       'Version: 1.0.0',
@@ -126,10 +135,26 @@ class AboutScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  _buildInfoRow(context, 'Internet Usage', '0 Bytes (100% Offline)'),
-                  _buildInfoRow(context, 'Transfer Speeds', 'Ultra-Fast Local P2P'),
-                  _buildInfoRow(context, 'Device Speed Control', 'Custom Per-Device Limit'),
-                  _buildInfoRow(context, 'Security', 'Private Direct Local Handoff'),
+                  _buildInfoRow(
+                    context,
+                    'File Sharing',
+                    'Direct Local Network',
+                  ),
+                  _buildInfoRow(
+                    context,
+                    'Transfer Speeds',
+                    'Ultra-Fast Local P2P',
+                  ),
+                  _buildInfoRow(
+                    context,
+                    'Device Speed Control',
+                    'Custom Per-Device Limit',
+                  ),
+                  _buildInfoRow(
+                    context,
+                    'Security',
+                    'Private Direct Local Handoff',
+                  ),
                 ],
               ),
             ),
@@ -145,7 +170,10 @@ class AboutScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: TextStyle(fontSize: 12, color: CyberColors.subtext(context))),
+          Text(
+            title,
+            style: TextStyle(fontSize: 12, color: CyberColors.subtext(context)),
+          ),
           Text(
             val,
             style: TextStyle(

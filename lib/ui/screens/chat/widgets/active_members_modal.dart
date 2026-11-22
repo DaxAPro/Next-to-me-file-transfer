@@ -128,7 +128,11 @@ class ActiveMembersModal extends StatelessWidget {
                   : 'Connected to Local Wi-Fi Group',
               style: TextStyle(fontSize: 11, color: textSecondary),
             ),
-            trailing: _roleBadge(isHost ? 'HOST' : 'GUEST', emeraldGreen),
+            trailing: _roleBadge(
+              context,
+              isHost ? 'HOST' : 'GUEST',
+              emeraldGreen,
+            ),
           ),
           const Divider(),
 
@@ -153,7 +157,7 @@ class ActiveMembersModal extends StatelessWidget {
                   height: 38,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFFF1F5F9),
+                    color: CyberColors.background(context),
                     border: Border.all(color: emeraldGreen, width: 1.5),
                   ),
                   child: Center(
@@ -182,7 +186,7 @@ class ActiveMembersModal extends StatelessWidget {
                     ? Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _roleBadge('GUEST', emeraldGreen),
+                          _roleBadge(context, 'GUEST', emeraldGreen),
                           TextButton.icon(
                             icon: const Icon(
                               Icons.person_remove_outlined,
@@ -201,7 +205,7 @@ class ActiveMembersModal extends StatelessWidget {
                           ),
                         ],
                       )
-                    : _roleBadge('HOST', emeraldGreen),
+                    : _roleBadge(context, 'HOST', emeraldGreen),
               );
             }),
         ],
@@ -209,21 +213,24 @@ class ActiveMembersModal extends StatelessWidget {
     );
   }
 
-  Widget _roleBadge(String role, Color emeraldGreen) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-    decoration: BoxDecoration(
-      color: role == 'HOST' ? emeraldGreen : const Color(0xFFF1F5F9),
-      borderRadius: BorderRadius.circular(4),
-    ),
-    child: Text(
-      role,
-      style: TextStyle(
-        fontSize: 9,
-        fontWeight: FontWeight.bold,
-        color: role == 'HOST' ? Colors.white : emeraldGreen,
-      ),
-    ),
-  );
+  Widget _roleBadge(BuildContext context, String role, Color emeraldGreen) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: role == 'HOST'
+              ? emeraldGreen
+              : CyberColors.background(context),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          role,
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            color: role == 'HOST' ? Colors.white : emeraldGreen,
+          ),
+        ),
+      );
 
   void _confirmRemovePeer(BuildContext context, DevicePeer peer) {
     showDialog(

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/cyber_colors.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
-import '../home_screen.dart';
+import 'local_profile_setup_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final HybridConnectionManager connectionManager;
@@ -40,7 +40,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => HomeScreen(connectionManager: widget.connectionManager),
+        builder: (_) => LocalProfileSetupScreen(
+          connectionManager: widget.connectionManager,
+        ),
       ),
     );
   }

@@ -14,7 +14,9 @@ import 'package:next_to_me/ui/screens/about/about_screen.dart';
 import 'package:next_to_me/ui/screens/hotspot_limits/widgets/interactive_speedometer_gauge.dart';
 import 'package:next_to_me/ui/screens/hotspot_limits/widgets/live_bandwidth_card.dart';
 import 'package:next_to_me/ui/screens/onboarding/onboarding_screen.dart';
+import 'package:next_to_me/ui/screens/onboarding/local_profile_setup_screen.dart';
 import 'package:next_to_me/ui/screens/privacy/privacy_policy_screen.dart';
+import 'package:next_to_me/ui/screens/privacy/terms_and_conditions_screen.dart';
 import 'package:next_to_me/ui/widgets/adaptive_radar_painter.dart';
 import 'package:next_to_me/ui/widgets/radar_scan_view.dart';
 import 'package:next_to_me/ui/widgets/wave_transfer_progress.dart';
@@ -132,7 +134,7 @@ void main() {
       expect(find.text('Version: 1.0.0'), findsOneWidget);
       expect(
         find.textContaining(
-          'NextToMe is the ultimate high-speed, offline file-sharing and communication hub',
+          'NextToMe provides high-speed peer-to-peer file sharing and communication over local networks',
         ),
         findsOneWidget,
       );
@@ -146,20 +148,50 @@ void main() {
         expect(find.text('Privacy Policy'), findsOneWidget);
         expect(
           find.textContaining('NextToMe is a 100% offline application.'),
-          findsOneWidget,
+          findsNothing,
         );
         expect(
           find.textContaining(
-            'Location, Bluetooth, and Wi-Fi permissions are used EXCLUSIVELY',
+            'NextToMe offers secure local peer-to-peer file transfers and communication which operate over local networks. We do not collect or store your transferred files. Location permissions are used strictly for local device discovery. However, features such as the Global Internet Speed Test require an active internet connection.',
           ),
-          findsOneWidget,
-        );
-        expect(
-          find.textContaining('We do not use cloud servers.'),
           findsOneWidget,
         );
       },
     );
+
+    testWidgets('Terms screen explains local transfers and internet testing', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: TermsAndConditionsScreen()),
+      );
+
+      expect(find.text('Terms and Conditions'), findsOneWidget);
+      expect(
+        find.textContaining('local peer-to-peer file transfers'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Global Internet Speed Test'), findsOneWidget);
+    });
+  });
+
+  testWidgets('Local profile setup stores the display name', (tester) async {
+    final connectionManager = HybridConnectionManager();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LocalProfileSetupScreen(connectionManager: connectionManager),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextFormField), 'Nearby User');
+    await tester.tap(find.text('Continue'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getString(AppConstants.keyDisplayName), 'Nearby User');
+    expect(connectionManager.localDeviceName, 'Nearby User');
+    connectionManager.dispose();
   });
 
   group('Cyber Colors & Gradients', () {
@@ -295,24 +327,27 @@ void main() {
   });
 
   group('Connection Safety Checks', () {
-    test('HybridConnectionManager refuses peers without a network address', () async {
-      final manager = HybridConnectionManager();
-      final peer = DevicePeer(
-        id: 'peer-no-ip',
-        name: 'Peer Without IP',
-        ipAddress: null,
-        port: 52520,
-        mode: ConnectionMode.directMode,
-      );
+    test(
+      'HybridConnectionManager refuses peers without a network address',
+      () async {
+        final manager = HybridConnectionManager();
+        final peer = DevicePeer(
+          id: 'peer-no-ip',
+          name: 'Peer Without IP',
+          ipAddress: null,
+          port: 52520,
+          mode: ConnectionMode.directMode,
+        );
 
-      final result = await manager.connectToPeer(peer);
+        final result = await manager.connectToPeer(peer);
 
-      expect(result, isFalse);
-      expect(manager.connectedPeer, isNull);
-      expect(manager.handshakePhase, equals(HandshakePhase.failed));
+        expect(result, isFalse);
+        expect(manager.connectedPeer, isNull);
+        expect(manager.handshakePhase, equals(HandshakePhase.failed));
 
-      manager.dispose();
-    });
+        manager.dispose();
+      },
+    );
   });
 
   group('4-Step Welcome Onboarding Slider & First-Launch Logic', () {

@@ -53,10 +53,7 @@ class CyberColors {
       ? textSecondary
       : lightTextSecondary;
 
-  static Color primaryAccent(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-      ? electricCyan
-      : const Color(0xFF0097A7);
+  static Color primaryAccent(BuildContext context) => techEmerald;
 
   static Color emeraldAccent(BuildContext context) => techEmerald;
 

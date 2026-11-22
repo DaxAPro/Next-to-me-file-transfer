@@ -5,17 +5,17 @@ import 'package:flutter/material.dart';
 /// Zero faux glassmorphism, zero bloated glow shadows.
 class AppTheme {
   // Brand Solid Accents
-  static const Color cyan = Color(0xFF00E5FF);       // Electric Cyan Blue
-  static const Color green = Color(0xFF10B981);      // Tech Emerald Green
-  static const Color amber = Color(0xFFFFB300);      // Warning / Throttled
-  static const Color red = Color(0xFFFF5252);        // Error / Danger
-  static const Color violet = Color(0xFF7C4DFF);     // LAN / P2P Mode
+  static const Color cyan = Color(0xFF00E5FF); // Electric Cyan Blue
+  static const Color green = Color(0xFF10B981); // Tech Emerald Green
+  static const Color amber = Color(0xFFFFB300); // Warning / Throttled
+  static const Color red = Color(0xFFFF5252); // Error / Danger
+  static const Color violet = Color(0xFF7C4DFF); // LAN / P2P Mode
 
   // Backward-Compatible Aliases for Existing Widgets
-  static const Color primaryNeon = cyan;
+  static const Color primaryNeon = green;
   static const Color accentGreen = green;
   static const Color accentAmber = amber;
-  static const Color secondaryAccent = violet;
+  static const Color secondaryAccent = cyan;
 
   // Dark Palette (Flat & High-Contrast Obsidian #121212)
   static const Color darkBg = Color(0xFF121212);
@@ -44,7 +44,7 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: darkBg,
-      primaryColor: cyan,
+      primaryColor: green,
       colorScheme: const ColorScheme.dark(
         primary: green,
         secondary: cyan,
@@ -85,9 +85,7 @@ class AppTheme {
           foregroundColor: Colors.black,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         ),
       ),
@@ -96,9 +94,7 @@ class AppTheme {
           foregroundColor: darkTextPrimary,
           side: const BorderSide(color: darkBorder),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         ),
       ),
@@ -109,7 +105,7 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: lightBg,
-      primaryColor: const Color(0xFF00838F),
+      primaryColor: green,
       colorScheme: const ColorScheme.light(
         primary: green,
         secondary: cyan,
@@ -150,9 +146,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         ),
       ),

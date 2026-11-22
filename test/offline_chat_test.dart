@@ -118,10 +118,7 @@ void main() {
       );
 
       expect(find.text('Hello nearby friend!'), findsOneWidget);
-      expect(
-        find.text('✓✓'),
-        findsOneWidget,
-      ); // Two green/white ticks for delivered
+      expect(find.byIcon(Icons.done_all_rounded), findsOneWidget);
     });
 
     testWidgets(

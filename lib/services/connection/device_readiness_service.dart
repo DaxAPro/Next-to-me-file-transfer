@@ -19,6 +19,14 @@ class DeviceReadinessService {
   static const MethodChannel _channel = MethodChannel('nexttome/wifi_direct');
 
   Future<bool> requestPermissions() async {
+    if (Platform.isIOS) {
+      final statuses = await [
+        Permission.bluetooth,
+        Permission.locationWhenInUse,
+      ].request();
+      return statuses.length == 2 &&
+          statuses.values.every((status) => status.isGranted);
+    }
     if (!Platform.isAndroid) return true;
 
     final sdkVersion = await _channel.invokeMethod<int>('getAndroidSdkVersion');
@@ -30,17 +38,14 @@ class DeviceReadinessService {
         Permission.bluetoothScan,
         Permission.bluetoothConnect,
         Permission.bluetoothAdvertise,
-      ] else ...[
-        Permission.locationWhenInUse,
       ],
-      if (sdkVersion >= 33)
-        Permission.nearbyWifiDevices
-      else if (sdkVersion >= 31)
-        Permission.locationWhenInUse,
+      Permission.locationWhenInUse,
+      if (sdkVersion >= 33) Permission.nearbyWifiDevices,
     ];
 
     final statuses = await permissions.request();
-    return statuses.values.every((status) => status.isGranted);
+    return statuses.length == permissions.length &&
+        statuses.values.every((status) => status.isGranted);
   }
 
   Future<DeviceHardwareStatus> checkHardwareStatus() async {

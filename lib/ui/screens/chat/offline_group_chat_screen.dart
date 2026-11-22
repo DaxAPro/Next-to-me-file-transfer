@@ -9,6 +9,7 @@ import '../../../core/models/chat_message.dart';
 import '../../../core/models/device_peer.dart';
 import '../../../core/theme/cyber_colors.dart';
 import '../../../services/connection/hybrid_connection_manager.dart';
+import '../../../services/connection/local_web_server_service.dart';
 import '../../../services/storage/local_chat_storage.dart';
 import 'widgets/active_members_modal.dart';
 import 'widgets/chat_message_bubble.dart';
@@ -44,6 +45,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
     _subscribeToPeerMessages();
     _subscribeToDeliveryUpdates();
     _subscribeToMembers();
+    _subscribeToPortalMessages();
   }
 
   Future<void> _loadLocalChatHistory() async {
@@ -53,7 +55,11 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
       );
       if (!mounted) return;
       setState(() {
-        _messages = loaded;
+        final loadedIds = loaded.map((message) => message.id).toSet();
+        _messages = [
+          ...loaded,
+          ..._messages.where((message) => !loadedIds.contains(message.id)),
+        ]..sort((first, second) => first.timestamp.compareTo(second.timestamp));
         _isLoading = false;
       });
       _scrollToBottom();
@@ -90,6 +96,9 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
               myDeviceId: widget.connectionManager.localDeviceId,
             );
             await _storage.saveMessage(incoming);
+            LocalWebServerService.instance.publishChatMessage(
+              incoming.toJson(),
+            );
             if (!mounted) return;
             setState(() => _messages.add(incoming));
             _scrollToBottom();
@@ -133,6 +142,16 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
     _subscriptions.add(
       widget.connectionManager.wifiDirectService.membersStream.listen((peers) {
         if (mounted) setState(() => _connectedPeers = peers);
+      }),
+    );
+  }
+
+  void _subscribeToPortalMessages() {
+    _subscriptions.add(
+      LocalWebServerService.instance.chatStream.listen((message) {
+        if (!mounted || _messages.any((item) => item.id == message.id)) return;
+        setState(() => _messages.add(message));
+        _scrollToBottom();
       }),
     );
   }
@@ -199,6 +218,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
       await widget.connectionManager.wifiDirectService.sendChatMessage(
         outgoingData,
       );
+      LocalWebServerService.instance.publishChatMessage(message.toJson());
       if (mounted && customContent == null) {
         setState(_msgController.clear);
       }
@@ -228,7 +248,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
   Future<void> _chooseImageSource() async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: CyberColors.surface(context),
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -412,13 +432,15 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
   Widget build(BuildContext context) {
     final totalMembers = 1 + _activePeers.length;
     final isHost = widget.connectionManager.wifiDirectService.isHost;
+    final backgroundColor = CyberColors.background(context);
+    final surfaceColor = CyberColors.surface(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0.5,
+        backgroundColor: surfaceColor,
+        foregroundColor: CyberColors.text(context),
+        elevation: 0,
         titleSpacing: 0,
         title: InkWell(
           onTap: _openParticipantsSheet,
@@ -485,7 +507,7 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
           ),
           Container(
             height: 42,
-            color: Colors.white,
+            color: surfaceColor,
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -511,9 +533,11 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              border: Border(
+                top: BorderSide(color: CyberColors.border(context)),
+              ),
             ),
             child: Row(
               children: [
@@ -528,15 +552,15 @@ class _OfflineGroupChatScreenState extends State<OfflineGroupChatScreen> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                      color: backgroundColor,
                       borderRadius: BorderRadius.circular(22),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: TextField(
                       controller: _msgController,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Color(0xFF0F172A),
+                        color: CyberColors.text(context),
                       ),
                       decoration: const InputDecoration(
                         hintText: 'Type a message...',

@@ -19,6 +19,7 @@ class AppConstants {
   static const String keyIsFirstTimeLaunch = 'isFirstTimeLaunch';
   static const String keyFirstLaunch = 'pref_first_launch_done';
   static const String keyHasSeenOnboarding = 'has_seen_onboarding';
+  static const String keyDisplayName = 'local_display_name';
   static const String keyEcoMode = 'pref_eco_mode';
   static const String keyDarkMode = 'pref_dark_mode';
   static const String keyPinEnabled = 'pref_pin_enabled';

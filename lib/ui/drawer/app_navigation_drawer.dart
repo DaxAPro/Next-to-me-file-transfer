@@ -13,16 +13,22 @@ import '../screens/chat/offline_group_chat_screen.dart';
 import '../screens/history/download_history_screen.dart';
 import '../screens/hotspot_limits/hotspot_limits_screen.dart';
 import '../screens/privacy/privacy_policy_screen.dart';
+import '../screens/privacy/terms_and_conditions_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/web_portal/local_web_portal_screen.dart';
+import '../screens/speed_test/global_speed_test_screen.dart';
 
 enum DrawerItem {
   home,
   setLimits,
   history,
   offlineChat,
+  webPortal,
+  globalSpeedTest,
   settings,
   about,
   privacyPolicy,
+  terms,
 }
 
 class AppNavigationDrawer extends StatelessWidget {
@@ -130,6 +136,41 @@ class AppNavigationDrawer extends StatelessWidget {
                       },
                     ),
 
+                    _buildNavItem(
+                      context,
+                      iconType: CyberIconType.wifiDirect,
+                      title: 'PC Web Portal',
+                      subtitle: 'Local file sharing and chat',
+                      isSelected: currentItem == DrawerItem.webPortal,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => LocalWebPortalScreen(
+                              connectionManager: connectionManager,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildNavItem(
+                      context,
+                      iconType: CyberIconType.speedometer,
+                      title: 'Global Speed Test',
+                      subtitle: 'Test internet connection',
+                      isSelected: currentItem == DrawerItem.globalSpeedTest,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const GlobalSpeedTestScreen(),
+                          ),
+                        );
+                      },
+                    ),
+
                     // 5. Settings
                     _buildNavItem(
                       context,
@@ -180,7 +221,7 @@ class AppNavigationDrawer extends StatelessWidget {
                       context,
                       iconType: CyberIconType.shield,
                       title: UserFriendlyStrings.navPrivacyPolicy,
-                      subtitle: '100% Offline & Private',
+                      subtitle: 'Local network privacy details',
                       isSelected: currentItem == DrawerItem.privacyPolicy,
                       onTap: () {
                         Navigator.pop(context);
@@ -188,6 +229,21 @@ class AppNavigationDrawer extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (_) => const PrivacyPolicyScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildNavItem(
+                      context,
+                      iconType: CyberIconType.shield,
+                      title: 'Terms and Conditions',
+                      isSelected: currentItem == DrawerItem.terms,
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const TermsAndConditionsScreen(),
                           ),
                         );
                       },

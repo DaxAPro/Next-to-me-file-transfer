@@ -26,6 +26,18 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>NSCameraUsageDescription</key>
 	<string>NextToMe uses the camera when you choose to take a photo to share in an offline chat.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>NextToMe uses Bluetooth to discover nearby devices for local peer-to-peer connections.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>NextToMe uses Bluetooth to discover nearby devices for local peer-to-peer connections.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>NextToMe uses location permission strictly for local device discovery. It does not collect or record your physical location.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>NextToMe uses your local network for peer-to-peer transfers, group chat, and the PC web portal.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_http._tcp</string>
+	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>NextToMe accesses photos only when you choose an image to share in an offline chat.</string>
 	<key>LSRequiresIPhoneOS</key>
