@@ -29,6 +29,7 @@ dependencies:
   shelf_multipart: ^2.0.2
   shelf_web_socket: ^3.0.0
   web_socket_channel: ^3.0.3
+  file_picker: 8.3.7
 
 dev_dependencies:
   flutter_test:

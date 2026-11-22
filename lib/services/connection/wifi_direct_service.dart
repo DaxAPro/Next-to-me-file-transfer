@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter/services.dart';
 import 'package:cryptography/cryptography.dart';
@@ -32,6 +33,12 @@ class _SecureSession {
   Future<KeyPair>? localKeyPair;
   bool helloSent = false;
   final Completer<SecretKey> keyReady = Completer<SecretKey>();
+}
+
+class _IncomingFile {
+  final TransferTask task;
+  final RandomAccessFile handle;
+  _IncomingFile(this.task, this.handle);
 }
 
 /// Wi-Fi Direct & LAN High-Speed Socket Service
@@ -75,6 +82,7 @@ class WifiDirectService {
   final Map<Socket, String> _peerIds = {};
   final Map<Socket, String> _peerNames = {};
   final Map<Socket, String> _peerAddresses = {};
+  final Map<Socket, _IncomingFile> _incomingFiles = {};
 
   final SpeedThrottler speedThrottler = SpeedThrottler();
 
@@ -297,6 +305,45 @@ class WifiDirectService {
       case opFileMeta:
         final jsonStr = utf8.decode(clearPayload);
         final meta = jsonDecode(jsonStr) as Map<String, dynamic>;
+        final fileName = (meta['fileName'] as String?)?.split(RegExp(r'[/\\]')).last;
+        final fileSize = meta['fileSize'];
+        final fileId = meta['id']?.toString();
+        if (fileName == null || fileName.isEmpty || fileId == null ||
+            fileSize is! int || fileSize < 0 || fileSize > 20 * 1024 * 1024 * 1024) {
+          throw const FormatException('Invalid incoming file metadata.');
+        }
+        await _incomingFiles.remove(socket)?.handle.close();
+        final root = await getApplicationDocumentsDirectory();
+        final directory = Directory('${root.path}${Platform.pathSeparator}NextToMe${Platform.pathSeparator}Received');
+        await directory.create(recursive: true);
+        final destination = File('${directory.path}${Platform.pathSeparator}$fileName');
+        final resumeFrom = meta['resumeFrom'] is int ? meta['resumeFrom'] as int : 0;
+        // The current protocol does not persist partial receive files across
+        // sessions, so accepting a non-zero resume offset would corrupt output.
+        if (resumeFrom != 0) {
+          throw const FormatException('Invalid file resume offset.');
+        }
+        final handle = await destination.open(mode: FileMode.write);
+        if (resumeFrom > 0) await handle.setPosition(resumeFrom);
+        final task = TransferTask(
+          id: fileId,
+          fileName: fileName,
+          fileSize: fileSize,
+          bytesTransferred: resumeFrom,
+          localPath: destination.path,
+          isIncoming: true,
+          status: TransferStatus.transferring,
+          remotePeerId: _peerIds[socket],
+          remotePeerName: _peerNames[socket],
+        );
+        _incomingFiles[socket] = _IncomingFile(task, handle);
+        if (fileSize == 0) {
+          await handle.close();
+          task.status = TransferStatus.completed;
+          task.finishedAt = DateTime.now();
+          _incomingFiles.remove(socket);
+        }
+        _transferProgressController.add(task);
         await _sendSecureFrame(
           socket,
           opChunkAck,
@@ -308,7 +355,22 @@ class WifiDirectService {
         break;
 
       case opFileChunk:
-        // Chunk received at offset
+        final incoming = _incomingFiles[socket];
+        if (incoming == null || offset != incoming.task.bytesTransferred ||
+            incoming.task.bytesTransferred + clearPayload.length > incoming.task.fileSize) {
+          throw const FormatException('Unexpected or out-of-order file chunk.');
+        }
+        await incoming.handle.writeFrom(clearPayload);
+        incoming.task.bytesTransferred += clearPayload.length;
+        incoming.task.checkStreamReady();
+        if (incoming.task.bytesTransferred == incoming.task.fileSize) {
+          await incoming.handle.flush();
+          await incoming.handle.close();
+          incoming.task.status = TransferStatus.completed;
+          incoming.task.finishedAt = DateTime.now();
+          _incomingFiles.remove(socket);
+        }
+        _transferProgressController.add(incoming.task);
         break;
 
       case opChatMessage:
@@ -498,6 +560,8 @@ class WifiDirectService {
   }
 
   void _removeSocket(Socket socket) {
+    final incoming = _incomingFiles.remove(socket);
+    if (incoming != null) unawaited(incoming.handle.close());
     _serverClients.remove(socket);
     _secureSessions.remove(socket);
     _frameQueues.remove(socket);

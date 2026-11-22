@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/constants/user_friendly_strings.dart';
@@ -9,7 +10,6 @@ import '../../core/theme/theme_controller.dart';
 import '../../services/connection/hybrid_connection_manager.dart';
 import '../../services/connection/device_readiness_service.dart';
 import '../common_widgets/cyber_avatar.dart';
-import '../common_widgets/custom_cyber_icons.dart';
 import '../common_widgets/glass_background.dart';
 import '../common_widgets/glass_container.dart';
 import '../drawer/app_navigation_drawer.dart';
@@ -279,115 +279,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _showQuickSendDialog(DevicePeer peer) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: CyberColors.surface(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CyberIcon(
-                  type: CyberIconType.wifiDirect,
-                  color: CyberColors.primaryAccent(context),
-                  size: 22,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'Send File to ${peer.name}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: CyberColors.text(context),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Select a sample file to send at ultra-fast speeds without internet:',
-              style: TextStyle(
-                fontSize: 12,
-                color: CyberColors.subtext(context),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Send a file to ${peer.name}', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              const Text('Choose a file from this device. The file is sent over the active connection.'),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () async {
+                  final selection = await FilePicker.platform.pickFiles();
+                  if (!sheetContext.mounted || selection == null) return;
+                  final path = selection.files.single.path;
+                  if (path == null) {
+                    ScaffoldMessenger.of(sheetContext).showSnackBar(
+                      const SnackBar(content: Text('This provider did not return a readable file path.')),
+                    );
+                    return;
+                  }
+                  Navigator.pop(sheetContext);
+                  try {
+                    await widget.connectionManager.sendLocalFile(path);
+                  } catch (error) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Could not send file: $error')),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.attach_file),
+                label: const Text('Choose file'),
               ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(
-                Icons.movie_outlined,
-                color: CyberColors.dangerRed,
-                size: 26,
-              ),
-              title: Text(
-                '4K_Nature_Documentary.mp4 (450 MB)',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: CyberColors.text(context),
-                ),
-              ),
-              subtitle: Text(
-                'Supports watching while downloading',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: CyberColors.subtext(context),
-                ),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              tileColor: CyberColors.background(context),
-              onTap: () {
-                Navigator.pop(ctx);
-                widget.connectionManager.enqueueTransfer(
-                  fileName: '4K_Nature_Documentary.mp4',
-                  fileSize: 450 * 1024 * 1024,
-                  isIncoming: false,
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              leading: Icon(
-                Icons.android_outlined,
-                color: CyberColors.emeraldAccent(context),
-                size: 26,
-              ),
-              title: Text(
-                'AppInstaller_v2.0.apk (85 MB)',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: CyberColors.text(context),
-                ),
-              ),
-              subtitle: Text(
-                'Saved to your Downloads folder',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: CyberColors.subtext(context),
-                ),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              tileColor: CyberColors.background(context),
-              onTap: () {
-                Navigator.pop(ctx);
-                widget.connectionManager.enqueueTransfer(
-                  fileName: 'AppInstaller_v2.0.apk',
-                  fileSize: 85 * 1024 * 1024,
-                  isIncoming: false,
-                );
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

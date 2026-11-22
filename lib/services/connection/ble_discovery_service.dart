@@ -10,8 +10,6 @@ class BleDiscoveryService {
       StreamController<List<DevicePeer>>.broadcast();
 
   final Map<String, DevicePeer> _peers = {};
-  Timer? _advertisementTimer;
-  Timer? _discoveryPulseTimer;
 
   bool get isScanning => _isScanning;
   bool get isAdvertising => _isAdvertising;
@@ -25,24 +23,13 @@ class BleDiscoveryService {
     _peers.clear();
     _notifyPeersChanged();
 
-    // Pulse discovery sweep every 1.5 seconds to refresh RSSI and device status
-    _discoveryPulseTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
-      if (!_isScanning) {
-        timer.cancel();
-        return;
-      }
-      _scanPulse();
-    });
-
-    // Seed mock/real devices for interactive discovery & testing
-    _injectInitialPeers();
+    // No platform BLE scanner is currently registered. Keep the result empty
+    // rather than presenting fabricated devices as nearby peers.
   }
 
   /// Stop BLE scanning
   Future<void> stopScanning() async {
     _isScanning = false;
-    _discoveryPulseTimer?.cancel();
-    _discoveryPulseTimer = null;
   }
 
   /// Broadcast local BLE advertisement packet (Invisible Beacon)
@@ -54,22 +41,14 @@ class BleDiscoveryService {
     if (_isAdvertising) return;
     _isAdvertising = true;
 
-    // Fast BLE advertisement interval (100ms - 250ms)
-    _advertisementTimer = Timer.periodic(const Duration(milliseconds: 250), (timer) {
-      if (!_isAdvertising) {
-        timer.cancel();
-        return;
-      }
-      // Broadcast BLE advertisement packet containing:
-      // [Service UUID: 0xFD6F (Nearby Share standard compatible), DevType, 5GHz flag, Nickname]
-    });
+    // Advertising requires a native BLE implementation; do not claim a
+    // beacon is active when the platform has not provided one.
+    _isAdvertising = false;
   }
 
   /// Stop BLE broadcasting
   Future<void> stopAdvertising() async {
     _isAdvertising = false;
-    _advertisementTimer?.cancel();
-    _advertisementTimer = null;
   }
 
   /// Register or update an external discovered peer (e.g. from platform channels)
@@ -82,56 +61,6 @@ class BleDiscoveryService {
     if (_peers.remove(peerId) != null) {
       _notifyPeersChanged();
     }
-  }
-
-  void _scanPulse() {
-    // Dynamically adjust signal RSSI slightly to reflect real-world RF propagation
-    for (final _ in _peers.values) {
-      // In real BLE, this updates with actual scanResult.rssi
-    }
-    _notifyPeersChanged();
-  }
-
-  void _injectInitialPeers() {
-    // Provide realistic nearby peers so the UI radar immediately visualizes devices
-    final mockPeers = [
-      DevicePeer(
-        id: 'peer-ble-01',
-        name: 'Pixel 9 Pro',
-        deviceType: DeviceType.phone,
-        os: 'Android 15',
-        rssi: -48,
-        mode: ConnectionMode.directMode,
-        supports5GHz: true,
-        supportsZeroCopy: true,
-        supportsUwb: true,
-      ),
-      DevicePeer(
-        id: 'peer-ble-02',
-        name: 'Galaxy Tab S9',
-        deviceType: DeviceType.tablet,
-        os: 'One UI 6.1',
-        rssi: -62,
-        mode: ConnectionMode.directMode,
-        supports5GHz: true,
-        supportsZeroCopy: true,
-      ),
-      DevicePeer(
-        id: 'peer-ble-03',
-        name: 'MacBook Pro M3',
-        deviceType: DeviceType.pc,
-        os: 'macOS 15',
-        rssi: -71,
-        mode: ConnectionMode.directMode,
-        supports5GHz: true,
-        supportsZeroCopy: false,
-      ),
-    ];
-
-    for (final p in mockPeers) {
-      _peers[p.id] = p;
-    }
-    _notifyPeersChanged();
   }
 
   void _notifyPeersChanged() {

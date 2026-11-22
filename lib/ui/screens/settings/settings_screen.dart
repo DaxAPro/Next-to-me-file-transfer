@@ -21,8 +21,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isPinProtected = false;
-  final String _pinCode = '1234';
   LocalHotspotCredentials? _hotspotCredentials;
   bool _isHotspotBusy = false;
   bool _showHotspotPassword = false;
@@ -48,29 +46,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
             GlassContainer(
               borderRadius: BorderRadius.circular(12),
               blur: 16,
-              child: SwitchListTile(
-                secondary: Icon(
+              child: ListTile(
+                leading: Icon(
                   isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
                   color: CyberColors.primaryAccent(context),
                 ),
-                title: Text(
-                  'Dark Mode',
-                  style: TextStyle(
+                title: Text('Theme', style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: CyberColors.text(context),
-                  ),
+                  )),
+                trailing: DropdownButton<ThemeMode>(
+                  value: ThemeController.instance.themeMode,
+                  items: const [
+                    DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
+                    DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark (OLED)')),
+                    DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
+                  ],
+                  onChanged: (mode) {
+                    if (mode != null) _setThemeMode(mode);
+                  },
                 ),
-                subtitle: Text(
-                  isDark ? 'Dark Green Code Theme' : 'Light Green Code Theme',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: CyberColors.subtext(context),
-                  ),
-                ),
-                value: isDark,
-                activeThumbColor: CyberColors.emeraldAccent(context),
-                onChanged: _setDarkMode,
               ),
             ),
             const SizedBox(height: 20),
@@ -288,36 +284,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Section: Security
-            _buildSectionHeader(context, 'SECURITY & CONNECTION ACCESS'),
-            GlassContainer(
-              borderRadius: BorderRadius.circular(12),
-              blur: 16,
-              child: SwitchListTile(
-                title: Text(
-                  '4-Digit PIN Verification',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: CyberColors.text(context),
-                  ),
-                ),
-                subtitle: Text(
-                  _isPinProtected
-                      ? 'Active (PIN: $_pinCode)'
-                      : 'Incoming transfers accept automatically',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: CyberColors.subtext(context),
-                  ),
-                ),
-                value: _isPinProtected,
-                activeThumbColor: CyberColors.primaryAccent(context),
-                onChanged: (val) {
-                  setState(() => _isPinProtected = val);
-                },
-              ),
-            ),
           ],
         ),
       ),
@@ -433,11 +399,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _setDarkMode(bool enabled) async {
+  Future<void> _setThemeMode(ThemeMode mode) async {
     try {
-      await ThemeController.instance.setThemeMode(
-        enabled ? ThemeMode.dark : ThemeMode.light,
-      );
+      await ThemeController.instance.setThemeMode(mode);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -22,6 +22,7 @@ class AppConstants {
   static const String keyDisplayName = 'local_display_name';
   static const String keyEcoMode = 'pref_eco_mode';
   static const String keyDarkMode = 'pref_dark_mode';
+  static const String keyThemeMode = 'pref_theme_mode';
   static const String keyPinEnabled = 'pref_pin_enabled';
   static const String keyPinCode = 'pref_pin_code';
   static const String keyOfflineChatEnabled = 'pref_offline_chat_enabled';

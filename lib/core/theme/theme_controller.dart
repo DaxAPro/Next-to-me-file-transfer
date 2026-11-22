@@ -18,13 +18,15 @@ class ThemeController extends ChangeNotifier {
   /// Initialize theme mode from SharedPreferences
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    if (!prefs.containsKey(AppConstants.keyDarkMode)) {
-      // Default launch state: Light Mode (Pure white #FFFFFF)
-      _themeMode = ThemeMode.light;
-    } else {
-      final isDark = prefs.getBool(AppConstants.keyDarkMode) ?? false;
-      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    }
+    final saved = prefs.getString(AppConstants.keyThemeMode);
+    _themeMode = switch (saved) {
+      'dark' => ThemeMode.dark,
+      'system' => ThemeMode.system,
+      'light' => ThemeMode.light,
+      _ => (prefs.getBool(AppConstants.keyDarkMode) ?? false)
+          ? ThemeMode.dark
+          : ThemeMode.light,
+    };
     _updateSystemOverlay();
     notifyListeners();
   }
@@ -40,6 +42,14 @@ class ThemeController extends ChangeNotifier {
     if (_themeMode == mode) return;
 
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      AppConstants.keyThemeMode,
+      switch (mode) {
+        ThemeMode.dark => 'dark',
+        ThemeMode.system => 'system',
+        ThemeMode.light => 'light',
+      },
+    );
     await prefs.setBool(AppConstants.keyDarkMode, mode == ThemeMode.dark);
 
     _themeMode = mode;

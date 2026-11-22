@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
@@ -37,7 +38,6 @@ class HybridConnectionManager extends ChangeNotifier {
 
   List<DevicePeer> _discoveredPeers = [];
   final List<TransferTask> _activeTransfers = [];
-  final Map<String, Timer> _transferTimers = {};
 
   // Host configuration for speed throttling & limits
   SpeedLimitProfile _hostLimitProfile = const SpeedLimitProfile();
@@ -120,18 +120,15 @@ class HybridConnectionManager extends ChangeNotifier {
 
   /// Start discovery based on current mode
   Future<void> startScanning() async {
+    await _wifiDirectService.startServer();
     if (_activeMode == ConnectionMode.directMode) {
       _lanService.stopDiscovery();
-      _handshakePhase = HandshakePhase.discoveringBle;
-      _statusMessage = 'Scanning BLE 5GHz beacons (1-2s)...';
+      _handshakePhase = HandshakePhase.idle;
+      _statusMessage =
+          'Bluetooth discovery is unavailable. Select Home Wi-Fi to find devices on your local network.';
       notifyListeners();
-
-      await _bleService.startScanning(localDeviceId: localDeviceId);
-      await _bleService.startAdvertising(
-        deviceName: localDeviceName,
-        deviceId: localDeviceId,
-        is5GHzCapable: true,
-      );
+      await _bleService.stopScanning();
+      await _bleService.stopAdvertising();
     } else {
       await _bleService.stopScanning();
       await _bleService.stopAdvertising();
@@ -180,17 +177,13 @@ class HybridConnectionManager extends ChangeNotifier {
         );
       }
 
-      await Future.delayed(const Duration(milliseconds: 300));
-
       _handshakePhase = HandshakePhase.connectingWifiDirect;
-      _statusMessage = 'Connecting to 5GHz Wi-Fi Channel (DIRECT-NM)...';
+      _statusMessage = 'Connecting to the peer over the local network...';
       notifyListeners();
-
-      await _wifiDirectService.startServer(port: invitation.port);
 
       final connected = await _wifiDirectService.connectToHost(
         hostIp: targetIp,
-        port: invitation.port,
+        port: peer.port,
       );
       if (!connected) {
         throw StateError(
@@ -244,106 +237,27 @@ class HybridConnectionManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  void enqueueTransfer({
-    required String fileName,
-    required int fileSize,
-    required bool isIncoming,
-    int resumeOffset = 0,
-  }) {
+  Future<void> sendLocalFile(String path) async {
+    final file = File(path);
+    if (!await file.exists()) throw FileSystemException('File not found', path);
+    if (!isConnected) throw StateError('Connect to a nearby device first.');
     final task = TransferTask(
       id: 'task-${DateTime.now().millisecondsSinceEpoch}',
-      fileName: fileName,
-      fileSize: fileSize,
-      bytesTransferred: resumeOffset,
-      isIncoming: isIncoming,
+      fileName: path.split(Platform.pathSeparator).last,
+      fileSize: await file.length(),
+      localPath: path,
+      isIncoming: false,
       remotePeerId: _connectedPeer?.id,
       remotePeerName: _connectedPeer?.name,
     );
-
     _activeTransfers.insert(0, task);
     notifyListeners();
-
-    _simulateHighSpeedTransfer(task, resumeOffset: resumeOffset);
-  }
-
-  void _cancelTransferTimer(String taskId) {
-    final existingTimer = _transferTimers.remove(taskId);
-    existingTimer?.cancel();
-  }
-
-  /// Green Code: Throttles UI refresh frequency to save battery during 40MB/s transfers
-  void _simulateHighSpeedTransfer(
-    TransferTask task, {
-    int resumeOffset = 0,
-  }) {
-    _cancelTransferTimer(task.id);
-    task.status = TransferStatus.transferring;
-    task.bytesTransferred = resumeOffset;
-    notifyListeners();
-
-    // In Eco Mode, tick interval is 250ms (4 FPS); normal is 125ms (8 FPS)
-    final tickMs = _isEcoMode ? 250 : 125;
-    var currentBytes = resumeOffset;
-    var lastUiNotify = DateTime.now().millisecondsSinceEpoch;
-
-    final timer = Timer.periodic(Duration(milliseconds: tickMs), (timer) {
-      if (task.status == TransferStatus.paused ||
-          task.status == TransferStatus.canceled ||
-          task.status == TransferStatus.completed ||
-          task.status == TransferStatus.failed) {
-        _cancelTransferTimer(task.id);
-        return;
-      }
-
-      double targetBytesPerSec = 42.5 * 1024 * 1024;
-      if (_hostLimitProfile.isSpeedThrottled) {
-        targetBytesPerSec = _hostLimitProfile.maxBytesPerSecond.toDouble();
-      }
-
-      final bytesThisTick = (targetBytesPerSec * (tickMs / 1000.0)).round();
-
-      if (_hostLimitProfile.hasQuotaLimit &&
-          (currentBytes + bytesThisTick) >
-              _hostLimitProfile.maxTotalQuotaBytes) {
-        task.status = TransferStatus.failed;
-        task.errorMessage =
-            'Host data limit (${_hostLimitProfile.formattedQuotaLimit}) exceeded.';
-        _cancelTransferTimer(task.id);
-        notifyListeners();
-        return;
-      }
-
-      currentBytes += bytesThisTick;
-      if (currentBytes >= task.fileSize) {
-        currentBytes = task.fileSize;
-        task.status = TransferStatus.completed;
-        task.finishedAt = DateTime.now();
-        task.speedBytesPerSec = 0;
-        _cancelTransferTimer(task.id);
-        notifyListeners();
-      } else {
-        task.speedBytesPerSec = targetBytesPerSec;
-        task.checkStreamReady();
-      }
-
-      task.bytesTransferred = currentBytes;
-
-      // Green Code: Only call notifyListeners every 250ms (or 500ms in Eco Mode)
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final uiNotifyThreshold = _isEcoMode ? 500 : 250;
-      if (now - lastUiNotify >= uiNotifyThreshold) {
-        lastUiNotify = now;
-        notifyListeners();
-      }
-    });
-
-    _transferTimers[task.id] = timer;
+    await _wifiDirectService.sendFile(task: task, fileByteStream: file.openRead());
   }
 
   void pauseTransfer(String taskId) {
     final index = _activeTransfers.indexWhere((t) => t.id == taskId);
     if (index >= 0) {
-      _cancelTransferTimer(taskId);
       _activeTransfers[index].status = TransferStatus.paused;
       _activeTransfers[index].speedBytesPerSec = 0;
       notifyListeners();
@@ -359,16 +273,19 @@ class HybridConnectionManager extends ChangeNotifier {
           task.status == TransferStatus.canceled) {
         return;
       }
-      _simulateHighSpeedTransfer(task, resumeOffset: task.bytesTransferred);
+      final path = task.localPath;
+      if (!task.isIncoming && path != null) {
+        unawaited(_wifiDirectService.sendFile(
+          task: task,
+          fileByteStream: File(path).openRead(task.bytesTransferred),
+          resumeFromByte: task.bytesTransferred,
+        ));
+      }
     }
   }
 
   @override
   void dispose() {
-    for (final timer in _transferTimers.values) {
-      timer.cancel();
-    }
-    _transferTimers.clear();
     _bleSub?.cancel();
     _lanSub?.cancel();
     _transferSub?.cancel();

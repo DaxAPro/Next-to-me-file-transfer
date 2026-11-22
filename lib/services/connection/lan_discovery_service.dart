@@ -56,8 +56,13 @@ class LanDiscoveryService {
       });
       _broadcastPresence(localDeviceId, localDeviceName, transferPort);
     } catch (e) {
-      // In sandbox or restricted network environments, fallback gracefully
-      _injectMockLanPeers();
+      // Discovery can be unavailable due to permissions or network policy.
+      // An empty peer list is safer than reporting fictional devices.
+      _isRunning = false;
+      _announcementTimer?.cancel();
+      _announcementTimer = null;
+      _broadcastSocket?.close();
+      _broadcastSocket = null;
     }
   }
 
@@ -102,40 +107,6 @@ class LanDiscoveryService {
         _notifyPeers();
       }
     } catch (_) {}
-  }
-
-  void _injectMockLanPeers() {
-    final mockPeers = [
-      DevicePeer(
-        id: 'peer-lan-01',
-        name: 'Workstation-PC (Chrome)',
-        deviceType: DeviceType.pc,
-        os: 'Windows 11',
-        rssi: -35,
-        ipAddress: '192.168.1.105',
-        port: 52520,
-        mode: ConnectionMode.homeMode,
-        supports5GHz: true,
-        supportsZeroCopy: true,
-      ),
-      DevicePeer(
-        id: 'peer-lan-02',
-        name: 'Living Room TV / Box',
-        deviceType: DeviceType.pc,
-        os: 'Android TV',
-        rssi: -42,
-        ipAddress: '192.168.1.140',
-        port: 52520,
-        mode: ConnectionMode.homeMode,
-        supports5GHz: true,
-        supportsZeroCopy: true,
-      ),
-    ];
-
-    for (final p in mockPeers) {
-      _peers[p.id] = p;
-    }
-    _notifyPeers();
   }
 
   void stopDiscovery() {
